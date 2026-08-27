@@ -273,6 +273,8 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
 
   Color _getQuadrantColor(int quadrant) {
     switch (quadrant) {
+      case 0:
+        return AppColors.q0;
       case 1:
         return AppColors.q1;
       case 2:

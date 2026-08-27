@@ -36,6 +36,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
 
   Color _getQColor(int q) {
     switch (q) {
+      case 0:
+        return AppColors.q0;
       case 1:
         return AppColors.q1;
       case 2:
@@ -137,11 +139,14 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
             ),
             const SizedBox(height: 8),
             Row(
-              children: [1, 2, 3, 4].map((q) {
+              children: [0, 1, 2, 3, 4].map((q) {
                 final isSelected = _selectedQ == q;
                 final qColor = _getQColor(q);
                 String qName = '';
                 switch (q) {
+                  case 0:
+                    qName = '미분류';
+                    break;
                   case 1:
                     qName = 'Q1: Do';
                     break;

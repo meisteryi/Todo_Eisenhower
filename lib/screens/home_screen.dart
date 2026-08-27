@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _currentQuoteIndex = Random().nextInt(QuotesData.list.length);
     // Default PageView index corresponds to activeQuadrant - 1
     _pageController = PageController(
-      initialPage: widget.provider.activeQuadrant - 1,
+      initialPage: widget.provider.activeQuadrant,
     );
 
     // Fetch todos and check for incinerated tasks on startup
@@ -113,13 +113,13 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_pageController.hasClients) {
         if (!wasVisible) {
           // Jump immediately if the panel was closed so the correct page slides up
-          _pageController.jumpToPage(index - 1);
+          _pageController.jumpToPage(index);
           _isPageChanging = false;
         } else {
           // Slide smoothly if the panel was already open
           _pageController
               .animateToPage(
-                index - 1,
+                index,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
               )
@@ -136,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Handle PageView swiping
   void _onPageChanged(int pageIndex) {
     if (_isPageChanging) return;
-    widget.provider.setActiveQuadrant(pageIndex + 1);
+    widget.provider.setActiveQuadrant(pageIndex);
   }
 
   // Show Quick Task Entry Bottom Sheet
@@ -169,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('아이젠하워 매트릭스 투두'),
+        title: const Text('Matrix Todo'),
         actions: [
           // Recycle Bin Navigation Button with Count Badge
           Stack(
@@ -273,6 +273,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               controller: _pageController,
                               onPageChanged: _onPageChanged,
                               children: [
+                                TodoListPage(
+                                  quadrant: 0,
+                                  provider: widget.provider,
+                                ),
                                 TodoListPage(
                                   quadrant: 1,
                                   provider: widget.provider,

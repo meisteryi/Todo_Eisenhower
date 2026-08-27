@@ -6,6 +6,7 @@ class AppColors {
   static const Color q2 = Color(0xff2563eb); // cobalt blue (originally 3B82F6, 2563eb is cleaner)
   static const Color q3 = Color(0xFFF59E0B); // amber
   static const Color q4 = Color(0xFF64748B); // slate grey
+  static const Color q0 = Color(0xFF8B5CF6); // purple/violet for Unclassified
 
   // Light theme colors
   static const Color lightBg = Color(0xFFF8FAFC);

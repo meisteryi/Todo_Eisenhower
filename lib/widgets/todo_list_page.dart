@@ -20,6 +20,8 @@ class TodoListPage extends StatelessWidget {
 
   Color _getQuadrantColor() {
     switch (quadrant) {
+      case 0:
+        return AppColors.q0;
       case 1:
         return AppColors.q1;
       case 2:
@@ -35,6 +37,8 @@ class TodoListPage extends StatelessWidget {
 
   String _getQuadrantTitle() {
     switch (quadrant) {
+      case 0:
+        return '미분류 (Unclassified)';
       case 1:
         return 'Q1. Do (즉시 실행)';
       case 2:
@@ -50,6 +54,8 @@ class TodoListPage extends StatelessWidget {
 
   List<Todo> _getQuadrantTodos() {
     switch (quadrant) {
+      case 0:
+        return provider.q0Todos;
       case 1:
         return provider.q1Todos;
       case 2:
@@ -362,16 +368,23 @@ class TodoListPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 GridView.count(
                   shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 2.2,
+                  childAspectRatio: 2.5,
                   children: [
                     _buildRepositionButton(context, todo, 1, 'Q1. Do (즉시 실행)', AppColors.q1),
                     _buildRepositionButton(context, todo, 2, 'Q2. Decide (계획 실행)', AppColors.q2),
                     _buildRepositionButton(context, todo, 3, 'Q3. Delegate (업무 위임)', AppColors.q3),
                     _buildRepositionButton(context, todo, 4, 'Q4. Delete (제거/소각)', AppColors.q4),
                   ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: _buildRepositionButton(context, todo, 0, '미분류 카테고리로 이동', AppColors.q0),
                 ),
                 const SizedBox(height: 12),
               ],

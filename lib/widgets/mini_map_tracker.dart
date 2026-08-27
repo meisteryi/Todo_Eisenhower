@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../providers/todo_provider.dart';
 import '../theme/app_theme.dart';
@@ -36,6 +37,45 @@ class MiniMapTracker extends StatelessWidget {
       final activeCount = getActiveCount(index);
       final progress = getProgressRatio(index);
 
+      BorderRadius getCellRadius() {
+        final double outerRadius = isDashboard ? 24 : 14;
+        final double sideRadius = isDashboard ? 12 : 8;
+        final double centerRadius = isDashboard ? 48 : 28;
+
+        switch (index) {
+          case 1:
+            return BorderRadius.only(
+              topLeft: Radius.circular(outerRadius),
+              topRight: Radius.circular(sideRadius),
+              bottomLeft: Radius.circular(sideRadius),
+              bottomRight: Radius.circular(centerRadius),
+            );
+          case 2:
+            return BorderRadius.only(
+              topRight: Radius.circular(outerRadius),
+              topLeft: Radius.circular(sideRadius),
+              bottomRight: Radius.circular(sideRadius),
+              bottomLeft: Radius.circular(centerRadius),
+            );
+          case 3:
+            return BorderRadius.only(
+              bottomLeft: Radius.circular(outerRadius),
+              topLeft: Radius.circular(sideRadius),
+              bottomRight: Radius.circular(sideRadius),
+              topRight: Radius.circular(centerRadius),
+            );
+          case 4:
+            return BorderRadius.only(
+              bottomRight: Radius.circular(outerRadius),
+              topRight: Radius.circular(sideRadius),
+              bottomLeft: Radius.circular(sideRadius),
+              topLeft: Radius.circular(centerRadius),
+            );
+          default:
+            return BorderRadius.circular(16);
+        }
+      }
+
       Color cellBg;
       Color borderClr;
       if (isActive && !isDashboard) {
@@ -73,7 +113,7 @@ class MiniMapTracker extends StatelessWidget {
           padding: cellPadding,
           decoration: BoxDecoration(
             color: cellBg,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: getCellRadius(),
             border: Border.all(
               color: borderClr,
               width: (isActive && !isDashboard) ? 2.0 : 1.0,
@@ -174,50 +214,156 @@ class MiniMapTracker extends StatelessWidget {
       );
     }
 
+    final q0ActiveCount = getActiveCount(0);
+    final gap = isDashboard ? 24.0 : 12.0;
+
     return Container(
       padding: EdgeInsets.all(isDashboard ? 16 : 12),
-      child: Column(
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: buildQuadrantCell(1, 'Q1', '즉시 실행 (Do)', AppColors.q1),
+          // 2x2 grid representing quadrants
+          Column(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: buildQuadrantCell(1, 'Q1', '즉시 실행 (Do)', AppColors.q1),
+                    ),
+                    SizedBox(width: gap),
+                    Expanded(
+                      child: buildQuadrantCell(
+                        2,
+                        'Q2',
+                        '계획 실행 (Decide)',
+                        AppColors.q2,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: buildQuadrantCell(
-                    2,
-                    'Q2',
-                    '계획 실행 (Decide)',
-                    AppColors.q2,
-                  ),
+              ),
+              SizedBox(height: gap),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: buildQuadrantCell(
+                        3,
+                        'Q3',
+                        '업무 위임 (Delegate)',
+                        AppColors.q3,
+                      ),
+                    ),
+                    SizedBox(width: gap),
+                    Expanded(
+                      child: buildQuadrantCell(
+                        4,
+                        'Q4',
+                        '제거/소각 (Delete)',
+                        AppColors.q4,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: buildQuadrantCell(
-                    3,
-                    'Q3',
-                    '업무 위임 (Delegate)',
-                    AppColors.q3,
+          // Central Diamond for Unclassified tasks (Q0)
+          GestureDetector(
+            onTap: () => onQuadrantSelected(0),
+            child: Transform.rotate(
+              angle: pi / 4,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: isDashboard ? 80 : 42,
+                height: isDashboard ? 80 : 42,
+                decoration: BoxDecoration(
+                  color: (provider.activeQuadrant == 0 && !isDashboard)
+                      ? AppColors.q0.withValues(alpha: 0.15)
+                      : (isDark ? AppColors.darkCard : Colors.white),
+                  borderRadius: BorderRadius.circular(isDashboard ? 16 : 8),
+                  border: Border.all(
+                    color: (provider.activeQuadrant == 0 && !isDashboard)
+                        ? AppColors.q0
+                        : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
+                    width: (provider.activeQuadrant == 0 && !isDashboard) ? 2.0 : 1.0,
+                  ),
+                  boxShadow: (provider.activeQuadrant == 0 && !isDashboard)
+                      ? [
+                          BoxShadow(
+                            color: AppColors.q0.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: isDark ? 0.2 : 0.05,
+                            ),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                ),
+                child: Transform.rotate(
+                  angle: -pi / 4,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.category_outlined,
+                            size: isDashboard ? 24 : 16,
+                            color: (provider.activeQuadrant == 0 && !isDashboard)
+                                ? AppColors.q0
+                                : (isDark ? Colors.white : AppColors.lightTextPrimary),
+                          ),
+                          if (isDashboard) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              '미분류',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      // Active Count Badge
+                      if (q0ActiveCount > 0)
+                        Positioned(
+                          top: isDashboard ? -6 : -4,
+                          right: isDashboard ? -6 : -4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.q0,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$q0ActiveCount',
+                              style: const TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: buildQuadrantCell(
-                    4,
-                    'Q4',
-                    '제거/소각 (Delete)',
-                    AppColors.q4,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],

@@ -26,6 +26,7 @@ class TodoProvider with ChangeNotifier {
   int get lastIncineratedCount => _lastIncineratedCount;
 
   // Quadrant filtered lists (only active, non-trash)
+  List<Todo> get q0Todos => _todos.where((t) => t.quadrant == 0).toList();
   List<Todo> get q1Todos => _todos.where((t) => t.quadrant == 1).toList();
   List<Todo> get q2Todos => _todos.where((t) => t.quadrant == 2).toList();
   List<Todo> get q3Todos => _todos.where((t) => t.quadrant == 3).toList();
@@ -44,7 +45,7 @@ class TodoProvider with ChangeNotifier {
 
   // Set active quadrant index (from swipe or minimap tap)
   void setActiveQuadrant(int quadrant) {
-    if (quadrant >= 1 && quadrant <= 4) {
+    if (quadrant >= 0 && quadrant <= 4) {
       _activeQuadrant = quadrant;
       notifyListeners();
     }
@@ -113,7 +114,7 @@ class TodoProvider with ChangeNotifier {
 
   // Move todo to another quadrant
   Future<void> moveTodo(Todo todo, int newQuadrant) async {
-    if (newQuadrant < 1 || newQuadrant > 4) return;
+    if (newQuadrant < 0 || newQuadrant > 4) return;
     final updatedTodo = todo.copyWith(quadrant: newQuadrant);
 
     try {
