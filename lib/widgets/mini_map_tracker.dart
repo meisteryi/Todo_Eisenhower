@@ -40,7 +40,7 @@ class MiniMapTracker extends StatelessWidget {
       BorderRadius getCellRadius() {
         final double outerRadius = isDashboard ? 24 : 14;
         final double sideRadius = isDashboard ? 12 : 8;
-        final double centerRadius = isDashboard ? 48 : 28;
+        final double centerRadius = isDashboard ? 76 : 36;
 
         switch (index) {
           case 1:
@@ -110,6 +110,7 @@ class MiniMapTracker extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeInOut,
+          clipBehavior: Clip.antiAlias,
           padding: cellPadding,
           decoration: BoxDecoration(
             color: cellBg,
@@ -136,7 +137,6 @@ class MiniMapTracker extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Header Row (Label + Count Badge)
               Row(
@@ -161,7 +161,7 @@ class MiniMapTracker extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: isDashboard ? 12 : 6),
               // Title
               Text(
                 title,
@@ -169,44 +169,16 @@ class MiniMapTracker extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
-              // Occupancy Bar Gauge (Progress Bar)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(3),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-                      valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                      minHeight: 4,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '진행률',
-                        style: TextStyle(
-                          fontSize: 8,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                        ),
-                      ),
-                      Text(
-                        '${(progress * 100).toInt()}%',
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: (isActive && !isDashboard)
-                              ? themeColor
-                              : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              SizedBox(height: isDashboard ? 10 : 5),
+              // Occupancy Bar Gauge (Progress Bar only, no labels, thicker)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                  valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                  minHeight: isDashboard ? 7.0 : 5.0,
+                ),
               ),
             ],
           ),
@@ -215,7 +187,7 @@ class MiniMapTracker extends StatelessWidget {
     }
 
     final q0ActiveCount = getActiveCount(0);
-    final gap = isDashboard ? 24.0 : 12.0;
+    final gap = isDashboard ? 12.0 : 6.0;
 
     return Container(
       padding: EdgeInsets.all(isDashboard ? 16 : 12),
@@ -276,13 +248,13 @@ class MiniMapTracker extends StatelessWidget {
               angle: pi / 4,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
-                width: isDashboard ? 80 : 42,
-                height: isDashboard ? 80 : 42,
+                width: isDashboard ? 72 : 36,
+                height: isDashboard ? 72 : 36,
                 decoration: BoxDecoration(
                   color: (provider.activeQuadrant == 0 && !isDashboard)
                       ? AppColors.q0.withValues(alpha: 0.15)
                       : (isDark ? AppColors.darkCard : Colors.white),
-                  borderRadius: BorderRadius.circular(isDashboard ? 16 : 8),
+                  borderRadius: BorderRadius.circular(isDashboard ? 14 : 7),
                   border: Border.all(
                     color: (provider.activeQuadrant == 0 && !isDashboard)
                         ? AppColors.q0
@@ -318,7 +290,7 @@ class MiniMapTracker extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.category_outlined,
-                            size: isDashboard ? 24 : 16,
+                            size: isDashboard ? 22 : 13,
                             color: (provider.activeQuadrant == 0 && !isDashboard)
                                 ? AppColors.q0
                                 : (isDark ? Colors.white : AppColors.lightTextPrimary),
