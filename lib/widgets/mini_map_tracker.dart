@@ -37,6 +37,11 @@ class MiniMapTracker extends StatelessWidget {
       final activeCount = getActiveCount(index);
       final progress = getProgressRatio(index);
 
+      final activeTodos = provider.todos
+          .where((t) => t.quadrant == index && !t.isCompleted && !t.isTrash)
+          .toList();
+      final previewTodos = activeTodos.take(3).toList();
+
       BorderRadius getCellRadius() {
         final double outerRadius = isDashboard ? 24 : 14;
         final double sideRadius = isDashboard ? 12 : 8;
@@ -76,6 +81,42 @@ class MiniMapTracker extends StatelessWidget {
         }
       }
 
+      EdgeInsets getProgressBarPadding() {
+        if (!isDashboard) {
+          if (index == 1) return const EdgeInsets.only(right: 20, bottom: 2);
+          if (index == 2) return const EdgeInsets.only(left: 20, bottom: 2);
+          return const EdgeInsets.only(bottom: 2);
+        }
+        switch (index) {
+          case 1:
+            return const EdgeInsets.only(right: 48, bottom: 4);
+          case 2:
+            return const EdgeInsets.only(left: 48, bottom: 4);
+          case 3:
+          case 4:
+          default:
+            return const EdgeInsets.only(left: 4, right: 4, bottom: 4);
+        }
+      }
+
+      EdgeInsets getHeaderPadding() {
+        if (!isDashboard) {
+          if (index == 3) return const EdgeInsets.only(right: 14);
+          if (index == 4) return const EdgeInsets.only(left: 14);
+          return EdgeInsets.zero;
+        }
+        switch (index) {
+          case 3:
+            return const EdgeInsets.only(right: 48);
+          case 4:
+            return const EdgeInsets.only(left: 48);
+          case 1:
+          case 2:
+          default:
+            return EdgeInsets.zero;
+        }
+      }
+
       Color cellBg;
       Color borderClr;
       if (isActive && !isDashboard) {
@@ -88,7 +129,7 @@ class MiniMapTracker extends StatelessWidget {
 
       // Compact spacing, padding and fonts for mini-map mode to avoid cut-offs
       final cellPadding = isDashboard
-          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 16)
+          ? const EdgeInsets.symmetric(horizontal: 14, vertical: 11)
           : const EdgeInsets.symmetric(horizontal: 10, vertical: 6);
 
       final titleStyle = TextStyle(
@@ -139,29 +180,32 @@ class MiniMapTracker extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header Row (Label + Count Badge)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(label, style: labelStyle),
-                  if (activeCount > 0)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                      decoration: BoxDecoration(
-                        color: themeColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '$activeCount',
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+              Padding(
+                padding: getHeaderPadding(),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(label, style: labelStyle),
+                    if (activeCount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: themeColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$activeCount',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-              SizedBox(height: isDashboard ? 12 : 6),
+              SizedBox(height: isDashboard ? 4 : 2),
               // Title
               Text(
                 title,
@@ -169,15 +213,87 @@ class MiniMapTracker extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: isDashboard ? 10 : 5),
-              // Occupancy Bar Gauge (Progress Bar only, no labels, thicker)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                  minHeight: isDashboard ? 7.0 : 5.0,
+              // Preview uncompleted tasks (Max 3, only in dashboard mode)
+              if (isDashboard) ...[
+                const SizedBox(height: 4),
+                Expanded(
+                  child: previewTodos.isEmpty
+                      ? Center(
+                          child: Text(
+                            '대기 중인 태스크가 없습니다.',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontStyle: FontStyle.italic,
+                              color: isDark 
+                                  ? AppColors.darkTextSecondary 
+                                  : AppColors.lightTextSecondary,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(previewTodos.length, (todoIdx) {
+                            final todo = previewTodos[todoIdx];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 1.5),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                                decoration: BoxDecoration(
+                                  color: isDark 
+                                      ? Colors.black.withValues(alpha: 0.15) 
+                                      : Colors.grey[50]!.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 3.5,
+                                      height: 3.5,
+                                      decoration: BoxDecoration(
+                                        color: themeColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        todo.title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          color: isDark 
+                                              ? AppColors.darkTextPrimary 
+                                              : AppColors.lightTextPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                ),
+              ],
+              if (!isDashboard) const Spacer(),
+              SizedBox(height: isDashboard ? 6 : 4),
+              // Occupancy Bar Gauge (Progress Bar only, offset asymmetrically to avoid curves)
+              Padding(
+                padding: getProgressBarPadding(),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                    valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                    minHeight: isDashboard ? 7.0 : 5.0,
+                  ),
                 ),
               ),
             ],
@@ -190,7 +306,7 @@ class MiniMapTracker extends StatelessWidget {
     final gap = isDashboard ? 12.0 : 6.0;
 
     return Container(
-      padding: EdgeInsets.all(isDashboard ? 16 : 12),
+      padding: EdgeInsets.all(isDashboard ? 12 : 12),
       child: Stack(
         alignment: Alignment.center,
         children: [

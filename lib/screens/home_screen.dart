@@ -227,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOut,
-              height: _isPanelVisible ? 185 : 380,
+              height: _isPanelVisible ? 185 : 400,
               child: MiniMapTracker(
                 provider: widget.provider,
                 onQuadrantSelected: _onQuadrantSelected,

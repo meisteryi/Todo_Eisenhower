@@ -125,6 +125,54 @@ class TodoProvider with ChangeNotifier {
     }
   }
 
+  // Reorder todos within a quadrant in memory and database
+  Future<void> reorderTodos(int quadrant, int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex) return;
+
+    List<Todo> quadrantTodos;
+    switch (quadrant) {
+      case 0:
+        quadrantTodos = q0Todos;
+        break;
+      case 1:
+        quadrantTodos = q1Todos;
+        break;
+      case 2:
+        quadrantTodos = q2Todos;
+        break;
+      case 3:
+        quadrantTodos = q3Todos;
+        break;
+      case 4:
+        quadrantTodos = q4Todos;
+        break;
+      default:
+        return;
+    }
+
+    if (oldIndex < 0 || oldIndex >= quadrantTodos.length) return;
+    if (newIndex < 0 || newIndex >= quadrantTodos.length) return;
+
+    // Simulate reordering in a temp list
+    final reorderedList = List<Todo>.from(quadrantTodos);
+    final movedTodo = reorderedList.removeAt(oldIndex);
+    reorderedList.insert(newIndex, movedTodo);
+
+    // Reassign timestamps in descending order (created_at DESC) to persist order
+    final now = DateTime.now();
+    try {
+      for (int i = 0; i < reorderedList.length; i++) {
+        final todo = reorderedList[i];
+        final newCreatedAt = now.subtract(Duration(seconds: i * 2));
+        final updatedTodo = todo.copyWith(createdAt: newCreatedAt);
+        await _dbHelper.update(updatedTodo);
+      }
+      await loadTodos();
+    } catch (e) {
+      debugPrint("Error reordering todos: $e");
+    }
+  }
+
   // Update complete todo details (like due date)
   Future<void> updateTodo(Todo todo) async {
     try {

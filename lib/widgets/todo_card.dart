@@ -250,16 +250,8 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
                         ),
                       ),
 
-                      // Swipe hint indicator (only if not opened)
-                      if (!_isOpened)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: Icon(
-                            Icons.chevron_left,
-                            size: 16,
-                            color: isDark ? Colors.grey[700] : Colors.grey[400],
-                          ),
-                        ),
+                      // Space reserved for action buttons and drag handles on the far right
+                      const SizedBox(width: 48),
                     ],
                   ),
                 ),

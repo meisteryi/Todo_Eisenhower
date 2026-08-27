@@ -279,51 +279,7 @@ class TodoListPage extends StatelessWidget {
       );
     }
 
-    // Quick calendar datepicker trigger for Q2
-    void triggerQ2Calendar(Todo todo) async {
-      final initialDate = todo.dueDate ?? DateTime.now();
-      final pickedDate = await showDatePicker(
-        context: context,
-        initialDate: initialDate,
-        firstDate: DateTime.now().subtract(const Duration(days: 365)),
-        lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-        builder: (context, child) {
-          return Theme(
-            data: isDark ? AppTheme.dark : AppTheme.light,
-            child: child!,
-          );
-        },
-      );
 
-      if (pickedDate != null) {
-        if (!context.mounted) return;
-        final time = await showTimePicker(
-          context: context,
-          initialTime: TimeOfDay.fromDateTime(initialDate),
-        );
-
-        DateTime finalDateTime = DateTime(
-          pickedDate.year,
-          pickedDate.month,
-          pickedDate.day,
-          time?.hour ?? 12,
-          time?.minute ?? 0,
-        );
-
-        final updated = todo.copyWith(dueDate: finalDateTime);
-        await provider.updateTodo(updated);
-        await provider.loadTodos();
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('"${todo.title}" 마감일이 예약되었습니다.'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    }
 
     // Quick share helper for Q3
     void triggerQ3Share(Todo todo) {
@@ -423,14 +379,19 @@ class TodoListPage extends StatelessWidget {
         Expanded(
           child: todos.isEmpty
               ? buildEmptyState()
-              : ListView.builder(
-                  controller: scrollController,
+              : ReorderableListView.builder(
+                  scrollController: scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
+                  buildDefaultDragHandles: false,
+                  onReorderItem: (oldIndex, newIndex) {
+                    provider.reorderTodos(quadrant, oldIndex, newIndex);
+                  },
                   itemCount: todos.length,
                   padding: const EdgeInsets.only(bottom: 80),
                   itemBuilder: (context, index) {
                     final todo = todos[index];
                     return Stack(
+                      key: ValueKey(todo.id!),
                       alignment: Alignment.centerRight,
                       children: [
                         TodoCard(
@@ -443,7 +404,7 @@ class TodoListPage extends StatelessWidget {
                         ),
                         // Quadrant Specific Overlay Icons for quick action
                         Positioned(
-                          right: 32,
+                          right: 16,
                           top: 0,
                           bottom: 0,
                           child: Row(
@@ -467,27 +428,7 @@ class TodoListPage extends StatelessWidget {
                                     }
                                   },
                                 ),
-                              // Q2 Schedule reminder trigger
-                              if (quadrant == 2 && !todo.isCompleted && todo.dueDate == null)
-                                TextButton.icon(
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  icon: const Icon(Icons.add_alarm, size: 14, color: AppColors.q2),
-                                  label: const Text(
-                                    '예약',
-                                    style: TextStyle(fontSize: 11, color: AppColors.q2, fontWeight: FontWeight.bold),
-                                  ),
-                                  onPressed: () => triggerQ2Calendar(todo),
-                                ),
-                              // Q2 Change existing due date trigger
-                              if (quadrant == 2 && !todo.isCompleted && todo.dueDate != null)
-                                IconButton(
-                                  icon: const Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.q2),
-                                  onPressed: () => triggerQ2Calendar(todo),
-                                ),
+
                               // Q3 Share trigger
                               if (quadrant == 3 && !todo.isCompleted)
                                 IconButton(
@@ -497,6 +438,19 @@ class TodoListPage extends StatelessWidget {
                               // Q4 Incinerator countdown warning
                               if (quadrant == 4 && !todo.isCompleted)
                                 _IncineratorCountdown(todo: todo),
+                              
+                              // Reorder Drag Handle (2-line horizontal handle)
+                              ReorderableDragStartListener(
+                                index: index,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                                  child: Icon(
+                                    Icons.drag_handle,
+                                    color: isDark ? Colors.grey[600] : Colors.grey[400],
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
