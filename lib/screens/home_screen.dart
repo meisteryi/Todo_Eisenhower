@@ -1,17 +1,12 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../models/quote_model.dart';
 import '../providers/todo_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/mini_map_tracker.dart';
 import '../widgets/todo_list_page.dart';
+import '../widgets/add_task_sheet.dart';
 import 'trash_screen.dart';
-
-class Quote {
-  final String text;
-  final String author;
-  const Quote(this.text, this.author);
-}
 
 class HomeScreen extends StatefulWidget {
   final TodoProvider provider;
@@ -28,51 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isPanelVisible = false; // State to track collapse/expand lists
   int _currentQuoteIndex = 0;
 
-  static const List<Quote> _quotes = [
-    Quote("가장 긴급한 결정은 대개 가장 중요한 결정이 아니다.", "드와이트 D. 아이젠하워"),
-    Quote("시간은 우리가 가진 가장 희소한 자원이며, 그것을 관리하지 못하면 다른 어떤 것도 관리할 수 없다.", "피터 드러커"),
-    Quote("가장 중요한 일들이 가장 중요하지 않은 일들에 의해 좌우되어서는 안 된다.", "요한 볼프강 폰 괴테"),
-    Quote("바쁘게 움직이는 것만으로는 부족하다. 중요한 것은 무엇 때문에 바쁜가이다.", "헨리 데이비드 소로"),
-    Quote("할 일을 계획하고, 계획한 일을 실행하라.", "나폴레옹 힐"),
-    Quote("가장 중요한 일을 가장 먼저 하라.", "스티븐 코비"),
-    Quote("미래는 현재 우리가 무엇을 하고 있는가에 달려 있다.", "마하트마 간디"),
-    Quote("시작하는 방법은 말을 그만두고 행동하기 시작하는 것이다.", "월트 디즈니"),
-    Quote("어떤 일을 시작하기에 앞서 그것이 정말 중요한 일인지 자문해 보라.", "마르쿠스 아우렐리우스"),
-    Quote("계획 없는 목표는 단지 바람에 불과하다.", "생텍쥐페리"),
-    Quote("집중이란 해야 할 일에 예스(Yes)하는 것이 아니라, 하지 말아야 할 일에 노(No)하는 것이다.", "스티브 잡스"),
-    Quote("당신이 쓸 수 있는 가장 귀한 자산은 시간이다.", "벤자민 프랭클린"),
-    Quote("오늘 할 수 있는 일을 내일로 미루지 마라.", "벤자민 프랭클린"),
-    Quote(
-      "평범한 사람은 시간을 소비하는 데 마음을 쓰고, 재능 있는 사람은 시간을 사용하기 위해 노력한다.",
-      "아르투어 쇼펜하우어",
-    ),
-    Quote("무언가를 시작하고 실패하는 것보다 더 나쁜 것은 아무것도 시작하지 않는 것이다.", "세스 고딘"),
-    Quote("성공은 매일 반복되는 작은 노력들의 합이다.", "로버트 콜리어"),
-    Quote("단순하게 살아라. 쓸데없는 절차가 늘어날수록 핵심은 흐려진다.", "브루스 리"),
-    Quote("해야 할 일은 즉시 시작하고, 불필요한 일은 과감히 버려라.", "드와이트 D. 아이젠하워"),
-    Quote("우리가 진정 두려워해야 할 것은 실패가 아니라, 성공하지 못할 일에 집중하는 것이다.", "버나드 쇼"),
-    Quote("위대한 일은 한순간에 이루어지지 않으며, 작은 일들이 모여 이루어진다.", "빈센트 반 고흐"),
-    Quote("오늘의 행동이 내일의 당신을 결정한다.", "작자 미상"),
-    Quote("가장 낭비하는 시간은 시작하지 않고 미루는 시간이다.", "에드워드 영"),
-    Quote("당신의 시간은 한정되어 있다. 그러니 다른 사람의 삶을 사느라 시간을 낭비하지 마라.", "스티브 잡스"),
-    Quote("시간을 단축하려면 핵심만 남기고 나머지는 위임하라.", "피터 드러커"),
-    Quote("진정한 효율성은 단순히 빨리하는 것이 아니라, 올바른 일을 하는 것이다.", "피터 드러커"),
-    Quote("하루를 지배하라. 그렇지 않으면 하루가 당신을 지배할 것이다.", "존 헨리 뉴먼"),
-    Quote("우리가 할 일은 다가오는 파도를 걱정하는 것이 아니라 배를 젓는 것이다.", "헤르만 헤세"),
-    Quote("아무리 작은 일이라도 정성을 다하라. 작은 일에 정성을 다하는 자만이 큰일을 할 수 있다.", "중용(中庸)"),
-    Quote("행동은 모든 성공의 기초이다.", "파블로 피카소"),
-    Quote("시간을 미루는 것은 미래의 빚을 지는 것과 같다.", "찰스 디킨스"),
-    Quote("남에게 넘길 수 있는 일은 과감하게 위임하라. 그것이 리더십의 시작이다.", "앤드류 카네기"),
-    Quote("버려야 할 것을 버리지 못하는 것은 삶을 무겁게 만드는 주범이다.", "세네카"),
-    Quote("오늘이라는 날은 다시 돌아오지 않는다. 매 순간 정성을 다해 살아가라.", "단테"),
-    Quote("바쁜 것만으로는 불충분하다. 무엇에 집중하고 있는지 자문하라.", "헨리 데이비드 소로"),
-    Quote("가장 큰 위기는 중요한 일을 뒤로 미루는 사소한 습관에서 시작된다.", "공자"),
-  ];
-
   @override
   void initState() {
     super.initState();
-    _currentQuoteIndex = Random().nextInt(_quotes.length);
+    _currentQuoteIndex = Random().nextInt(QuotesData.list.length);
     // Default PageView index corresponds to activeQuadrant - 1
     _pageController = PageController(
       initialPage: widget.provider.activeQuadrant - 1,
@@ -187,290 +141,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Show Quick Task Entry Bottom Sheet
   void _showAddTaskSheet() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textTheme = Theme.of(context).textTheme;
-
-    final titleController = TextEditingController();
-    int selectedQ = widget.provider.activeQuadrant;
-    DateTime? selectedDate;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            Color getQColor(int q) {
-              switch (q) {
-                case 1:
-                  return AppColors.q1;
-                case 2:
-                  return AppColors.q2;
-                case 3:
-                  return AppColors.q3;
-                case 4:
-                  return AppColors.q4;
-                default:
-                  return Colors.blue;
-              }
-            }
-
-            void submitTask() {
-              final text = titleController.text.trim();
-              if (text.isEmpty) return;
-
-              widget.provider.addTodo(text, selectedQ, dueDate: selectedDate);
-
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('"$text" 할 일이 추가되었습니다.'),
-                  behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Handle Bar
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[700] : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '새로운 할 일 등록',
-                      style: textTheme.titleMedium?.copyWith(fontSize: 16),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Title Input Text Field
-                    TextField(
-                      controller: titleController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: '할 일을 입력하세요...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: isDark
-                                ? AppColors.darkDivider
-                                : AppColors.lightDivider,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: getQColor(selectedQ),
-                            width: 2.0,
-                          ),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => submitTask(),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Quadrant Segment Selection
-                    Text(
-                      '사분면 영역 지정',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [1, 2, 3, 4].map((q) {
-                        final isSelected = selectedQ == q;
-                        final qColor = getQColor(q);
-                        String qName = '';
-                        switch (q) {
-                          case 1:
-                            qName = 'Q1: Do';
-                            break;
-                          case 2:
-                            qName = 'Q2: Plan';
-                            break;
-                          case 3:
-                            qName = 'Q3: Delg';
-                            break;
-                          case 4:
-                            qName = 'Q4: Dlet';
-                            break;
-                        }
-
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 3),
-                            child: InkWell(
-                              onTap: () {
-                                setModalState(() {
-                                  selectedQ = q;
-                                });
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? qColor
-                                      : (isDark
-                                            ? AppColors.darkBg
-                                            : Colors.grey[100]),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? qColor
-                                        : Colors.transparent,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  qName,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : (isDark
-                                              ? AppColors.darkTextSecondary
-                                              : AppColors.lightTextSecondary),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Due Date Picker Trigger
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today_outlined,
-                              size: 18,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              selectedDate == null
-                                  ? '마감 기한 지정 안 함'
-                                  : '기한: ${DateFormat('yyyy.MM.dd HH:mm').format(selectedDate!)}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: selectedDate == null
-                                    ? (isDark
-                                          ? AppColors.darkTextSecondary
-                                          : AppColors.lightTextSecondary)
-                                    : getQColor(selectedQ),
-                                fontWeight: selectedDate == null
-                                    ? FontWeight.normal
-                                    : FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            final pickedDate = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate ?? DateTime.now(),
-                              firstDate: DateTime.now().subtract(
-                                const Duration(days: 30),
-                              ),
-                              lastDate: DateTime.now().add(
-                                const Duration(days: 365 * 5),
-                              ),
-                            );
-
-                            if (pickedDate != null) {
-                              if (!context.mounted) return;
-                              final pickedTime = await showTimePicker(
-                                context: context,
-                                initialTime: selectedDate != null
-                                    ? TimeOfDay.fromDateTime(selectedDate!)
-                                    : const TimeOfDay(hour: 12, minute: 0),
-                              );
-
-                              setModalState(() {
-                                selectedDate = DateTime(
-                                  pickedDate.year,
-                                  pickedDate.month,
-                                  pickedDate.day,
-                                  pickedTime?.hour ?? 12,
-                                  pickedTime?.minute ?? 0,
-                                );
-                              });
-                            }
-                          },
-                          child: const Text('지정하기'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Submit Button
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: getQColor(selectedQ),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: submitTask,
-                      child: const Text(
-                        '할 일 등록 완료',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+        return AddTaskSheet(
+          initialQuadrant: widget.provider.activeQuadrant,
+          onAddTask: (title, quadrant, dueDate) {
+            widget.provider.addTodo(title, quadrant, dueDate: dueDate);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('"$title" 할 일이 추가되었습니다.'),
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
               ),
             );
           },
@@ -665,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      _quotes[_currentQuoteIndex].text,
+                                      QuotesData.list[_currentQuoteIndex].text,
                                       textAlign: TextAlign.center,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
@@ -683,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      '- ${_quotes[_currentQuoteIndex].author}',
+                                      '- ${QuotesData.list[_currentQuoteIndex].author}',
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
