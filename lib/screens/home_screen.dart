@@ -18,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late PageController _pageController;
   bool _isPageChanging = false;
+  bool _isPanelVisible = false; // State to track collapse/expand lists
 
   @override
   void initState() {
@@ -83,17 +84,49 @@ class _HomeScreenState extends State<HomeScreen> {
   // Handle tap on MiniMapTracker grid
   void _onQuadrantSelected(int index) {
     if (_isPageChanging) return;
+
+    final isActive = widget.provider.activeQuadrant == index;
+    final wasVisible = _isPanelVisible;
+
+    if (wasVisible && isActive) {
+      // Collapse panel if active quadrant is tapped again
+      setState(() {
+        _isPanelVisible = false;
+      });
+      return;
+    }
+
     _isPageChanging = true;
+    if (!wasVisible) {
+      setState(() {
+        _isPanelVisible = true;
+      });
+    }
+
     widget.provider.setActiveQuadrant(index);
-    _pageController
-        .animateToPage(
-          index - 1,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        )
-        .then((_) {
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_pageController.hasClients) {
+        if (!wasVisible) {
+          // Jump immediately if the panel was closed so the correct page slides up
+          _pageController.jumpToPage(index - 1);
           _isPageChanging = false;
-        });
+        } else {
+          // Slide smoothly if the panel was already open
+          _pageController
+              .animateToPage(
+                index - 1,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              )
+              .then((_) {
+                _isPageChanging = false;
+              });
+        }
+      } else {
+        _isPageChanging = false;
+      }
+    });
   }
 
   // Handle PageView swiping
@@ -456,23 +489,148 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top fixed Grid tracker mini map
-            MiniMapTracker(
-              provider: widget.provider,
-              onQuadrantSelected: _onQuadrantSelected,
+            // Animated height MiniMapTracker
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOut,
+              height: _isPanelVisible ? 185 : 380,
+              child: MiniMapTracker(
+                provider: widget.provider,
+                onQuadrantSelected: _onQuadrantSelected,
+                isDashboard: !_isPanelVisible,
+              ),
             ),
-            const Divider(height: 1),
-            // Swipeable body view
+
+            // Visual divider (only when panel is visible)
+            AnimatedCrossFade(
+              firstChild: const Divider(height: 1),
+              secondChild: const SizedBox.shrink(),
+              crossFadeState: _isPanelVisible
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              duration: const Duration(milliseconds: 300),
+            ),
+
+            // Scrollable list area (PageView)
             Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
-                children: [
-                  TodoListPage(quadrant: 1, provider: widget.provider),
-                  TodoListPage(quadrant: 2, provider: widget.provider),
-                  TodoListPage(quadrant: 3, provider: widget.provider),
-                  TodoListPage(quadrant: 4, provider: widget.provider),
-                ],
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 0.4),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
+                child: _isPanelVisible
+                    ? Column(
+                        key: const ValueKey('expanded_panel'),
+                        children: [
+                          // Top bar for collapsing the list view
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  '💡 좌우 스와이프로 다른 사분면 전환 가능',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPanelVisible = false;
+                                    });
+                                  },
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    size: 18,
+                                  ),
+                                  label: const Text(
+                                    '대시보드 보기',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: PageView(
+                              controller: _pageController,
+                              onPageChanged: _onPageChanged,
+                              children: [
+                                TodoListPage(
+                                  quadrant: 1,
+                                  provider: widget.provider,
+                                ),
+                                TodoListPage(
+                                  quadrant: 2,
+                                  provider: widget.provider,
+                                ),
+                                TodoListPage(
+                                  quadrant: 3,
+                                  provider: widget.provider,
+                                ),
+                                TodoListPage(
+                                  quadrant: 4,
+                                  provider: widget.provider,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                    : Center(
+                        key: const ValueKey('collapsed_tip'),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 16),
+                            Icon(
+                              Icons.touch_app_outlined,
+                              size: 40,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[700]
+                                  : Colors.grey[350],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              '사분면을 탭하여 세부 할 일 목록을 확인하세요.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
               ),
             ),
           ],

@@ -25,7 +25,8 @@ class MyApp extends StatelessWidget {
           title: '아이젠하워 투두',
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
-          themeMode: ThemeMode.system, // Automatic Dark/Light based on system settings
+          themeMode:
+              ThemeMode.system, // Automatic Dark/Light based on system settings
           home: HomeScreen(provider: provider),
           debugShowCheckedModeBanner: false,
         );

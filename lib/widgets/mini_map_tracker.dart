@@ -5,11 +5,13 @@ import '../theme/app_theme.dart';
 class MiniMapTracker extends StatelessWidget {
   final TodoProvider provider;
   final Function(int) onQuadrantSelected;
+  final bool isDashboard;
 
   const MiniMapTracker({
     super.key,
     required this.provider,
     required this.onQuadrantSelected,
+    this.isDashboard = false,
   });
 
   @override
@@ -36,7 +38,7 @@ class MiniMapTracker extends StatelessWidget {
 
       Color cellBg;
       Color borderClr;
-      if (isActive) {
+      if (isActive && !isDashboard) {
         cellBg = themeColor.withValues(alpha: 0.15);
         borderClr = themeColor;
       } else {
@@ -44,20 +46,39 @@ class MiniMapTracker extends StatelessWidget {
         borderClr = isDark ? AppColors.darkDivider : AppColors.lightDivider;
       }
 
+      // Compact spacing, padding and fonts for mini-map mode to avoid cut-offs
+      final cellPadding = isDashboard
+          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 16)
+          : const EdgeInsets.symmetric(horizontal: 10, vertical: 6);
+
+      final titleStyle = TextStyle(
+        fontSize: isDashboard ? 16 : 12,
+        fontWeight: FontWeight.bold,
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+      );
+
+      final labelStyle = TextStyle(
+        fontSize: isDashboard ? 13 : 9,
+        fontWeight: FontWeight.bold,
+        color: (isActive && !isDashboard)
+            ? themeColor
+            : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+      );
+
       return GestureDetector(
         onTap: () => onQuadrantSelected(index),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: cellPadding,
           decoration: BoxDecoration(
             color: cellBg,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: borderClr,
-              width: isActive ? 2.0 : 1.0,
+              width: (isActive && !isDashboard) ? 2.0 : 1.0,
             ),
-            boxShadow: isActive
+            boxShadow: (isActive && !isDashboard)
                 ? [
                     BoxShadow(
                       color: themeColor.withValues(alpha: 0.25),
@@ -81,47 +102,34 @@ class MiniMapTracker extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: isActive ? themeColor : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
-                    ),
-                  ),
+                  Text(label, style: labelStyle),
                   if (activeCount > 0)
-                    AnimatedScale(
-                      scale: 1.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: themeColor,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '$activeCount',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: themeColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '$activeCount',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               // Title
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                ),
+                style: titleStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               // Occupancy Bar Gauge (Progress Bar)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +140,7 @@ class MiniMapTracker extends StatelessWidget {
                       value: progress,
                       backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
                       valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                      minHeight: 5,
+                      minHeight: 4,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -142,16 +150,18 @@ class MiniMapTracker extends StatelessWidget {
                       Text(
                         '진행률',
                         style: TextStyle(
-                          fontSize: 9,
+                          fontSize: 8,
                           color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                         ),
                       ),
                       Text(
                         '${(progress * 100).toInt()}%',
                         style: TextStyle(
-                          fontSize: 9,
+                          fontSize: 8,
                           fontWeight: FontWeight.bold,
-                          color: isActive ? themeColor : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                          color: (isActive && !isDashboard)
+                              ? themeColor
+                              : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
                         ),
                       ),
                     ],
@@ -165,19 +175,51 @@ class MiniMapTracker extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
-      height: 180,
-      child: GridView.count(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.5,
-        physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.all(isDashboard ? 16 : 12),
+      child: Column(
         children: [
-          buildQuadrantCell(1, 'Q1', '즉시 실행 (Do)', AppColors.q1),
-          buildQuadrantCell(2, 'Q2', '계획 실행 (Decide)', AppColors.q2),
-          buildQuadrantCell(3, 'Q3', '업무 위임 (Delegate)', AppColors.q3),
-          buildQuadrantCell(4, 'Q4', '제거/소각 (Delete)', AppColors.q4),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: buildQuadrantCell(1, 'Q1', '즉시 실행 (Do)', AppColors.q1),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: buildQuadrantCell(
+                    2,
+                    'Q2',
+                    '계획 실행 (Decide)',
+                    AppColors.q2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: buildQuadrantCell(
+                    3,
+                    'Q3',
+                    '업무 위임 (Delegate)',
+                    AppColors.q3,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: buildQuadrantCell(
+                    4,
+                    'Q4',
+                    '제거/소각 (Delete)',
+                    AppColors.q4,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
