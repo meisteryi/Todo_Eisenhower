@@ -6,6 +6,12 @@ import '../widgets/mini_map_tracker.dart';
 import '../widgets/todo_list_page.dart';
 import 'trash_screen.dart';
 
+class Quote {
+  final String text;
+  final String author;
+  const Quote(this.text, this.author);
+}
+
 class HomeScreen extends StatefulWidget {
   final TodoProvider provider;
 
@@ -19,10 +25,25 @@ class _HomeScreenState extends State<HomeScreen> {
   late PageController _pageController;
   bool _isPageChanging = false;
   bool _isPanelVisible = false; // State to track collapse/expand lists
+  int _currentQuoteIndex = 0;
+
+  static const List<Quote> _quotes = [
+    Quote("가장 긴급한 결정은 대개 가장 중요한 결정이 아니다.", "드와이트 D. 아이젠하워"),
+    Quote("시간은 우리가 가진 가장 희소한 자원이며, 그것을 관리하지 못하면 다른 어떤 것도 관리할 수 없다.", "피터 드러커"),
+    Quote("가장 중요한 일들이 가장 중요하지 않은 일들에 의해 좌우되어서는 안 된다.", "요한 볼프강 폰 괴테"),
+    Quote("바쁘게 움직이는 것만으로는 부족하다. 중요한 것은 무엇 때문에 바쁜가이다.", "헨리 데이비드 소로"),
+    Quote("할 일을 계획하고, 계획한 일을 실행하라.", "나폴레옹 힐"),
+    Quote("가장 중요한 일을 가장 먼저 하라.", "스티븐 코비"),
+    Quote("미래는 현재 우리가 무엇을 하고 있는가에 달려 있다.", "마하트마 간디"),
+    Quote("시작하는 방법은 말을 그만두고 행동하기 시작하는 것이다.", "월트 디즈니"),
+    Quote("어떤 일을 시작하기에 앞서 그것이 정말 중요한 일인지 자문해 보라.", "마르쿠스 아우렐리우스"),
+    Quote("계획 없는 목표는 단지 바람에 불과하다.", "생텍쥐페리"),
+  ];
 
   @override
   void initState() {
     super.initState();
+    _currentQuoteIndex = DateTime.now().day % _quotes.length;
     // Default PageView index corresponds to activeQuadrant - 1
     _pageController = PageController(
       initialPage: widget.provider.activeQuadrant - 1,
@@ -534,47 +555,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? Column(
                         key: const ValueKey('expanded_panel'),
                         children: [
-                          // Top bar for collapsing the list view
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  '💡 좌우 스와이프로 다른 사분면 전환 가능',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                TextButton.icon(
-                                  onPressed: () {
-                                    setState(() {
-                                      _isPanelVisible = false;
-                                    });
-                                  },
-                                  icon: const Icon(
-                                    Icons.keyboard_arrow_down,
-                                    size: 18,
-                                  ),
-                                  label: const Text(
-                                    '대시보드 보기',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 4,
-                                    ),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                           Expanded(
                             child: PageView(
                               controller: _pageController,
@@ -603,32 +583,121 @@ class _HomeScreenState extends State<HomeScreen> {
                       )
                     : Center(
                         key: const ValueKey('collapsed_tip'),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 16),
-                            Icon(
-                              Icons.touch_app_outlined,
-                              size: 40,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.grey[700]
-                                  : Colors.grey[350],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              '사분면을 탭하여 세부 할 일 목록을 확인하세요.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Quote Card
+                              Container(
+                                width: double.infinity,
+                                height: 125,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.darkCard
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.darkDivider
+                                        : AppColors.lightDivider,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? 0.3
+                                            : 0.05,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.format_quote_rounded,
+                                      color: AppColors.q2.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                      size: 24,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      _quotes[_currentQuoteIndex].text,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        height: 1.4,
+                                        fontWeight: FontWeight.w600,
+                                        fontStyle: FontStyle.italic,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? AppColors.darkTextPrimary
+                                            : AppColors.lightTextPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '- ${_quotes[_currentQuoteIndex].author}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? AppColors.darkTextSecondary
+                                            : AppColors.lightTextSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 24),
+                              // Grid selection hint
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.touch_app_outlined,
+                                    size: 16,
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey[600]
+                                        : Colors.grey[400],
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '사분면을 탭하여 세부 할 일 목록을 확인하세요.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.lightTextSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
               ),
