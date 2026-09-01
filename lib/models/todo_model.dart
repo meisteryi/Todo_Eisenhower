@@ -11,6 +11,9 @@ class Todo {
   final DateTime createdAt;
   final DateTime? completedAt;
   final DateTime? deletedAt;
+  final String? location;
+  final String? timeStr;
+  final String? memo;
 
   Todo({
     this.id,
@@ -25,6 +28,9 @@ class Todo {
     required this.createdAt,
     this.completedAt,
     this.deletedAt,
+    this.location,
+    this.timeStr,
+    this.memo,
   }) : targetDate = targetDate ?? DateTime.now();
 
   Todo copyWith({
@@ -40,6 +46,9 @@ class Todo {
     DateTime? createdAt,
     DateTime? completedAt,
     DateTime? deletedAt,
+    String? location,
+    String? timeStr,
+    String? memo,
   }) {
     return Todo(
       id: id ?? this.id,
@@ -54,6 +63,9 @@ class Todo {
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
       deletedAt: deletedAt ?? this.deletedAt,
+      location: location ?? this.location,
+      timeStr: timeStr ?? this.timeStr,
+      memo: memo ?? this.memo,
     );
   }
 
@@ -72,6 +84,9 @@ class Todo {
       'created_at': createdAt.toIso8601String(),
       'completed_at': completedAt?.toIso8601String(),
       'deleted_at': deletedAt?.toIso8601String(),
+      'location': location,
+      'time_str': timeStr,
+      'memo': memo,
     };
   }
 
@@ -104,6 +119,9 @@ class Todo {
       createdAt: DateTime.parse(map['created_at'] as String),
       completedAt: map['completed_at'] != null ? DateTime.parse(map['completed_at'] as String) : null,
       deletedAt: map['deleted_at'] != null ? DateTime.parse(map['deleted_at'] as String) : null,
+      location: map['location'] as String?,
+      timeStr: map['time_str'] as String?,
+      memo: map['memo'] as String?,
     );
   }
 }

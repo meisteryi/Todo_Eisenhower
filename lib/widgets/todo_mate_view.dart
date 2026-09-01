@@ -286,6 +286,56 @@ class _TodoMateViewState extends State<TodoMateView> {
                             : theme.textTheme.bodyLarge?.color,
                       ),
                     ),
+                    subtitle: (todo.timeStr != null || todo.location != null || todo.memo != null)
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (todo.timeStr != null || todo.location != null)
+                                  Wrap(
+                                    spacing: 8,
+                                    children: [
+                                      if (todo.timeStr != null && todo.timeStr!.isNotEmpty)
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.access_time_rounded, size: 12, color: Colors.blueAccent),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              todo.timeStr!,
+                                              style: const TextStyle(fontSize: 11, color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      if (todo.location != null && todo.location!.isNotEmpty)
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.location_on_outlined, size: 12, color: Colors.deepOrangeAccent),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              todo.location!,
+                                              style: const TextStyle(fontSize: 11, color: Colors.deepOrangeAccent, fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                if (todo.memo != null && todo.memo!.isNotEmpty)
+                                  Text(
+                                    '📝 ${todo.memo!}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          )
+                        : null,
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -307,6 +357,28 @@ class _TodoMateViewState extends State<TodoMateView> {
                                 ),
                               ],
                             ),
+                          ),
+                        if (!todo.isCompleted && todo.id != null)
+                          IconButton(
+                            icon: Icon(
+                              widget.provider.pomodoroTodoId == todo.id && widget.provider.isTimerRunning
+                                  ? Icons.pause_circle_filled
+                                  : Icons.timer_outlined,
+                              size: 20,
+                              color: widget.provider.pomodoroTodoId == todo.id
+                                  ? Colors.redAccent
+                                  : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                            ),
+                            onPressed: () {
+                              if (widget.provider.pomodoroTodoId == todo.id && widget.provider.isTimerRunning) {
+                                widget.provider.pausePomodoro();
+                              } else {
+                                widget.provider.startPomodoro(todo.id!);
+                              }
+                            },
+                            tooltip: '뽀모도로 25분 타이머',
+                            constraints: const BoxConstraints(),
+                            padding: const EdgeInsets.all(6),
                           ),
                         IconButton(
                           icon: const Icon(Icons.edit_outlined, size: 18),

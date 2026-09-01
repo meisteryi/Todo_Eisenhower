@@ -145,14 +145,14 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
                   children: [
                     // Button 1: Adjacent Q1/Q2
                     buildActionButton(
-                      'Q${adjacentQuadrants[0]}로',
+                      _getQShortTitle(adjacentQuadrants[0]),
                       Icons.swap_horiz,
                       _getQuadrantColor(adjacentQuadrants[0]),
                       () => widget.onMoveToQuadrant(adjacentQuadrants[0]),
                     ),
                     // Button 2: Adjacent Q3/Q4
                     buildActionButton(
-                      'Q${adjacentQuadrants[1]}로',
+                      _getQShortTitle(adjacentQuadrants[1]),
                       Icons.swap_vert,
                       _getQuadrantColor(adjacentQuadrants[1]),
                       () => widget.onMoveToQuadrant(adjacentQuadrants[1]),
@@ -238,11 +238,42 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
                                       : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
                                 ),
                               ),
-                              if (widget.todo.dueDate != null) ...[
-                                const SizedBox(height: 6),
-                                _DueDateBadge(
-                                  dueDate: widget.todo.dueDate!,
-                                  isCompleted: widget.todo.isCompleted,
+                              if (widget.todo.timeStr != null || widget.todo.location != null || widget.todo.dueDate != null) ...[
+                                const SizedBox(height: 4),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: [
+                                    if (widget.todo.timeStr != null && widget.todo.timeStr!.isNotEmpty)
+                                      _InfoChip(
+                                        icon: Icons.access_time_rounded,
+                                        label: widget.todo.timeStr!,
+                                        color: Colors.blueAccent,
+                                      ),
+                                    if (widget.todo.location != null && widget.todo.location!.isNotEmpty)
+                                      _InfoChip(
+                                        icon: Icons.location_on_outlined,
+                                        label: widget.todo.location!,
+                                        color: Colors.deepOrangeAccent,
+                                      ),
+                                    if (widget.todo.dueDate != null)
+                                      _DueDateBadge(
+                                        dueDate: widget.todo.dueDate!,
+                                        isCompleted: widget.todo.isCompleted,
+                                      ),
+                                  ],
+                                ),
+                              ],
+                              if (widget.todo.memo != null && widget.todo.memo!.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  '📝 ${widget.todo.memo!}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                  ),
                                 ),
                               ],
                             ],
@@ -277,6 +308,23 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
         return AppColors.q4;
       default:
         return Colors.blue;
+    }
+  }
+
+  String _getQShortTitle(int quadrant) {
+    switch (quadrant) {
+      case 0:
+        return '미분류';
+      case 1:
+        return '1사분면';
+      case 2:
+        return '2사분면';
+      case 3:
+        return '3사분면';
+      case 4:
+        return '4사분면';
+      default:
+        return '';
     }
   }
 }
@@ -437,6 +485,44 @@ class _DueDateBadge extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.bold,
               color: textColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
         ],

@@ -36,7 +36,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -56,7 +56,10 @@ class DatabaseHelper {
         due_date TEXT,
         created_at TEXT NOT NULL,
         completed_at TEXT,
-        deleted_at TEXT
+        deleted_at TEXT,
+        location TEXT,
+        time_str TEXT,
+        memo TEXT
       )
     ''');
 
@@ -130,6 +133,12 @@ class DatabaseHelper {
       await db.execute('''
         UPDATE todos SET target_date = substr(created_at, 1, 10) WHERE target_date IS NULL
       ''');
+    }
+
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE todos ADD COLUMN location TEXT');
+      await db.execute('ALTER TABLE todos ADD COLUMN time_str TEXT');
+      await db.execute('ALTER TABLE todos ADD COLUMN memo TEXT');
     }
   }
 

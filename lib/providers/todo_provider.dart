@@ -194,6 +194,9 @@ class TodoProvider with ChangeNotifier {
     int? categoryId,
     DateTime? targetDate,
     DateTime? dueDate,
+    String? location,
+    String? timeStr,
+    String? memo,
   }) async {
     final todoTargetDate = targetDate ?? _selectedDate;
     final newTodo = Todo(
@@ -207,6 +210,9 @@ class TodoProvider with ChangeNotifier {
       ),
       dueDate: dueDate,
       createdAt: DateTime.now(),
+      location: location,
+      timeStr: timeStr,
+      memo: memo,
     );
 
     try {

@@ -146,7 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
           categories: widget.provider.categories,
           initialCategoryId: todoToEdit?.categoryId,
           initialTargetDate: todoToEdit?.targetDate ?? widget.provider.selectedDate,
-          onAddTask: (title, quadrant, categoryId, targetDate, dueDate) {
+          initialTodo: todoToEdit,
+          onAddTask: (title, quadrant, categoryId, targetDate, dueDate, location, timeStr, memo) {
             if (todoToEdit == null) {
               widget.provider.addTodo(
                 title,
@@ -154,6 +155,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 categoryId: categoryId,
                 targetDate: targetDate,
                 dueDate: dueDate,
+                location: location,
+                timeStr: timeStr,
+                memo: memo,
               );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -169,6 +173,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 categoryId: categoryId,
                 targetDate: targetDate,
                 dueDate: dueDate,
+                location: location,
+                timeStr: timeStr,
+                memo: memo,
               );
               widget.provider.updateTodo(updated);
             }
@@ -319,100 +326,107 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           body: SafeArea(
-            child: isDesktop
-                ? Row(
-                    children: [
-                      Container(
-                        width: 280,
-                        decoration: BoxDecoration(
-                          border: Border(
-                            right: BorderSide(
-                              color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-                            ),
-                          ),
-                        ),
-                        child: Column(
+            child: Column(
+              children: [
+                _buildActivePomodoroBar(),
+                Expanded(
+                  child: isDesktop
+                      ? Row(
                           children: [
-                            DateStripHeader(provider: widget.provider),
-                            const Divider(height: 1),
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
+                            Container(
+                              width: 280,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  right: BorderSide(
+                                    color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                                  ),
+                                ),
+                              ),
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    '빠른 실행',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ListTile(
-                                    leading: const Icon(Icons.help_outline, color: Colors.blue),
-                                    title: const Text('사용 설명서'),
-                                    onTap: _openHelpGuideDialog,
-                                    dense: true,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.category, color: Colors.indigo),
-                                    title: const Text('카테고리 관리'),
-                                    onTap: _openCategoryManageDialog,
-                                    dense: true,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.autorenew, color: Colors.teal),
-                                    title: const Text('루틴 관리'),
-                                    onTap: _openRoutineManageDialog,
-                                    dense: true,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                    title: Text('소각장 보관함 ($trashCount)'),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => TrashScreen(provider: widget.provider),
+                                  DateStripHeader(provider: widget.provider),
+                                  const Divider(height: 1),
+                                  Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          '빠른 실행',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
                                         ),
-                                      );
-                                    },
-                                    dense: true,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        const SizedBox(height: 8),
+                                        ListTile(
+                                          leading: const Icon(Icons.help_outline, color: Colors.blue),
+                                          title: const Text('사용 설명서'),
+                                          onTap: _openHelpGuideDialog,
+                                          dense: true,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                        ListTile(
+                                          leading: const Icon(Icons.category, color: Colors.indigo),
+                                          title: const Text('카테고리 관리'),
+                                          onTap: _openCategoryManageDialog,
+                                          dense: true,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                        ListTile(
+                                          leading: const Icon(Icons.autorenew, color: Colors.teal),
+                                          title: const Text('루틴 관리'),
+                                          onTap: _openRoutineManageDialog,
+                                          dense: true,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                        ListTile(
+                                          leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                          title: Text('소각장 보관함 ($trashCount)'),
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => TrashScreen(provider: widget.provider),
+                                              ),
+                                            );
+                                          },
+                                          dense: true,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
+                            Expanded(
+                              child: viewMode == 'todomate'
+                                  ? TodoMateView(
+                                      provider: widget.provider,
+                                      onEditTodo: (todo) => _showAddTaskSheet(todoToEdit: todo),
+                                    )
+                                  : _buildEisenhowerView(),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            if (viewMode == 'todomate') DateStripHeader(provider: widget.provider),
+                            Expanded(
+                              child: viewMode == 'todomate'
+                                  ? TodoMateView(
+                                      provider: widget.provider,
+                                      onEditTodo: (todo) => _showAddTaskSheet(todoToEdit: todo),
+                                    )
+                                  : _buildEisenhowerView(),
+                            ),
                           ],
                         ),
-                      ),
-                      Expanded(
-                        child: viewMode == 'todomate'
-                            ? TodoMateView(
-                                provider: widget.provider,
-                                onEditTodo: (todo) => _showAddTaskSheet(todoToEdit: todo),
-                              )
-                            : _buildEisenhowerView(),
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      if (viewMode == 'todomate') DateStripHeader(provider: widget.provider),
-                      Expanded(
-                        child: viewMode == 'todomate'
-                            ? TodoMateView(
-                                provider: widget.provider,
-                                onEditTodo: (todo) => _showAddTaskSheet(todoToEdit: todo),
-                              )
-                            : _buildEisenhowerView(),
-                      ),
-                    ],
-                  ),
+                ),
+              ],
+            ),
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => _showAddTaskSheet(),
@@ -424,6 +438,114 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildActivePomodoroBar() {
+    final provider = widget.provider;
+    if (provider.pomodoroTodoId == null) return const SizedBox.shrink();
+
+    final activeTodo = provider.todos.firstWhere(
+      (t) => t.id == provider.pomodoroTodoId,
+      orElse: () => Todo(title: '할 일', quadrant: 1, createdAt: DateTime.now()),
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.q1,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.q1.withValues(alpha: 0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: Row(
+          children: [
+            const Icon(Icons.timer_rounded, color: Colors.white, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '⏱️ 뽀모도로 몰입 중',
+                    style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    activeTodo.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                provider.pomodoroTimeFormatted,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            IconButton(
+              icon: Icon(
+                provider.isTimerRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                color: Colors.white,
+                size: 26,
+              ),
+              onPressed: () {
+                if (provider.isTimerRunning) {
+                  provider.pausePomodoro();
+                } else {
+                  if (activeTodo.id != null) {
+                    provider.startPomodoro(activeTodo.id!);
+                  }
+                }
+              },
+              tooltip: provider.isTimerRunning ? '일시 정지' : '다시 시작',
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(4),
+            ),
+            IconButton(
+              icon: const Icon(Icons.check_circle, color: Colors.white, size: 24),
+              onPressed: () {
+                provider.toggleTodoCompletion(activeTodo);
+              },
+              tooltip: '완료 처리',
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(4),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 20),
+              onPressed: () {
+                provider.stopPomodoro();
+              },
+              tooltip: '타이머 종료',
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(4),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

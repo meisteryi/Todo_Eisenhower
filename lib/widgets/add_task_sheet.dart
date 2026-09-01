@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/category_model.dart';
+import '../models/todo_model.dart';
 import '../theme/app_theme.dart';
 
 class AddTaskSheet extends StatefulWidget {
@@ -8,7 +9,17 @@ class AddTaskSheet extends StatefulWidget {
   final List<Category> categories;
   final int? initialCategoryId;
   final DateTime? initialTargetDate;
-  final Function(String title, int quadrant, int? categoryId, DateTime? targetDate, DateTime? dueDate) onAddTask;
+  final Todo? initialTodo;
+  final Function(
+    String title,
+    int quadrant,
+    int? categoryId,
+    DateTime? targetDate,
+    DateTime? dueDate,
+    String? location,
+    String? timeStr,
+    String? memo,
+  ) onAddTask;
 
   const AddTaskSheet({
     super.key,
@@ -16,6 +27,7 @@ class AddTaskSheet extends StatefulWidget {
     this.categories = const [],
     this.initialCategoryId,
     this.initialTargetDate,
+    this.initialTodo,
     required this.onAddTask,
   });
 
@@ -25,6 +37,10 @@ class AddTaskSheet extends StatefulWidget {
 
 class _AddTaskSheetState extends State<AddTaskSheet> {
   late TextEditingController _titleController;
+  late TextEditingController _locationController;
+  late TextEditingController _timeController;
+  late TextEditingController _memoController;
+
   late int _selectedQ;
   int? _selectedCategoryId;
   late DateTime _selectedTargetDate;
@@ -33,15 +49,24 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
-    _selectedQ = widget.initialQuadrant;
-    _selectedCategoryId = widget.initialCategoryId ?? (widget.categories.isNotEmpty ? widget.categories.first.id : null);
-    _selectedTargetDate = widget.initialTargetDate ?? DateTime.now();
+    final todo = widget.initialTodo;
+    _titleController = TextEditingController(text: todo?.title ?? '');
+    _locationController = TextEditingController(text: todo?.location ?? '');
+    _timeController = TextEditingController(text: todo?.timeStr ?? '');
+    _memoController = TextEditingController(text: todo?.memo ?? '');
+
+    _selectedQ = todo?.quadrant ?? widget.initialQuadrant;
+    _selectedCategoryId = todo?.categoryId ?? widget.initialCategoryId ?? (widget.categories.isNotEmpty ? widget.categories.first.id : null);
+    _selectedTargetDate = todo?.targetDate ?? widget.initialTargetDate ?? DateTime.now();
+    _selectedDueDate = todo?.dueDate;
   }
 
   @override
   void dispose() {
     _titleController.dispose();
+    _locationController.dispose();
+    _timeController.dispose();
+    _memoController.dispose();
     super.dispose();
   }
 
@@ -62,11 +87,58 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     }
   }
 
+  String _getQFullName(int q) {
+    switch (q) {
+      case 0:
+        return '미분류 (Inbox)';
+      case 1:
+        return '1사분면: 즉시 실행 (Do - 긴급&중요)';
+      case 2:
+        return '2사분면: 계획 수립 (Decide - 중요&긴급X)';
+      case 3:
+        return '3사분면: 신속 위임 (Delegate - 긴급&중요X)';
+      case 4:
+        return '4사분면: 소각 대상 (Delete - 낭비)';
+      default:
+        return '';
+    }
+  }
+
+  String _getQShortName(int q) {
+    switch (q) {
+      case 0:
+        return '미분류';
+      case 1:
+        return '1사분면 (즉시)';
+      case 2:
+        return '2사분면 (계획)';
+      case 3:
+        return '3사분면 (위임)';
+      case 4:
+        return '4사분면 (소각)';
+      default:
+        return '';
+    }
+  }
+
   void _submitTask() {
     final text = _titleController.text.trim();
     if (text.isEmpty) return;
 
-    widget.onAddTask(text, _selectedQ, _selectedCategoryId, _selectedTargetDate, _selectedDueDate);
+    final loc = _locationController.text.trim();
+    final timeStr = _timeController.text.trim();
+    final memoStr = _memoController.text.trim();
+
+    widget.onAddTask(
+      text,
+      _selectedQ,
+      _selectedCategoryId,
+      _selectedTargetDate,
+      _selectedDueDate,
+      loc.isNotEmpty ? loc : null,
+      timeStr.isNotEmpty ? timeStr : null,
+      memoStr.isNotEmpty ? memoStr : null,
+    );
     Navigator.pop(context);
   }
 
@@ -106,7 +178,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               ),
               const SizedBox(height: 16),
               Text(
-                '새로운 할 일 등록',
+                widget.initialTodo == null ? '새로운 할 일 등록' : '할 일 세부 수정',
                 style: textTheme.titleMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
@@ -114,9 +186,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               // Title Input Text Field
               TextField(
                 controller: _titleController,
-                autofocus: true,
+                autofocus: widget.initialTodo == null,
                 decoration: InputDecoration(
                   hintText: '할 일을 입력하세요...',
+                  prefixIcon: const Icon(Icons.check_box_outlined, size: 20),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
@@ -135,8 +208,60 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     vertical: 12,
                   ),
                 ),
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submitTask(),
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 12),
+
+              // Time & Location Inputs Row
+              Row(
+                children: [
+                  // Time input
+                  Expanded(
+                    child: TextField(
+                      controller: _timeController,
+                      decoration: InputDecoration(
+                        hintText: '시간 (예: 14:00)',
+                        prefixIcon: const Icon(Icons.access_time_rounded, size: 18),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Location input
+                  Expanded(
+                    child: TextField(
+                      controller: _locationController,
+                      decoration: InputDecoration(
+                        hintText: '장소 (예: 회의실 A)',
+                        prefixIcon: const Icon(Icons.location_on_outlined, size: 18),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Memo / Description Input
+              TextField(
+                controller: _memoController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: '상세 메모 및 주요 노트 입력...',
+                  prefixIcon: const Icon(Icons.notes_rounded, size: 18),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -178,9 +303,9 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 const SizedBox(height: 16),
               ],
 
-              // Quadrant Segment Selection
+              // Quadrant Selection Dropdown & Chips with Full Names
               Text(
-                '사분면 영역 지정 (아이젠하워)',
+                '우선순위 사분면 지정',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
@@ -188,67 +313,82 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
+              DropdownButtonFormField<int>(
+                initialValue: _selectedQ,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: _getQColor(_selectedQ), width: 2),
+                  ),
+                ),
+                items: [0, 1, 2, 3, 4].map((q) {
+                  final qColor = _getQColor(q);
+                  return DropdownMenuItem<int>(
+                    value: q,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: qColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _getQFullName(q),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _selectedQ = val;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+
+              // Quick Selector Chips with Descriptive Names
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
                 children: [0, 1, 2, 3, 4].map((q) {
                   final isSelected = _selectedQ == q;
                   final qColor = _getQColor(q);
-                  String qName = '';
-                  switch (q) {
-                    case 0:
-                      qName = '미분류';
-                      break;
-                    case 1:
-                      qName = 'Q1';
-                      break;
-                    case 2:
-                      qName = 'Q2';
-                      break;
-                    case 3:
-                      qName = 'Q3';
-                      break;
-                    case 4:
-                      qName = 'Q4';
-                      break;
-                  }
 
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _selectedQ = q;
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? qColor
-                                : (isDark ? AppColors.darkBg : Colors.grey[100]),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: isSelected ? qColor : Colors.transparent,
-                              width: 1.5,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            qName,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected
-                                  ? Colors.white
-                                  : (isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary),
-                            ),
-                          ),
-                        ),
+                  return ChoiceChip(
+                    label: Text(
+                      _getQShortName(q),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? Colors.white : qColor,
                       ),
                     ),
+                    selected: isSelected,
+                    selectedColor: qColor,
+                    backgroundColor: qColor.withValues(alpha: 0.1),
+                    side: BorderSide(color: qColor, width: 1.2),
+                    showCheckmark: false,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          _selectedQ = q;
+                        });
+                      }
+                    },
                   );
                 }).toList(),
               ),
@@ -294,9 +434,9 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   ),
                 ),
                 onPressed: _submitTask,
-                child: const Text(
-                  '할 일 등록 완료',
-                  style: TextStyle(
+                child: Text(
+                  widget.initialTodo == null ? '할 일 등록 완료' : '수정 사항 저장',
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
