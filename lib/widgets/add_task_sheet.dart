@@ -973,134 +973,145 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    ChoiceChip(
-                      label: const Text(
-                        '정시',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      ChoiceChip(
+                        label: const Text(
+                          '정시',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      selected: _notificationOffset == 0,
-                      selectedColor: Colors.amber[700],
-                      labelStyle: TextStyle(
-                        color: _notificationOffset == 0
-                            ? Colors.white
-                            : (isDark ? Colors.white70 : Colors.black87),
-                      ),
-                      showCheckmark: false,
-                      onSelected: (selected) {
-                        if (selected) setState(() => _notificationOffset = 0);
-                      },
-                    ),
-                    ChoiceChip(
-                      label: const Text(
-                        '10분 전',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        selected: _notificationOffset == 0,
+                        selectedColor: Colors.amber[700],
+                        labelStyle: TextStyle(
+                          color: _notificationOffset == 0
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : Colors.black87),
                         ),
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        onSelected: (selected) {
+                          if (selected) setState(() => _notificationOffset = 0);
+                        },
                       ),
-                      selected: _notificationOffset == 10,
-                      selectedColor: Colors.amber[700],
-                      labelStyle: TextStyle(
-                        color: _notificationOffset == 10
-                            ? Colors.white
-                            : (isDark ? Colors.white70 : Colors.black87),
-                      ),
-                      showCheckmark: false,
-                      onSelected: (selected) {
-                        if (selected) setState(() => _notificationOffset = 10);
-                      },
-                    ),
-                    ChoiceChip(
-                      label: const Text(
-                        '30분 전',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(width: 4),
+                      ChoiceChip(
+                        label: const Text(
+                          '10분 전',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      selected: _notificationOffset == 30,
-                      selectedColor: Colors.amber[700],
-                      labelStyle: TextStyle(
-                        color: _notificationOffset == 30
-                            ? Colors.white
-                            : (isDark ? Colors.white70 : Colors.black87),
-                      ),
-                      showCheckmark: false,
-                      onSelected: (selected) {
-                        if (selected) setState(() => _notificationOffset = 30);
-                      },
-                    ),
-                    ChoiceChip(
-                      label: const Text(
-                        '1시간 전',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        selected: _notificationOffset == 10,
+                        selectedColor: Colors.amber[700],
+                        labelStyle: TextStyle(
+                          color: _notificationOffset == 10
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : Colors.black87),
                         ),
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        onSelected: (selected) {
+                          if (selected) setState(() => _notificationOffset = 10);
+                        },
                       ),
-                      selected: _notificationOffset == 60,
-                      selectedColor: Colors.amber[700],
-                      labelStyle: TextStyle(
-                        color: _notificationOffset == 60
-                            ? Colors.white
-                            : (isDark ? Colors.white70 : Colors.black87),
-                      ),
-                      showCheckmark: false,
-                      onSelected: (selected) {
-                        if (selected) setState(() => _notificationOffset = 60);
-                      },
-                    ),
-                    ChoiceChip(
-                      label: Text(
-                        _notificationOffset != 0 &&
-                                _notificationOffset != 10 &&
-                                _notificationOffset != 30 &&
-                                _notificationOffset != 60
-                            ? '커스텀 ($_notificationOffset분 전)'
-                            : '커스텀',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(width: 4),
+                      ChoiceChip(
+                        label: const Text(
+                          '30분 전',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                        selected: _notificationOffset == 30,
+                        selectedColor: Colors.amber[700],
+                        labelStyle: TextStyle(
+                          color: _notificationOffset == 30
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        onSelected: (selected) {
+                          if (selected) setState(() => _notificationOffset = 30);
+                        },
                       ),
-                      selected:
+                      const SizedBox(width: 4),
+                      ChoiceChip(
+                        label: const Text(
+                          '1시간 전',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        selected: _notificationOffset == 60,
+                        selectedColor: Colors.amber[700],
+                        labelStyle: TextStyle(
+                          color: _notificationOffset == 60
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        onSelected: (selected) {
+                          if (selected) setState(() => _notificationOffset = 60);
+                        },
+                      ),
+                      const SizedBox(width: 4),
+                      ChoiceChip(
+                        label: Text(
                           _notificationOffset != 0 &&
-                          _notificationOffset != 10 &&
-                          _notificationOffset != 30 &&
-                          _notificationOffset != 60,
-                      selectedColor: Colors.amber[700],
-                      labelStyle: TextStyle(
-                        color:
-                            (_notificationOffset != 0 &&
-                                _notificationOffset != 10 &&
-                                _notificationOffset != 30 &&
-                                _notificationOffset != 60)
-                            ? Colors.white
-                            : (isDark ? Colors.white70 : Colors.black87),
-                      ),
-                      showCheckmark: false,
-                      onSelected: (selected) async {
-                        if (selected) {
+                                  _notificationOffset != 10 &&
+                                  _notificationOffset != 30 &&
+                                  _notificationOffset != 60
+                              ? (_notificationOffset >= 60 &&
+                                      _notificationOffset % 60 == 0
+                                  ? '${_notificationOffset ~/ 60}시간 전'
+                                  : '$_notificationOffset분 전')
+                              : '커스텀',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        selected:
+                            _notificationOffset != 0 &&
+                            _notificationOffset != 10 &&
+                            _notificationOffset != 30 &&
+                            _notificationOffset != 60,
+                        selectedColor: Colors.amber[700],
+                        labelStyle: TextStyle(
+                          color:
+                              (_notificationOffset != 0 &&
+                                  _notificationOffset != 10 &&
+                                  _notificationOffset != 30 &&
+                                  _notificationOffset != 60)
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        onSelected: (_) async {
                           final customMin = await _showCustomMinutesDialog();
                           if (customMin != null) {
                             setState(() => _notificationOffset = customMin);
                           }
-                        }
-                      },
-                    ),
-                  ],
+                        },
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
 
-              // Category Selection Dropdown
+              // Category Selection (Organic Wrap Pastel Pill Selector)
               if (widget.categories.isNotEmpty) ...[
                 Text(
                   '카테고리 선택',
@@ -1113,34 +1124,72 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                DropdownButtonFormField<int?>(
-                  initialValue: _selectedCategoryId,
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    // '카테고리 없음' Chip
+                    ChoiceChip(
+                      label: Text(
+                        '📁 없음',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: _selectedCategoryId == null
+                              ? (isDark ? Colors.white : Colors.black87)
+                              : (isDark ? Colors.white60 : Colors.black54),
+                        ),
+                      ),
+                      selected: _selectedCategoryId == null,
+                      selectedColor: isDark
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : Colors.black.withValues(alpha: 0.1),
+                      backgroundColor: Colors.transparent,
+                      showCheckmark: false,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            _selectedCategoryId = null;
+                          });
+                        }
+                      },
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('카테고리 없음'),
-                    ),
+                    // Category Chips List
                     ...widget.categories.map((cat) {
-                      return DropdownMenuItem<int?>(
-                        value: cat.id,
-                        child: Text('${cat.emoji} ${cat.name}'),
+                      final isSelected = _selectedCategoryId == cat.id;
+                      final catColor = Color(
+                        int.parse(cat.colorHex.replaceFirst('#', '0xFF')),
+                      );
+
+                      return ChoiceChip(
+                        label: Text(
+                          '${cat.emoji} ${cat.name}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark ? Colors.white70 : Colors.black87),
+                          ),
+                        ),
+                        selected: isSelected,
+                        selectedColor: catColor,
+                        backgroundColor: catColor.withValues(alpha: 0.15),
+                        showCheckmark: false,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() {
+                              _selectedCategoryId = cat.id;
+                            });
+                          }
+                        },
                       );
                     }),
                   ],
-                  onChanged: (val) {
-                    setState(() {
-                      _selectedCategoryId = val;
-                    });
-                  },
                 ),
                 const SizedBox(height: 16),
               ],

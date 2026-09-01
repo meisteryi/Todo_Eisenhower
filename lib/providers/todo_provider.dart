@@ -140,7 +140,6 @@ class TodoProvider with ChangeNotifier {
   // Set selected date for calendar/date strip
   void setSelectedDate(DateTime date) {
     _selectedDate = DateTime(date.year, date.month, date.day);
-    _checkAndGenerateRoutinesForDate(_selectedDate);
     notifyListeners();
   }
 
@@ -169,10 +168,7 @@ class TodoProvider with ChangeNotifier {
       _todos = await _dbHelper.fetchAllActive();
       _trashTodos = await _dbHelper.fetchTrash();
 
-      // 4. Generate routines for selected date if needed
-      await _checkAndGenerateRoutinesForDate(_selectedDate);
-
-      // 5. Schedule local notifications for active todos
+      // 4. Schedule local notifications for active todos
       for (final todo in _todos) {
         if (todo.hasNotification && !todo.isCompleted) {
           NotificationService().scheduleTodoNotification(todo);
@@ -186,39 +182,49 @@ class TodoProvider with ChangeNotifier {
     }
   }
 
-  // Check if active routines should be auto-created for a date
-  Future<void> _checkAndGenerateRoutinesForDate(DateTime date) async {
+  // Check if active routines exist for a date (manual addition mode)
+  List<Routine> getPendingRoutinesForDate(DateTime date) {
     final targetDateOnly = DateTime(date.year, date.month, date.day);
-    bool addedAny = false;
+    return _routines.where((routine) {
+      if (!routine.shouldOccurOn(targetDateOnly)) return false;
+      final alreadyAdded = _todos.any(
+        (t) =>
+            t.routineId == routine.id &&
+            t.targetDate.year == targetDateOnly.year &&
+            t.targetDate.month == targetDateOnly.month &&
+            t.targetDate.day == targetDateOnly.day,
+      );
+      return !alreadyAdded;
+    }).toList();
+  }
 
-    for (final routine in _routines) {
-      if (routine.shouldOccurOn(targetDateOnly)) {
-        // Check if todo already exists for this routine on this date
-        final exists = _todos.any(
-          (t) =>
-              t.routineId == routine.id &&
-              t.targetDate.year == targetDateOnly.year &&
-              t.targetDate.month == targetDateOnly.month &&
-              t.targetDate.day == targetDateOnly.day,
-        );
+  Future<void> instantiateRoutineAsTodo(Routine routine, [DateTime? date]) async {
+    final targetDateOnly = date ?? _selectedDate;
+    final newTodo = Todo(
+      title: routine.title,
+      quadrant: routine.quadrant,
+      categoryId: routine.categoryId,
+      routineId: routine.id,
+      targetDate: DateTime(
+        targetDateOnly.year,
+        targetDateOnly.month,
+        targetDateOnly.day,
+      ),
+      dueDate: routine.endDate,
+      createdAt: DateTime.now(),
+      location: routine.location,
+      timeStr: routine.timeStr,
+      dueTimeStr: routine.dueTimeStr,
+      memo: routine.memo,
+      hasNotification: routine.hasNotification,
+      notificationOffset: routine.notificationOffset,
+    );
 
-        if (!exists) {
-          final newRoutineTodo = Todo(
-            title: routine.title,
-            quadrant: 1, // Default Q1
-            categoryId: routine.categoryId,
-            routineId: routine.id,
-            targetDate: targetDateOnly,
-            createdAt: DateTime.now(),
-          );
-          await _dbHelper.insert(newRoutineTodo);
-          addedAny = true;
-        }
-      }
-    }
-
-    if (addedAny) {
-      _todos = await _dbHelper.fetchAllActive();
+    try {
+      await _dbHelper.insert(newTodo);
+      await loadTodos();
+    } catch (e) {
+      debugPrint("Error instantiating routine: $e");
     }
   }
 
@@ -468,17 +474,33 @@ class TodoProvider with ChangeNotifier {
 
   Future<void> addRoutine({
     required String title,
+    int quadrant = 1,
     int? categoryId,
     required String repeatType,
     required String repeatDays,
     required DateTime startDate,
+    DateTime? endDate,
+    String? location,
+    String? timeStr,
+    String? dueTimeStr,
+    String? memo,
+    bool hasNotification = false,
+    int notificationOffset = 0,
   }) async {
     final routine = Routine(
       title: title,
+      quadrant: quadrant,
       categoryId: categoryId,
       repeatType: repeatType,
       repeatDays: repeatDays,
       startDate: startDate,
+      endDate: endDate,
+      location: location,
+      timeStr: timeStr,
+      dueTimeStr: dueTimeStr,
+      memo: memo,
+      hasNotification: hasNotification,
+      notificationOffset: notificationOffset,
       isActive: true,
     );
 

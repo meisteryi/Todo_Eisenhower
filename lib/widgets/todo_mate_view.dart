@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/category_model.dart';
 import '../models/todo_model.dart';
 import '../providers/todo_provider.dart';
+import '../theme/app_theme.dart';
 
 class TodoMateView extends StatefulWidget {
   final TodoProvider provider;
@@ -100,6 +101,7 @@ class _TodoMateViewState extends State<TodoMateView> {
     required List<Todo> todos,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final completedCount = todos.where((t) => t.isCompleted).length;
     final isInputActive = _inlineInputActive[category.id] ?? false;
 
@@ -107,6 +109,11 @@ class _TodoMateViewState extends State<TodoMateView> {
       _inlineControllers[category.id] = TextEditingController();
     }
     final controller = _inlineControllers[category.id]!;
+
+    final pendingRoutines = widget.provider
+        .getPendingRoutinesForDate(widget.provider.selectedDate)
+        .where((r) => r.categoryId == category.id)
+        .toList();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -218,8 +225,75 @@ class _TodoMateViewState extends State<TodoMateView> {
               ),
             ),
 
+          // Pending Routines list (semi-transparent grey preview cards with manual add button)
+          if (pendingRoutines.isNotEmpty)
+            ...pendingRoutines.map((routine) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                  leading: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark ? Colors.white12 : Colors.black12,
+                    ),
+                    child: Icon(
+                      Icons.autorenew_rounded,
+                      size: 16,
+                      color: isDark ? Colors.white54 : Colors.black45,
+                    ),
+                  ),
+                  title: Text(
+                    routine.title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: (isDark ? Colors.white70 : Colors.black87).withValues(alpha: 0.6),
+                    ),
+                  ),
+                  subtitle: Text(
+                    '반복 루틴${routine.timeStr != null ? ' • ${routine.timeStr}' : ''}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+                  ),
+                  trailing: TextButton.icon(
+                    onPressed: () async {
+                      await widget.provider.instantiateRoutineAsTodo(
+                        routine,
+                        widget.provider.selectedDate,
+                      );
+                    },
+                    icon: const Icon(Icons.add_rounded, size: 16, color: AppColors.q2),
+                    label: const Text(
+                      '추가',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.q2,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.q2.withValues(alpha: 0.15),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              );
+            }),
+
           // Todo List items
-          if (todos.isEmpty && !isInputActive)
+          if (todos.isEmpty && pendingRoutines.isEmpty && !isInputActive)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               child: Text(
@@ -227,7 +301,7 @@ class _TodoMateViewState extends State<TodoMateView> {
                 style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
               ),
             )
-          else
+          else if (todos.isNotEmpty)
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),

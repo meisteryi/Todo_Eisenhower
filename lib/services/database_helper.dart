@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/category_model.dart';
 import '../models/routine_model.dart';
@@ -36,7 +35,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -51,9 +50,10 @@ class DatabaseHelper {
         category_id INTEGER,
         routine_id INTEGER,
         target_date TEXT,
+        due_date TEXT,
         is_completed INTEGER NOT NULL DEFAULT 0,
         is_trash INTEGER NOT NULL DEFAULT 0,
-        due_date TEXT,
+        trashed_at TEXT,
         created_at TEXT NOT NULL,
         completed_at TEXT,
         deleted_at TEXT,
@@ -82,9 +82,17 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         category_id INTEGER,
         title TEXT NOT NULL,
+        quadrant INTEGER NOT NULL DEFAULT 1,
         repeat_type TEXT NOT NULL,
         repeat_days TEXT NOT NULL,
         start_date TEXT NOT NULL,
+        end_date TEXT,
+        location TEXT,
+        time_str TEXT,
+        due_time_str TEXT,
+        memo TEXT,
+        has_notification INTEGER NOT NULL DEFAULT 0,
+        notification_offset INTEGER NOT NULL DEFAULT 0,
         is_active INTEGER NOT NULL DEFAULT 1
       )
     ''');
@@ -124,9 +132,8 @@ class DatabaseHelper {
         )
       ''');
 
-      // Populate default categories if empty
-      final catCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM categories')) ?? 0;
-      if (catCount == 0) {
+      final catCheck = await db.rawQuery('SELECT count(*) as count FROM categories');
+      if ((catCheck.first['count'] as int) == 0) {
         for (final cat in Category.defaultCategories()) {
           await db.insert('categories', cat.toMap());
         }
@@ -154,6 +161,17 @@ class DatabaseHelper {
 
     if (oldVersion < 6) {
       try { await db.execute('ALTER TABLE todos ADD COLUMN due_time_str TEXT'); } catch (_) {}
+    }
+
+    if (oldVersion < 7) {
+      try { await db.execute('ALTER TABLE routines ADD COLUMN quadrant INTEGER NOT NULL DEFAULT 1'); } catch (_) {}
+      try { await db.execute('ALTER TABLE routines ADD COLUMN end_date TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE routines ADD COLUMN location TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE routines ADD COLUMN time_str TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE routines ADD COLUMN due_time_str TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE routines ADD COLUMN memo TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE routines ADD COLUMN has_notification INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+      try { await db.execute('ALTER TABLE routines ADD COLUMN notification_offset INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
     }
   }
 
@@ -306,6 +324,15 @@ class DatabaseHelper {
 
   Future<int> insertRoutine(Routine routine) async {
     final db = await instance.database;
+    try { await db.execute('ALTER TABLE routines ADD COLUMN quadrant INTEGER NOT NULL DEFAULT 1'); } catch (_) {}
+    try { await db.execute('ALTER TABLE routines ADD COLUMN end_date TEXT'); } catch (_) {}
+    try { await db.execute('ALTER TABLE routines ADD COLUMN location TEXT'); } catch (_) {}
+    try { await db.execute('ALTER TABLE routines ADD COLUMN time_str TEXT'); } catch (_) {}
+    try { await db.execute('ALTER TABLE routines ADD COLUMN due_time_str TEXT'); } catch (_) {}
+    try { await db.execute('ALTER TABLE routines ADD COLUMN memo TEXT'); } catch (_) {}
+    try { await db.execute('ALTER TABLE routines ADD COLUMN has_notification INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+    try { await db.execute('ALTER TABLE routines ADD COLUMN notification_offset INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+
     return await db.insert('routines', routine.toMap());
   }
 

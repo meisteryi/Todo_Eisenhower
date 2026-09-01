@@ -26,7 +26,12 @@ void main() {
       final defaults = Category.defaultCategories();
       expect(defaults.length, 4);
 
-      final cat = Category(id: 10, name: '운동', colorHex: '#2ECC71', emoji: '💪');
+      final cat = Category(
+        id: 10,
+        name: '운동',
+        colorHex: '#2ECC71',
+        emoji: '💪',
+      );
       final map = cat.toMap();
       expect(map['name'], '운동');
       expect(map['color_hex'], '#2ECC71');
