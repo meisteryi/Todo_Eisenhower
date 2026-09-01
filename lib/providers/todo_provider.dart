@@ -4,6 +4,7 @@ import '../models/category_model.dart';
 import '../models/routine_model.dart';
 import '../models/todo_model.dart';
 import '../services/database_helper.dart';
+import '../services/notification_service.dart';
 
 class TodoProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
@@ -138,6 +139,13 @@ class TodoProvider with ChangeNotifier {
 
       // 4. Generate routines for selected date if needed
       await _checkAndGenerateRoutinesForDate(_selectedDate);
+
+      // 5. Schedule local notifications for active todos
+      for (final todo in _todos) {
+        if (todo.hasNotification && !todo.isCompleted) {
+          NotificationService().scheduleTodoNotification(todo);
+        }
+      }
     } catch (e) {
       debugPrint("Error loading data: $e");
     } finally {
@@ -197,6 +205,8 @@ class TodoProvider with ChangeNotifier {
     String? location,
     String? timeStr,
     String? memo,
+    bool hasNotification = false,
+    int notificationOffset = 0,
   }) async {
     final todoTargetDate = targetDate ?? _selectedDate;
     final newTodo = Todo(
@@ -213,6 +223,8 @@ class TodoProvider with ChangeNotifier {
       location: location,
       timeStr: timeStr,
       memo: memo,
+      hasNotification: hasNotification,
+      notificationOffset: notificationOffset,
     );
 
     try {

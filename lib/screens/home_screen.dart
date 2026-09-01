@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
           initialCategoryId: todoToEdit?.categoryId,
           initialTargetDate: todoToEdit?.targetDate ?? widget.provider.selectedDate,
           initialTodo: todoToEdit,
-          onAddTask: (title, quadrant, categoryId, targetDate, dueDate, location, timeStr, memo) {
+          onAddTask: (title, quadrant, categoryId, targetDate, dueDate, location, timeStr, memo, hasNotification, notificationOffset) {
             if (todoToEdit == null) {
               widget.provider.addTodo(
                 title,
@@ -158,6 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 location: location,
                 timeStr: timeStr,
                 memo: memo,
+                hasNotification: hasNotification,
+                notificationOffset: notificationOffset,
               );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -176,6 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 location: location,
                 timeStr: timeStr,
                 memo: memo,
+                hasNotification: hasNotification,
+                notificationOffset: notificationOffset,
               );
               widget.provider.updateTodo(updated);
             }

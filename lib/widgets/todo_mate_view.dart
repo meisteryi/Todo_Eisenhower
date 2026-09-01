@@ -286,16 +286,30 @@ class _TodoMateViewState extends State<TodoMateView> {
                             : theme.textTheme.bodyLarge?.color,
                       ),
                     ),
-                    subtitle: (todo.timeStr != null || todo.location != null || todo.memo != null)
+                    subtitle: (todo.timeStr != null || todo.location != null || todo.memo != null || todo.hasNotification)
                         ? Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (todo.timeStr != null || todo.location != null)
+                                if (todo.timeStr != null || todo.location != null || todo.hasNotification)
                                   Wrap(
                                     spacing: 8,
                                     children: [
+                                      if (todo.hasNotification)
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.notifications_active_rounded, size: 12, color: Colors.amber),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              todo.notificationOffset == 0
+                                                  ? '알림 ON'
+                                                  : (todo.notificationOffset == 60 ? '1시간 전' : '${todo.notificationOffset}분 전'),
+                                              style: const TextStyle(fontSize: 11, color: Colors.amber, fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
                                       if (todo.timeStr != null && todo.timeStr!.isNotEmpty)
                                         Row(
                                           mainAxisSize: MainAxisSize.min,

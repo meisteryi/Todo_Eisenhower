@@ -36,7 +36,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -59,7 +59,9 @@ class DatabaseHelper {
         deleted_at TEXT,
         location TEXT,
         time_str TEXT,
-        memo TEXT
+        memo TEXT,
+        has_notification INTEGER NOT NULL DEFAULT 0,
+        notification_offset INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -136,9 +138,17 @@ class DatabaseHelper {
     }
 
     if (oldVersion < 3) {
-      await db.execute('ALTER TABLE todos ADD COLUMN location TEXT');
-      await db.execute('ALTER TABLE todos ADD COLUMN time_str TEXT');
-      await db.execute('ALTER TABLE todos ADD COLUMN memo TEXT');
+      try { await db.execute('ALTER TABLE todos ADD COLUMN location TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE todos ADD COLUMN time_str TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE todos ADD COLUMN memo TEXT'); } catch (_) {}
+    }
+
+    if (oldVersion < 4) {
+      try { await db.execute('ALTER TABLE todos ADD COLUMN has_notification INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+    }
+
+    if (oldVersion < 5) {
+      try { await db.execute('ALTER TABLE todos ADD COLUMN notification_offset INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
     }
   }
 

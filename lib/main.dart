@@ -5,10 +5,14 @@ import 'providers/todo_provider.dart';
 import 'screens/home_screen.dart';
 import 'theme/app_theme.dart';
 
+import 'services/notification_service.dart';
+
 void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko', null);
+  await NotificationService().init();
+  await NotificationService().requestPermissions();
 
   final provider = TodoProvider();
   runApp(MyApp(provider: provider));

@@ -1,7 +1,8 @@
 class Todo {
   final int? id;
   final String title;
-  final int quadrant; // 0: Inbox, 1: Q1 (Do), 2: Q2 (Decide), 3: Q3 (Delegate), 4: Q4 (Delete)
+  final int
+  quadrant; // 0: Inbox, 1: Q1 (Do), 2: Q2 (Decide), 3: Q3 (Delegate), 4: Q4 (Delete)
   final int? categoryId;
   final int? routineId;
   final DateTime targetDate;
@@ -14,6 +15,9 @@ class Todo {
   final String? location;
   final String? timeStr;
   final String? memo;
+  final bool hasNotification;
+  final int
+  notificationOffset; // 0: 정시, 10: 10분 전, 30: 30분 전, 60: 1시간 전, custom
 
   Todo({
     this.id,
@@ -31,6 +35,8 @@ class Todo {
     this.location,
     this.timeStr,
     this.memo,
+    this.hasNotification = false,
+    this.notificationOffset = 0,
   }) : targetDate = targetDate ?? DateTime.now();
 
   Todo copyWith({
@@ -49,6 +55,8 @@ class Todo {
     String? location,
     String? timeStr,
     String? memo,
+    bool? hasNotification,
+    int? notificationOffset,
   }) {
     return Todo(
       id: id ?? this.id,
@@ -66,11 +74,14 @@ class Todo {
       location: location ?? this.location,
       timeStr: timeStr ?? this.timeStr,
       memo: memo ?? this.memo,
+      hasNotification: hasNotification ?? this.hasNotification,
+      notificationOffset: notificationOffset ?? this.notificationOffset,
     );
   }
 
   Map<String, dynamic> toMap() {
-    final targetDateStr = "${targetDate.year.toString().padLeft(4, '0')}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}";
+    final targetDateStr =
+        "${targetDate.year.toString().padLeft(4, '0')}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}";
     return {
       if (id != null) 'id': id,
       'title': title,
@@ -87,6 +98,8 @@ class Todo {
       'location': location,
       'time_str': timeStr,
       'memo': memo,
+      'has_notification': hasNotification ? 1 : 0,
+      'notification_offset': notificationOffset,
     };
   }
 
@@ -103,26 +116,40 @@ class Todo {
       }
     } else if (map['created_at'] != null) {
       final parsedCreated = DateTime.parse(map['created_at'] as String);
-      parsedTargetDate = DateTime(parsedCreated.year, parsedCreated.month, parsedCreated.day);
+      parsedTargetDate = DateTime(
+        parsedCreated.year,
+        parsedCreated.month,
+        parsedCreated.day,
+      );
     }
 
     return Todo(
       id: map['id'] as int?,
-      title: map['title'] as String,
-      quadrant: map['quadrant'] as int,
+      title: (map['title'] ?? '') as String,
+      quadrant: (map['quadrant'] as int?) ?? 0,
       categoryId: map['category_id'] as int?,
       routineId: map['routine_id'] as int?,
       targetDate: parsedTargetDate,
-      isCompleted: (map['is_completed'] as int) == 1,
-      isTrash: (map['is_trash'] as int) == 1,
-      dueDate: map['due_date'] != null ? DateTime.parse(map['due_date'] as String) : null,
-      createdAt: DateTime.parse(map['created_at'] as String),
-      completedAt: map['completed_at'] != null ? DateTime.parse(map['completed_at'] as String) : null,
-      deletedAt: map['deleted_at'] != null ? DateTime.parse(map['deleted_at'] as String) : null,
-      location: map['location'] as String?,
-      timeStr: map['time_str'] as String?,
-      memo: map['memo'] as String?,
+      isCompleted: map['is_completed'] == 1 || map['is_completed'] == true,
+      isTrash: map['is_trash'] == 1 || map['is_trash'] == true,
+      dueDate: map['due_date'] != null
+          ? DateTime.parse(map['due_date'] as String)
+          : null,
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'] as String)
+          : DateTime.now(),
+      completedAt: map['completed_at'] != null
+          ? DateTime.parse(map['completed_at'] as String)
+          : null,
+      deletedAt: map['deleted_at'] != null
+          ? DateTime.parse(map['deleted_at'] as String)
+          : null,
+      location: map['location']?.toString(),
+      timeStr: map['time_str']?.toString(),
+      memo: map['memo']?.toString(),
+      hasNotification:
+          map['has_notification'] == 1 || map['has_notification'] == true,
+      notificationOffset: (map['notification_offset'] as int?) ?? 0,
     );
   }
 }
-

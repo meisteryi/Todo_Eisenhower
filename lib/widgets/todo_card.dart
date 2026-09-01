@@ -238,12 +238,22 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
                                       : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
                                 ),
                               ),
-                              if (widget.todo.timeStr != null || widget.todo.location != null || widget.todo.dueDate != null) ...[
+                              if (widget.todo.timeStr != null || widget.todo.location != null || widget.todo.dueDate != null || widget.todo.hasNotification) ...[
                                 const SizedBox(height: 4),
                                 Wrap(
                                   spacing: 6,
                                   runSpacing: 4,
                                   children: [
+                                    if (widget.todo.hasNotification)
+                                      _InfoChip(
+                                        icon: Icons.notifications_active_rounded,
+                                        label: widget.todo.notificationOffset == 0
+                                            ? '알림'
+                                            : (widget.todo.notificationOffset == 60
+                                                ? '1시간 전'
+                                                : '${widget.todo.notificationOffset}분 전'),
+                                        color: Colors.amber[800]!,
+                                      ),
                                     if (widget.todo.timeStr != null && widget.todo.timeStr!.isNotEmpty)
                                       _InfoChip(
                                         icon: Icons.access_time_rounded,
