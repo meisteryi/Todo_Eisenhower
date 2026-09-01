@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/category_model.dart';
@@ -133,34 +134,153 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     TextEditingController controller,
     String titleLabel,
   ) async {
-    TimeOfDay initial = TimeOfDay.now();
+    int selectedHour = DateTime.now().hour;
+    int selectedMinuteIndex = 0; // 0: 00, 1: 05, 2: 10, ..., 11: 55
+
     if (controller.text.isNotEmpty) {
       final parts = controller.text.split(':');
       if (parts.length == 2) {
         final h = int.tryParse(parts[0]);
         final m = int.tryParse(parts[1]);
-        if (h != null && m != null && h >= 0 && h < 24 && m >= 0 && m < 60) {
-          initial = TimeOfDay(hour: h, minute: m);
+        if (h != null && m != null) {
+          selectedHour = h.clamp(0, 23);
+          selectedMinuteIndex = (m / 5).round().clamp(0, 11);
         }
       }
     }
 
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-      initialEntryMode: TimePickerEntryMode.input,
-      helpText: '$titleLabel (숫자 입력)',
-      confirmText: '확인',
-      cancelText: '취소',
-    );
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final minutesList = List.generate(
+      12,
+      (index) => index * 5,
+    ); // 0, 5, 10, ..., 55
 
-    if (picked != null) {
-      final formattedHour = picked.hour.toString().padLeft(2, '0');
-      final formattedMinute = picked.minute.toString().padLeft(2, '0');
-      setState(() {
-        controller.text = '$formattedHour:$formattedMinute';
-      });
-    }
+    await showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext ctx) {
+        return Container(
+          height: 270,
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                // Header Row (Title + Done Button)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        titleLabel,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
+                      ),
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: () {
+                          final hStr = selectedHour.toString().padLeft(2, '0');
+                          final mStr = minutesList[selectedMinuteIndex]
+                              .toString()
+                              .padLeft(2, '0');
+                          setState(() {
+                            controller.text = '$hStr:$mStr';
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        child: const Text(
+                          '완료',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.q2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      // Hours Dial (0 ~ 23)
+                      Expanded(
+                        child: CupertinoPicker(
+                          magnification: 1.2,
+                          squeeze: 1.2,
+                          useMagnifier: true,
+                          itemExtent: 36,
+                          scrollController: FixedExtentScrollController(
+                            initialItem: selectedHour,
+                          ),
+                          onSelectedItemChanged: (int index) {
+                            selectedHour = index;
+                          },
+                          children: List<Widget>.generate(24, (int index) {
+                            return Center(
+                              child: Text(
+                                '${index.toString().padLeft(2, '0')} 시',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                      // Minutes Dial (00, 05, 10, ..., 55)
+                      Expanded(
+                        child: CupertinoPicker(
+                          magnification: 1.2,
+                          squeeze: 1.2,
+                          useMagnifier: true,
+                          itemExtent: 36,
+                          scrollController: FixedExtentScrollController(
+                            initialItem: selectedMinuteIndex,
+                          ),
+                          onSelectedItemChanged: (int index) {
+                            selectedMinuteIndex = index;
+                          },
+                          children: List<Widget>.generate(12, (int index) {
+                            final minVal = index * 5;
+                            return Center(
+                              child: Text(
+                                '${minVal.toString().padLeft(2, '0')} 분',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<int?> _showCustomMinutesDialog() async {
