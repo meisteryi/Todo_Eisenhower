@@ -310,18 +310,10 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                 ? theme.colorScheme.primary
                 : (isToday
                       ? theme.colorScheme.primary.withValues(
-                          alpha: 0.1,
+                          alpha: 0.15,
                         )
                       : Colors.transparent),
-            borderRadius: BorderRadius.circular(14),
-            border: isToday && !isSelected
-                ? Border.all(
-                    color: theme.colorScheme.primary.withValues(
-                      alpha: 0.4,
-                    ),
-                    width: 1.5,
-                  )
-                : null,
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Opacity(
             opacity: isOutsideMonth ? 0.4 : 1.0,

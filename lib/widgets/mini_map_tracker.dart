@@ -121,8 +121,8 @@ class MiniMapTracker extends StatelessWidget {
         cellBg = themeColor.withValues(alpha: 0.15);
         borderClr = themeColor;
       } else {
-        cellBg = isDark ? AppColors.darkCard.withValues(alpha: 0.5) : AppColors.lightCard;
-        borderClr = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+        cellBg = isDark ? AppColors.darkCard.withValues(alpha: 0.6) : AppColors.lightCard;
+        borderClr = Colors.transparent;
       }
 
       // Compact spacing, padding and fonts for mini-map mode to avoid cut-offs

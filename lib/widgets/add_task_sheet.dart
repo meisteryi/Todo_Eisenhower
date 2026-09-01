@@ -354,11 +354,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-        ),
+        color: isDark ? AppColors.darkInputBg : AppColors.lightInputBg,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         children: [

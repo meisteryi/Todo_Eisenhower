@@ -721,11 +721,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ? AppColors.darkCard
                                   : Colors.white,
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? AppColors.darkDivider
-                                    : AppColors.lightDivider,
-                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.03,
+                                  ),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,

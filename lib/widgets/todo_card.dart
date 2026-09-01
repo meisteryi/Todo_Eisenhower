@@ -181,18 +181,14 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
               child: Container(
                 decoration: BoxDecoration(
                   color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
+                      color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
-                  border: Border.all(
-                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                    width: 0.8,
-                  ),
                 ),
                 child: IntrinsicHeight(
                   child: Row(
