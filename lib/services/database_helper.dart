@@ -36,7 +36,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -59,6 +59,7 @@ class DatabaseHelper {
         deleted_at TEXT,
         location TEXT,
         time_str TEXT,
+        due_time_str TEXT,
         memo TEXT,
         has_notification INTEGER NOT NULL DEFAULT 0,
         notification_offset INTEGER NOT NULL DEFAULT 0
@@ -149,6 +150,10 @@ class DatabaseHelper {
 
     if (oldVersion < 5) {
       try { await db.execute('ALTER TABLE todos ADD COLUMN notification_offset INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+    }
+
+    if (oldVersion < 6) {
+      try { await db.execute('ALTER TABLE todos ADD COLUMN due_time_str TEXT'); } catch (_) {}
     }
   }
 

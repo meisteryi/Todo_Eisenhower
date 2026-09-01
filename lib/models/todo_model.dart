@@ -14,6 +14,7 @@ class Todo {
   final DateTime? deletedAt;
   final String? location;
   final String? timeStr;
+  final String? dueTimeStr;
   final String? memo;
   final bool hasNotification;
   final int
@@ -34,6 +35,7 @@ class Todo {
     this.deletedAt,
     this.location,
     this.timeStr,
+    this.dueTimeStr,
     this.memo,
     this.hasNotification = false,
     this.notificationOffset = 0,
@@ -54,6 +56,7 @@ class Todo {
     DateTime? deletedAt,
     String? location,
     String? timeStr,
+    String? dueTimeStr,
     String? memo,
     bool? hasNotification,
     int? notificationOffset,
@@ -73,6 +76,7 @@ class Todo {
       deletedAt: deletedAt ?? this.deletedAt,
       location: location ?? this.location,
       timeStr: timeStr ?? this.timeStr,
+      dueTimeStr: dueTimeStr ?? this.dueTimeStr,
       memo: memo ?? this.memo,
       hasNotification: hasNotification ?? this.hasNotification,
       notificationOffset: notificationOffset ?? this.notificationOffset,
@@ -97,6 +101,7 @@ class Todo {
       'deleted_at': deletedAt?.toIso8601String(),
       'location': location,
       'time_str': timeStr,
+      'due_time_str': dueTimeStr,
       'memo': memo,
       'has_notification': hasNotification ? 1 : 0,
       'notification_offset': notificationOffset,
@@ -146,6 +151,7 @@ class Todo {
           : null,
       location: map['location']?.toString(),
       timeStr: map['time_str']?.toString(),
+      dueTimeStr: map['due_time_str']?.toString(),
       memo: map['memo']?.toString(),
       hasNotification:
           map['has_notification'] == 1 || map['has_notification'] == true,

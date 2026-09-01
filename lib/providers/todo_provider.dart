@@ -45,12 +45,44 @@ class TodoProvider with ChangeNotifier {
   DateTime get selectedDate => _selectedDate;
   String get activeViewMode => _activeViewMode;
 
+  // Matrix View Filter: false = 전체 사분면 (All), true = 오늘의 사분면 (Today Only)
+  bool _isMatrixFilterTodayOnly = false;
+  bool get isMatrixFilterTodayOnly => _isMatrixFilterTodayOnly;
+
+  void setMatrixFilterTodayOnly(bool todayOnly) {
+    _isMatrixFilterTodayOnly = todayOnly;
+    notifyListeners();
+  }
+
+  // Get filtered Todos for a quadrant based on isMatrixFilterTodayOnly
+  List<Todo> getQuadrantTodos(int q) {
+    return _todos.where((t) {
+      if (t.quadrant != q || t.isCompleted || t.isTrash) return false;
+      if (!_isMatrixFilterTodayOnly) return true; // 전체 사분면
+
+      // 오늘의 사분면 조건:
+      // 1) targetDate가 선택된 날짜인 경우 (오늘 할 일)
+      final isSameTargetDate = t.targetDate.year == _selectedDate.year &&
+          t.targetDate.month == _selectedDate.month &&
+          t.targetDate.day == _selectedDate.day;
+
+      // 2) dueDate가 선택된 날짜 이전이거나 당일인 경우 (마감 임박/지연 과제)
+      final isDueTodayOrPast = t.dueDate != null &&
+          (t.dueDate!.isBefore(_selectedDate) ||
+              (t.dueDate!.year == _selectedDate.year &&
+                  t.dueDate!.month == _selectedDate.month &&
+                  t.dueDate!.day == _selectedDate.day));
+
+      return isSameTargetDate || isDueTodayOrPast;
+    }).toList();
+  }
+
   // Quadrant filtered lists (only active, non-trash)
-  List<Todo> get q0Todos => _todos.where((t) => t.quadrant == 0).toList();
-  List<Todo> get q1Todos => _todos.where((t) => t.quadrant == 1).toList();
-  List<Todo> get q2Todos => _todos.where((t) => t.quadrant == 2).toList();
-  List<Todo> get q3Todos => _todos.where((t) => t.quadrant == 3).toList();
-  List<Todo> get q4Todos => _todos.where((t) => t.quadrant == 4).toList();
+  List<Todo> get q0Todos => getQuadrantTodos(0);
+  List<Todo> get q1Todos => getQuadrantTodos(1);
+  List<Todo> get q2Todos => getQuadrantTodos(2);
+  List<Todo> get q3Todos => getQuadrantTodos(3);
+  List<Todo> get q4Todos => getQuadrantTodos(4);
 
   // Pomodoro getters
   int? get pomodoroTodoId => _pomodoroTodoId;
@@ -204,6 +236,7 @@ class TodoProvider with ChangeNotifier {
     DateTime? dueDate,
     String? location,
     String? timeStr,
+    String? dueTimeStr,
     String? memo,
     bool hasNotification = false,
     int notificationOffset = 0,
@@ -222,6 +255,7 @@ class TodoProvider with ChangeNotifier {
       createdAt: DateTime.now(),
       location: location,
       timeStr: timeStr,
+      dueTimeStr: dueTimeStr,
       memo: memo,
       hasNotification: hasNotification,
       notificationOffset: notificationOffset,

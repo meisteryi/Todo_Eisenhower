@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
           initialCategoryId: todoToEdit?.categoryId,
           initialTargetDate: todoToEdit?.targetDate ?? widget.provider.selectedDate,
           initialTodo: todoToEdit,
-          onAddTask: (title, quadrant, categoryId, targetDate, dueDate, location, timeStr, memo, hasNotification, notificationOffset) {
+          onAddTask: (title, quadrant, categoryId, targetDate, dueDate, location, timeStr, dueTimeStr, memo, hasNotification, notificationOffset) {
             if (todoToEdit == null) {
               widget.provider.addTodo(
                 title,
@@ -157,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 dueDate: dueDate,
                 location: location,
                 timeStr: timeStr,
+                dueTimeStr: dueTimeStr,
                 memo: memo,
                 hasNotification: hasNotification,
                 notificationOffset: notificationOffset,
@@ -178,6 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 dueDate: dueDate,
                 location: location,
                 timeStr: timeStr,
+                dueTimeStr: dueTimeStr,
                 memo: memo,
                 hasNotification: hasNotification,
                 notificationOffset: notificationOffset,
@@ -591,13 +593,92 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildMatrixFilterChip(bool isTodayOnly, String label) {
+    final isSelected = widget.provider.isMatrixFilterTodayOnly == isTodayOnly;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () {
+        widget.provider.setMatrixFilterTodayOnly(isTodayOnly);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.white70 : Colors.black87),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEisenhowerView() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
+        // Matrix Filter Header (오늘의 사분면 vs 전체 사분면)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    widget.provider.isMatrixFilterTodayOnly
+                        ? Icons.today_rounded
+                        : Icons.language_rounded,
+                    size: 16,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    widget.provider.isMatrixFilterTodayOnly
+                        ? '오늘의 사분면 모드'
+                        : '전체 사분면 모드',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkCard
+                      : Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildMatrixFilterChip(true, '오늘의 사분면 🎯'),
+                    _buildMatrixFilterChip(false, '전체 사분면 🌐'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         AnimatedContainer(
           duration: const Duration(milliseconds: 350),
           curve: Curves.easeInOut,
-          height: _isPanelVisible ? 185 : 400,
+          height: _isPanelVisible ? 185 : 380,
           child: MiniMapTracker(
             provider: widget.provider,
             onQuadrantSelected: _onQuadrantSelected,

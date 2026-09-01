@@ -260,12 +260,20 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
                                                  : '${widget.todo.notificationOffset}분 전'),
                                          color: Colors.amber[800]!,
                                        ),
-                                    if (widget.todo.timeStr != null && widget.todo.timeStr!.isNotEmpty)
-                                      _InfoChip(
-                                        icon: Icons.access_time_rounded,
-                                        label: widget.todo.timeStr!,
-                                        color: Colors.blueAccent,
-                                      ),
+                                     if (widget.todo.timeStr != null && widget.todo.timeStr!.isNotEmpty)
+                                       _InfoChip(
+                                         icon: Icons.access_time_rounded,
+                                         label: widget.todo.dueTimeStr != null && widget.todo.dueTimeStr!.isNotEmpty
+                                             ? '${widget.todo.timeStr} ~ ${widget.todo.dueTimeStr}'
+                                             : widget.todo.timeStr!,
+                                         color: Colors.blueAccent,
+                                       )
+                                     else if (widget.todo.dueTimeStr != null && widget.todo.dueTimeStr!.isNotEmpty)
+                                       _InfoChip(
+                                         icon: Icons.flag_outlined,
+                                         label: '~ ${widget.todo.dueTimeStr}',
+                                         color: Colors.redAccent,
+                                       ),
                                     if (widget.todo.location != null && widget.todo.location!.isNotEmpty)
                                       _InfoChip(
                                         icon: Icons.location_on_outlined,

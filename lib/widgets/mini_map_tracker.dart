@@ -29,7 +29,7 @@ class MiniMapTracker extends StatelessWidget {
 
     // Helper to get active task count
     int getActiveCount(int quadrant) {
-      return provider.todos.where((t) => t.quadrant == quadrant && !t.isCompleted).length;
+      return provider.getQuadrantTodos(quadrant).length;
     }
 
     Widget buildQuadrantCell(int index, String label, String title, Color themeColor) {
@@ -37,9 +37,7 @@ class MiniMapTracker extends StatelessWidget {
       final activeCount = getActiveCount(index);
       final progress = getProgressRatio(index);
 
-      final activeTodos = provider.todos
-          .where((t) => t.quadrant == index && !t.isCompleted && !t.isTrash)
-          .toList();
+      final activeTodos = provider.getQuadrantTodos(index);
       final previewTodos = activeTodos.take(3).toList();
 
       BorderRadius getCellRadius() {

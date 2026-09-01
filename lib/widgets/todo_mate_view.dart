@@ -310,15 +310,17 @@ class _TodoMateViewState extends State<TodoMateView> {
                                             ),
                                           ],
                                         ),
-                                      if (todo.timeStr != null && todo.timeStr!.isNotEmpty)
+                                      if ((todo.timeStr != null && todo.timeStr!.isNotEmpty) || (todo.dueTimeStr != null && todo.dueTimeStr!.isNotEmpty))
                                         Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             const Icon(Icons.access_time_rounded, size: 12, color: Colors.blueAccent),
                                             const SizedBox(width: 2),
                                             Text(
-                                              todo.timeStr!,
-                                              style: const TextStyle(fontSize: 11, color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                                              (todo.timeStr != null && todo.timeStr!.isNotEmpty && todo.dueTimeStr != null && todo.dueTimeStr!.isNotEmpty)
+                                                  ? '${todo.timeStr} ~ ${todo.dueTimeStr}'
+                                                  : (todo.timeStr ?? '~ ${todo.dueTimeStr}'),
+                                              style: const TextStyle(fontSize: 11, color: Colors.blueAccent),
                                             ),
                                           ],
                                         ),

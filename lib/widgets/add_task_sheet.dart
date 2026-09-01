@@ -18,6 +18,7 @@ class AddTaskSheet extends StatefulWidget {
     DateTime? dueDate,
     String? location,
     String? timeStr,
+    String? dueTimeStr,
     String? memo,
     bool hasNotification,
     int notificationOffset,
@@ -42,14 +43,19 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   late TextEditingController _titleController;
   late TextEditingController _locationController;
   late TextEditingController _timeController;
+  late TextEditingController _dueTimeController;
   late TextEditingController _memoController;
 
-  late int _selectedQ;
+  int _selectedQ = 1;
   int? _selectedCategoryId;
-  late DateTime _selectedTargetDate;
+  DateTime _selectedTargetDate = DateTime.now();
   DateTime? _selectedDueDate;
   bool _hasNotification = false;
   int _notificationOffset = 0;
+
+  bool _isCalendarExpanded = false;
+  DateTime _calendarMonth = DateTime.now();
+  bool _isSelectingRangeEnd = false;
 
   @override
   void initState() {
@@ -58,6 +64,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     _titleController = TextEditingController(text: todo?.title ?? '');
     _locationController = TextEditingController(text: todo?.location ?? '');
     _timeController = TextEditingController(text: todo?.timeStr ?? '');
+    _dueTimeController = TextEditingController(text: todo?.dueTimeStr ?? '');
     _memoController = TextEditingController(text: todo?.memo ?? '');
 
     _selectedQ = todo?.quadrant ?? widget.initialQuadrant;
@@ -70,6 +77,12 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     _selectedDueDate = todo?.dueDate;
     _hasNotification = todo?.hasNotification ?? false;
     _notificationOffset = todo?.notificationOffset ?? 0;
+
+    _calendarMonth = DateTime(
+      _selectedTargetDate.year,
+      _selectedTargetDate.month,
+      1,
+    );
   }
 
   @override
@@ -77,6 +90,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     _titleController.dispose();
     _locationController.dispose();
     _timeController.dispose();
+    _dueTimeController.dispose();
     _memoController.dispose();
     super.dispose();
   }
@@ -115,10 +129,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     }
   }
 
-  Future<void> _pickTime() async {
+  Future<void> _pickTimeForController(
+    TextEditingController controller,
+    String titleLabel,
+  ) async {
     TimeOfDay initial = TimeOfDay.now();
-    if (_timeController.text.isNotEmpty) {
-      final parts = _timeController.text.split(':');
+    if (controller.text.isNotEmpty) {
+      final parts = controller.text.split(':');
       if (parts.length == 2) {
         final h = int.tryParse(parts[0]);
         final m = int.tryParse(parts[1]);
@@ -132,7 +149,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       context: context,
       initialTime: initial,
       initialEntryMode: TimePickerEntryMode.input,
-      helpText: '시간 입력 (숫자 직접 입력)',
+      helpText: '$titleLabel (숫자 입력)',
       confirmText: '확인',
       cancelText: '취소',
     );
@@ -141,36 +158,65 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       final formattedHour = picked.hour.toString().padLeft(2, '0');
       final formattedMinute = picked.minute.toString().padLeft(2, '0');
       setState(() {
-        _timeController.text = '$formattedHour:$formattedMinute';
+        controller.text = '$formattedHour:$formattedMinute';
       });
     }
   }
 
   Future<int?> _showCustomMinutesDialog() async {
-    final controller = TextEditingController(
-      text: (_notificationOffset != 0 &&
-              _notificationOffset != 10 &&
-              _notificationOffset != 30 &&
-              _notificationOffset != 60)
-          ? _notificationOffset.toString()
-          : '15',
+    final currentHours = _notificationOffset ~/ 60;
+    final currentMins = _notificationOffset % 60;
+
+    final hoursController = TextEditingController(
+      text: currentHours > 0 ? currentHours.toString() : '',
     );
+    final minsController = TextEditingController(
+      text: currentMins > 0
+          ? currentMins.toString()
+          : (currentHours == 0 ? '15' : '0'),
+    );
+
     return showDialog<int>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text(
-            '커스텀 알림 시간 설정',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            '커스텀 미리 알림 시간 설정',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            autofocus: true,
-            decoration: const InputDecoration(
-              suffixText: '분 전',
-              hintText: '예: 15',
-            ),
+          content: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: hoursController,
+                  keyboardType: TextInputType.number,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    suffixText: '시간',
+                    hintText: '0',
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: minsController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    suffixText: '분 전',
+                    hintText: '15',
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -179,9 +225,11 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
             ),
             ElevatedButton(
               onPressed: () {
-                final min = int.tryParse(controller.text.trim());
-                if (min != null && min >= 0) {
-                  Navigator.pop(context, min);
+                final h = int.tryParse(hoursController.text.trim()) ?? 0;
+                final m = int.tryParse(minsController.text.trim()) ?? 0;
+                final total = (h * 60) + m;
+                if (total >= 0) {
+                  Navigator.pop(context, total);
                 }
               },
               child: const Text('확인'),
@@ -198,6 +246,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
 
     final loc = _locationController.text.trim();
     final timeStr = _timeController.text.trim();
+    final dueTimeStr = _dueTimeController.text.trim();
     final memoStr = _memoController.text.trim();
 
     widget.onAddTask(
@@ -208,11 +257,286 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       _selectedDueDate,
       loc.isNotEmpty ? loc : null,
       timeStr.isNotEmpty ? timeStr : null,
+      dueTimeStr.isNotEmpty ? dueTimeStr : null,
       memoStr.isNotEmpty ? memoStr : null,
       _hasNotification,
       _notificationOffset,
     );
     Navigator.pop(context);
+  }
+
+  void _onInlineCalendarDayTap(DateTime day) {
+    final tapped = DateTime(day.year, day.month, day.day);
+    final target = DateTime(
+      _selectedTargetDate.year,
+      _selectedTargetDate.month,
+      _selectedTargetDate.day,
+    );
+
+    if (!_isSelectingRangeEnd) {
+      // First Tap: Set targetDate = tapped, reset dueDate = null (single day)
+      setState(() {
+        _selectedTargetDate = tapped;
+        _selectedDueDate = null;
+        _isSelectingRangeEnd = true;
+      });
+    } else {
+      // Second Tap: Set range end or handle same day
+      if (tapped.isAtSameMomentAs(target)) {
+        // Tapped same day twice => Single-day task!
+        setState(() {
+          _selectedTargetDate = target;
+          _selectedDueDate = null;
+          _isSelectingRangeEnd = false;
+        });
+      } else if (tapped.isBefore(target)) {
+        // Tapped earlier day => Swap start and end
+        setState(() {
+          _selectedTargetDate = tapped;
+          _selectedDueDate = target;
+          _isSelectingRangeEnd = false;
+        });
+      } else {
+        // Tapped later day => Range from target to tapped
+        setState(() {
+          _selectedTargetDate = target;
+          _selectedDueDate = tapped;
+          _isSelectingRangeEnd = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildInlineCalendarGrid(ThemeData theme, bool isDark) {
+    final firstOfMonth = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
+    final lastOfMonth = DateTime(
+      _calendarMonth.year,
+      _calendarMonth.month + 1,
+      0,
+    );
+    final firstDisplayDate = firstOfMonth.subtract(
+      Duration(days: firstOfMonth.weekday - 1),
+    );
+    final lastDisplayDate = lastOfMonth.add(
+      Duration(days: 7 - lastOfMonth.weekday),
+    );
+
+    final totalDays = lastDisplayDate.difference(firstDisplayDate).inDays + 1;
+    final weeks = <List<DateTime>>[];
+    for (int i = 0; i < totalDays; i += 7) {
+      weeks.add(
+        List.generate(
+          7,
+          (index) => firstDisplayDate.add(Duration(days: i + index)),
+        ),
+      );
+    }
+
+    final targetOnly = DateTime(
+      _selectedTargetDate.year,
+      _selectedTargetDate.month,
+      _selectedTargetDate.day,
+    );
+    final dueOnly = _selectedDueDate != null
+        ? DateTime(
+            _selectedDueDate!.year,
+            _selectedDueDate!.month,
+            _selectedDueDate!.day,
+          )
+        : null;
+
+    final weekdayNames = ['월', '화', '수', '목', '금', '토', '일'];
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Month Header Switcher
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left, size: 20),
+                onPressed: () {
+                  setState(() {
+                    _calendarMonth = DateTime(
+                      _calendarMonth.year,
+                      _calendarMonth.month - 1,
+                      1,
+                    );
+                  });
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              Text(
+                DateFormat('yyyy년 M월', 'ko').format(_calendarMonth),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right, size: 20),
+                onPressed: () {
+                  setState(() {
+                    _calendarMonth = DateTime(
+                      _calendarMonth.year,
+                      _calendarMonth.month + 1,
+                      1,
+                    );
+                  });
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Weekday Names Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: weekdayNames.map((name) {
+              return Expanded(
+                child: Center(
+                  child: Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: name == '일'
+                          ? Colors.red
+                          : (name == '토'
+                                ? Colors.blue
+                                : (isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600])),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 6),
+          // Calendar Grid Rows
+          ...weeks.map((week) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: week.map((day) {
+                  final dayOnly = DateTime(day.year, day.month, day.day);
+                  final isOutside = day.month != _calendarMonth.month;
+
+                  final isStart = dayOnly.isAtSameMomentAs(targetOnly);
+                  final isEnd =
+                      dueOnly != null && dayOnly.isAtSameMomentAs(dueOnly);
+                  final isInRange =
+                      dueOnly != null &&
+                      dayOnly.isAfter(targetOnly) &&
+                      dayOnly.isBefore(dueOnly);
+                  final isToday =
+                      dayOnly.year == DateTime.now().year &&
+                      dayOnly.month == DateTime.now().month &&
+                      dayOnly.day == DateTime.now().day;
+
+                  Color? cellBg;
+                  BorderRadius cellRadius = BorderRadius.circular(10);
+
+                  if (isStart && (isEnd || dueOnly == null)) {
+                    cellBg = theme.colorScheme.primary;
+                  } else if (isStart) {
+                    cellBg = theme.colorScheme.primary;
+                    cellRadius = const BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      bottomLeft: Radius.circular(10),
+                    );
+                  } else if (isEnd) {
+                    cellBg = Colors.redAccent;
+                    cellRadius = const BorderRadius.only(
+                      topRight: Radius.circular(10),
+                      bottomRight: Radius.circular(10),
+                    );
+                  } else if (isInRange) {
+                    cellBg = theme.colorScheme.primary.withValues(alpha: 0.2);
+                    cellRadius = BorderRadius.zero;
+                  }
+
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => _onInlineCalendarDayTap(day),
+                      child: Container(
+                        height: 36,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: cellBg,
+                          borderRadius: cellRadius,
+                          border: isToday && !isStart && !isEnd
+                              ? Border.all(
+                                  color: theme.colorScheme.primary,
+                                  width: 1.5,
+                                )
+                              : null,
+                        ),
+                        child: Opacity(
+                          opacity: isOutside ? 0.35 : 1.0,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${day.day}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: (isStart || isEnd || isToday)
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: (isStart || isEnd)
+                                      ? Colors.white
+                                      : (day.weekday == 7
+                                            ? Colors.red
+                                            : (day.weekday == 6
+                                                  ? Colors.blue
+                                                  : (isDark
+                                                        ? Colors.white
+                                                        : Colors.black87))),
+                                ),
+                              ),
+                              if (isStart && dueOnly != null)
+                                const Text(
+                                  '시작',
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    color: Colors.white70,
+                                  ),
+                                )
+                              else if (isEnd)
+                                const Text(
+                                  '마감',
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
   }
 
   @override
@@ -272,8 +596,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         color: _hasNotification
                             ? Colors.amber[700]
                             : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary),
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -284,8 +608,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           color: _hasNotification
                               ? Colors.amber[700]
                               : (isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary),
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary),
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -339,64 +663,160 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               const SizedBox(height: 12),
 
               // Time & Location Inputs Row
-              Row(
-                children: [
-                  // Time input
-                  Expanded(
-                    child: TextField(
-                      controller: _timeController,
-                      readOnly: true,
-                      onTap: _pickTime,
-                      decoration: InputDecoration(
-                        hintText: '시간 선택⏱️',
-                        prefixIcon: const Icon(
-                          Icons.access_time_rounded,
-                          size: 18,
-                        ),
-                        suffixIcon: _timeController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 16),
-                                onPressed: () {
-                                  setState(() {
-                                    _timeController.clear();
-                                  });
-                                },
-                              )
-                            : null,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
+              if (_selectedDueDate != null) ...[
+                // Range Task: Separate Start Time & Due Time
+                Row(
+                  children: [
+                    // Start Time input
+                    Expanded(
+                      child: TextField(
+                        controller: _timeController,
+                        readOnly: true,
+                        onTap: () =>
+                            _pickTimeForController(_timeController, '실행/시작 시간'),
+                        decoration: InputDecoration(
+                          hintText: '시작 시간⏱️',
+                          prefixIcon: const Icon(
+                            Icons.access_time_rounded,
+                            size: 18,
+                            color: Colors.blue,
+                          ),
+                          suffixIcon: _timeController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 16),
+                                  onPressed: () {
+                                    setState(() {
+                                      _timeController.clear();
+                                    });
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Location input
-                  Expanded(
-                    child: TextField(
-                      controller: _locationController,
-                      decoration: InputDecoration(
-                        hintText: 'location',
-                        prefixIcon: const Icon(
-                          Icons.location_on_outlined,
-                          size: 18,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
+                    const SizedBox(width: 8),
+                    // Due Time input
+                    Expanded(
+                      child: TextField(
+                        controller: _dueTimeController,
+                        readOnly: true,
+                        onTap: () =>
+                            _pickTimeForController(_dueTimeController, '마감 시간'),
+                        decoration: InputDecoration(
+                          hintText: '마감 시간🚩',
+                          prefixIcon: const Icon(
+                            Icons.flag_outlined,
+                            size: 18,
+                            color: Colors.redAccent,
+                          ),
+                          suffixIcon: _dueTimeController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 16),
+                                  onPressed: () {
+                                    setState(() {
+                                      _dueTimeController.clear();
+                                    });
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                         ),
                       ),
-                      textInputAction: TextInputAction.next,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _locationController,
+                  decoration: InputDecoration(
+                    hintText: '위치/장소📍',
+                    prefixIcon: const Icon(
+                      Icons.location_on_outlined,
+                      size: 18,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
                     ),
                   ),
-                ],
-              ),
+                  textInputAction: TextInputAction.next,
+                ),
+              ] else ...[
+                // Single-day Task: Time + Location Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _timeController,
+                        readOnly: true,
+                        onTap: () =>
+                            _pickTimeForController(_timeController, '실행 시간'),
+                        decoration: InputDecoration(
+                          hintText: '시간 선택⏱️',
+                          prefixIcon: const Icon(
+                            Icons.access_time_rounded,
+                            size: 18,
+                          ),
+                          suffixIcon: _timeController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 16),
+                                  onPressed: () {
+                                    setState(() {
+                                      _timeController.clear();
+                                    });
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _locationController,
+                        decoration: InputDecoration(
+                          hintText: '위치/장소📍',
+                          prefixIcon: const Icon(
+                            Icons.location_on_outlined,
+                            size: 18,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                        ),
+                        textInputAction: TextInputAction.next,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 12),
 
               // Memo / Description Input
@@ -435,11 +855,19 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   runSpacing: 6,
                   children: [
                     ChoiceChip(
-                      label: const Text('정시', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        '정시',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       selected: _notificationOffset == 0,
                       selectedColor: Colors.amber[700],
                       labelStyle: TextStyle(
-                        color: _notificationOffset == 0 ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                        color: _notificationOffset == 0
+                            ? Colors.white
+                            : (isDark ? Colors.white70 : Colors.black87),
                       ),
                       showCheckmark: false,
                       onSelected: (selected) {
@@ -447,11 +875,19 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       },
                     ),
                     ChoiceChip(
-                      label: const Text('10분 전', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        '10분 전',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       selected: _notificationOffset == 10,
                       selectedColor: Colors.amber[700],
                       labelStyle: TextStyle(
-                        color: _notificationOffset == 10 ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                        color: _notificationOffset == 10
+                            ? Colors.white
+                            : (isDark ? Colors.white70 : Colors.black87),
                       ),
                       showCheckmark: false,
                       onSelected: (selected) {
@@ -459,11 +895,19 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       },
                     ),
                     ChoiceChip(
-                      label: const Text('30분 전', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        '30분 전',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       selected: _notificationOffset == 30,
                       selectedColor: Colors.amber[700],
                       labelStyle: TextStyle(
-                        color: _notificationOffset == 30 ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                        color: _notificationOffset == 30
+                            ? Colors.white
+                            : (isDark ? Colors.white70 : Colors.black87),
                       ),
                       showCheckmark: false,
                       onSelected: (selected) {
@@ -471,11 +915,19 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       },
                     ),
                     ChoiceChip(
-                      label: const Text('1시간 전', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        '1시간 전',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       selected: _notificationOffset == 60,
                       selectedColor: Colors.amber[700],
                       labelStyle: TextStyle(
-                        color: _notificationOffset == 60 ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                        color: _notificationOffset == 60
+                            ? Colors.white
+                            : (isDark ? Colors.white70 : Colors.black87),
                       ),
                       showCheckmark: false,
                       onSelected: (selected) {
@@ -484,15 +936,29 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     ),
                     ChoiceChip(
                       label: Text(
-                        _notificationOffset != 0 && _notificationOffset != 10 && _notificationOffset != 30 && _notificationOffset != 60
+                        _notificationOffset != 0 &&
+                                _notificationOffset != 10 &&
+                                _notificationOffset != 30 &&
+                                _notificationOffset != 60
                             ? '커스텀 ($_notificationOffset분 전)'
                             : '커스텀',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      selected: _notificationOffset != 0 && _notificationOffset != 10 && _notificationOffset != 30 && _notificationOffset != 60,
+                      selected:
+                          _notificationOffset != 0 &&
+                          _notificationOffset != 10 &&
+                          _notificationOffset != 30 &&
+                          _notificationOffset != 60,
                       selectedColor: Colors.amber[700],
                       labelStyle: TextStyle(
-                        color: (_notificationOffset != 0 && _notificationOffset != 10 && _notificationOffset != 30 && _notificationOffset != 60)
+                        color:
+                            (_notificationOffset != 0 &&
+                                _notificationOffset != 10 &&
+                                _notificationOffset != 30 &&
+                                _notificationOffset != 60)
                             ? Colors.white
                             : (isDark ? Colors.white70 : Colors.black87),
                       ),
@@ -601,35 +1067,109 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Target Date & Due Date Selection
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '날짜: ${DateFormat('yyyy.MM.dd').format(_selectedTargetDate)}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
+              // Inline Range Calendar Selection Header & Expandable Grid
+              InputDecorator(
+                decoration: InputDecoration(
+                  prefixIcon: Icon(
+                    _selectedDueDate != null
+                        ? Icons.date_range_rounded
+                        : Icons.today_rounded,
+                    size: 18,
+                    color: Theme.of(context).primaryColor,
                   ),
-                  TextButton.icon(
-                    icon: const Icon(Icons.calendar_month, size: 16),
-                    label: const Text('날짜 변경'),
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedTargetDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          _selectedTargetDate = picked;
-                        });
-                      }
-                    },
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                ),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _isCalendarExpanded = !_isCalendarExpanded;
+                    });
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _selectedDueDate == null
+                                ? '실행일: ${DateFormat('yyyy.MM.dd (E)', 'ko').format(_selectedTargetDate)}'
+                                : '기간: ${DateFormat('MM.dd', 'ko').format(_selectedTargetDate)} ~ ${DateFormat('MM.dd', 'ko').format(_selectedDueDate!)}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            _selectedDueDate == null
+                                ? '당일 일정 (달력을 2번 눌러 기간 설정)'
+                                : '${_selectedDueDate!.difference(_selectedTargetDate).inDays + 1}일간 진행되는 일정 (마감: ${DateFormat('MM.dd').format(_selectedDueDate!)})',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          if (_selectedDueDate != null)
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedDueDate = null;
+                                  _isSelectingRangeEnd = false;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                margin: const EdgeInsets.only(right: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  '당일로 초기화',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Icon(
+                            _isCalendarExpanded
+                                ? Icons.keyboard_arrow_up_rounded
+                                : Icons.keyboard_arrow_down_rounded,
+                            size: 20,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Expandable Inline Range Calendar Grid
+              AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                child: _isCalendarExpanded
+                    ? _buildInlineCalendarGrid(Theme.of(context), isDark)
+                    : const SizedBox.shrink(),
               ),
               const SizedBox(height: 16),
 
