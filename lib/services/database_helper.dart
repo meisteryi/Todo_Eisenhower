@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../models/category_model.dart';
+import '../models/routine_model.dart';
 import '../models/todo_model.dart';
 
 class DatabaseHelper {
@@ -17,7 +20,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    // macOS desktop initialization for SQLite
+    // macOS/Desktop initialization for SQLite
     if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
@@ -31,14 +34,11 @@ class DatabaseHelper {
       path = join(dbPath, filePath);
     }
 
-    // Note: If you want to configure shared containers for App Groups in the future:
-    // final sharedDirectory = await getApplicationDocumentsDirectory(); // Custom App Group path goes here
-    // final path = join(sharedDirectory.path, filePath);
-
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -48,6 +48,9 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         quadrant INTEGER NOT NULL,
+        category_id INTEGER,
+        routine_id INTEGER,
+        target_date TEXT,
         is_completed INTEGER NOT NULL DEFAULT 0,
         is_trash INTEGER NOT NULL DEFAULT 0,
         due_date TEXT,
@@ -56,7 +59,81 @@ class DatabaseHelper {
         deleted_at TEXT
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        color_hex TEXT NOT NULL,
+        emoji TEXT NOT NULL DEFAULT '📝',
+        is_visible INTEGER NOT NULL DEFAULT 1,
+        sort_order INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE routines (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_id INTEGER,
+        title TEXT NOT NULL,
+        repeat_type TEXT NOT NULL,
+        repeat_days TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1
+      )
+    ''');
+
+    // Populate default categories
+    for (final cat in Category.defaultCategories()) {
+      await db.insert('categories', cat.toMap());
+    }
   }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE todos ADD COLUMN category_id INTEGER');
+      await db.execute('ALTER TABLE todos ADD COLUMN routine_id INTEGER');
+      await db.execute('ALTER TABLE todos ADD COLUMN target_date TEXT');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          color_hex TEXT NOT NULL,
+          emoji TEXT NOT NULL DEFAULT '📝',
+          is_visible INTEGER NOT NULL DEFAULT 1,
+          sort_order INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS routines (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          category_id INTEGER,
+          title TEXT NOT NULL,
+          repeat_type TEXT NOT NULL,
+          repeat_days TEXT NOT NULL,
+          start_date TEXT NOT NULL,
+          is_active INTEGER NOT NULL DEFAULT 1
+        )
+      ''');
+
+      // Populate default categories if empty
+      final catCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM categories')) ?? 0;
+      if (catCount == 0) {
+        for (final cat in Category.defaultCategories()) {
+          await db.insert('categories', cat.toMap());
+        }
+      }
+
+      // Populate target_date for existing todos using created_at date
+      await db.execute('''
+        UPDATE todos SET target_date = substr(created_at, 1, 10) WHERE target_date IS NULL
+      ''');
+    }
+  }
+
+  // --- TODOS ---
 
   Future<int> insert(Todo todo) async {
     final db = await instance.database;
@@ -111,13 +188,11 @@ class DatabaseHelper {
   }
 
   /// Finds active (uncompleted) Q4 tasks created more than 7 days ago and soft-deletes them.
-  /// Returns the number of items soft-deleted.
   Future<int> incinerateOldQ4Tasks() async {
     final db = await instance.database;
     final now = DateTime.now();
     final sevenDaysAgo = now.subtract(const Duration(days: 7)).toIso8601String();
 
-    // First find which IDs will be deleted so we can log or count them
     final List<Map<String, dynamic>> results = await db.query(
       'todos',
       columns: ['id'],
@@ -140,5 +215,92 @@ class DatabaseHelper {
     );
 
     return count;
+  }
+
+  // --- CATEGORIES ---
+
+  Future<List<Category>> fetchCategories() async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'categories',
+      orderBy: 'sort_order ASC, id ASC',
+    );
+    if (maps.isEmpty) {
+      // Re-populate if missing
+      for (final cat in Category.defaultCategories()) {
+        await db.insert('categories', cat.toMap());
+      }
+      return Category.defaultCategories();
+    }
+    return maps.map((map) => Category.fromMap(map)).toList();
+  }
+
+  Future<int> insertCategory(Category category) async {
+    final db = await instance.database;
+    return await db.insert('categories', category.toMap());
+  }
+
+  Future<int> updateCategory(Category category) async {
+    final db = await instance.database;
+    return await db.update(
+      'categories',
+      category.toMap(),
+      where: 'id = ?',
+      whereArgs: [category.id],
+    );
+  }
+
+  Future<int> deleteCategory(int id) async {
+    final db = await instance.database;
+    // Set category_id to NULL on related todos
+    await db.update(
+      'todos',
+      {'category_id': null},
+      where: 'category_id = ?',
+      whereArgs: [id],
+    );
+    // Delete routines under category
+    await db.delete(
+      'routines',
+      where: 'category_id = ?',
+      whereArgs: [id],
+    );
+    return await db.delete(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // --- ROUTINES ---
+
+  Future<List<Routine>> fetchRoutines() async {
+    final db = await instance.database;
+    final maps = await db.query('routines', orderBy: 'id ASC');
+    return maps.map((map) => Routine.fromMap(map)).toList();
+  }
+
+  Future<int> insertRoutine(Routine routine) async {
+    final db = await instance.database;
+    return await db.insert('routines', routine.toMap());
+  }
+
+  Future<int> updateRoutine(Routine routine) async {
+    final db = await instance.database;
+    return await db.update(
+      'routines',
+      routine.toMap(),
+      where: 'id = ?',
+      whereArgs: [routine.id],
+    );
+  }
+
+  Future<int> deleteRoutine(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'routines',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

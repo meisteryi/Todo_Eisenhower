@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../models/category_model.dart';
 import '../theme/app_theme.dart';
 
 class AddTaskSheet extends StatefulWidget {
   final int initialQuadrant;
-  final Function(String title, int quadrant, DateTime? dueDate) onAddTask;
+  final List<Category> categories;
+  final int? initialCategoryId;
+  final DateTime? initialTargetDate;
+  final Function(String title, int quadrant, int? categoryId, DateTime? targetDate, DateTime? dueDate) onAddTask;
 
   const AddTaskSheet({
     super.key,
     required this.initialQuadrant,
+    this.categories = const [],
+    this.initialCategoryId,
+    this.initialTargetDate,
     required this.onAddTask,
   });
 
@@ -19,13 +26,17 @@ class AddTaskSheet extends StatefulWidget {
 class _AddTaskSheetState extends State<AddTaskSheet> {
   late TextEditingController _titleController;
   late int _selectedQ;
-  DateTime? _selectedDate;
+  int? _selectedCategoryId;
+  late DateTime _selectedTargetDate;
+  DateTime? _selectedDueDate;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController();
     _selectedQ = widget.initialQuadrant;
+    _selectedCategoryId = widget.initialCategoryId ?? (widget.categories.isNotEmpty ? widget.categories.first.id : null);
+    _selectedTargetDate = widget.initialTargetDate ?? DateTime.now();
   }
 
   @override
@@ -55,7 +66,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     final text = _titleController.text.trim();
     if (text.isEmpty) return;
 
-    widget.onAddTask(text, _selectedQ, _selectedDate);
+    widget.onAddTask(text, _selectedQ, _selectedCategoryId, _selectedTargetDate, _selectedDueDate);
     Navigator.pop(context);
   }
 
@@ -77,214 +88,222 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           ),
         ),
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Handle Bar
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[700] : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '새로운 할 일 등록',
-              style: textTheme.titleMedium?.copyWith(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-
-            // Title Input Text Field
-            TextField(
-              controller: _titleController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: '할 일을 입력하세요...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Handle Bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[700] : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: _getQColor(_selectedQ),
-                    width: 2.0,
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
               ),
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submitTask(),
-            ),
-            const SizedBox(height: 16),
-
-            // Quadrant Segment Selection
-            Text(
-              '사분면 영역 지정',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              const SizedBox(height: 16),
+              Text(
+                '새로운 할 일 등록',
+                style: textTheme.titleMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [0, 1, 2, 3, 4].map((q) {
-                final isSelected = _selectedQ == q;
-                final qColor = _getQColor(q);
-                String qName = '';
-                switch (q) {
-                  case 0:
-                    qName = '미분류';
-                    break;
-                  case 1:
-                    qName = 'Q1: Do';
-                    break;
-                  case 2:
-                    qName = 'Q2: Plan';
-                    break;
-                  case 3:
-                    qName = 'Q3: Delg';
-                    break;
-                  case 4:
-                    qName = 'Q4: Dlet';
-                    break;
-                }
+              const SizedBox(height: 16),
 
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 3),
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedQ = q;
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? qColor
-                              : (isDark ? AppColors.darkBg : Colors.grey[100]),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isSelected ? qColor : Colors.transparent,
-                            width: 1.5,
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          qName,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected
-                                ? Colors.white
-                                : (isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary),
-                          ),
-                        ),
-                      ),
+              // Title Input Text Field
+              TextField(
+                controller: _titleController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: '할 일을 입력하세요...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-
-            // Due Date Picker Trigger
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today_outlined,
-                      size: 18,
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: _getQColor(_selectedQ),
+                      width: 2.0,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _selectedDate == null
-                          ? '마감 기한 지정 안 함'
-                          : '기한: ${DateFormat('yyyy.MM.dd HH:mm').format(_selectedDate!)}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _selectedDate == null
-                            ? (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)
-                            : _getQColor(_selectedQ),
-                        fontWeight: _selectedDate == null ? FontWeight.normal : FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
-                TextButton(
-                  onPressed: () async {
-                    final pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate ?? DateTime.now(),
-                      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-                    );
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submitTask(),
+              ),
+              const SizedBox(height: 16),
 
-                    if (pickedDate != null) {
-                      if (!context.mounted) return;
-                      final pickedTime = await showTimePicker(
-                        context: context,
-                        initialTime: _selectedDate != null
-                            ? TimeOfDay.fromDateTime(_selectedDate!)
-                            : const TimeOfDay(hour: 12, minute: 0),
+              // Category Selection Dropdown
+              if (widget.categories.isNotEmpty) ...[
+                Text(
+                  '카테고리 선택',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int?>(
+                  initialValue: _selectedCategoryId,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('카테고리 없음'),
+                    ),
+                    ...widget.categories.map((cat) {
+                      return DropdownMenuItem<int?>(
+                        value: cat.id,
+                        child: Text('${cat.emoji} ${cat.name}'),
                       );
-
-                      setState(() {
-                        _selectedDate = DateTime(
-                          pickedDate.year,
-                          pickedDate.month,
-                          pickedDate.day,
-                          pickedTime?.hour ?? 12,
-                          pickedTime?.minute ?? 0,
-                        );
-                      });
-                    }
+                    }),
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedCategoryId = val;
+                    });
                   },
-                  child: const Text('지정하기'),
                 ),
+                const SizedBox(height: 16),
               ],
-            ),
-            const SizedBox(height: 20),
 
-            // Submit Button
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _getQColor(_selectedQ),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: _submitTask,
-              child: const Text(
-                '할 일 등록 완료',
+              // Quadrant Segment Selection
+              Text(
+                '사분면 영역 지정 (아이젠하워)',
                 style: TextStyle(
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Row(
+                children: [0, 1, 2, 3, 4].map((q) {
+                  final isSelected = _selectedQ == q;
+                  final qColor = _getQColor(q);
+                  String qName = '';
+                  switch (q) {
+                    case 0:
+                      qName = '미분류';
+                      break;
+                    case 1:
+                      qName = 'Q1';
+                      break;
+                    case 2:
+                      qName = 'Q2';
+                      break;
+                    case 3:
+                      qName = 'Q3';
+                      break;
+                    case 4:
+                      qName = 'Q4';
+                      break;
+                  }
+
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedQ = q;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? qColor
+                                : (isDark ? AppColors.darkBg : Colors.grey[100]),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected ? qColor : Colors.transparent,
+                              width: 1.5,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            qName,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+
+              // Target Date & Due Date Selection
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '날짜: ${DateFormat('yyyy.MM.dd').format(_selectedTargetDate)}',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  TextButton.icon(
+                    icon: const Icon(Icons.calendar_month, size: 16),
+                    label: const Text('날짜 변경'),
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedTargetDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _selectedTargetDate = picked;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Submit Button
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _getQColor(_selectedQ),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _submitTask,
+                child: const Text(
+                  '할 일 등록 완료',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

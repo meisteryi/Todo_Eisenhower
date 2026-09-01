@@ -1,7 +1,10 @@
 class Todo {
   final int? id;
   final String title;
-  final int quadrant; // 1: Q1 (Do), 2: Q2 (Decide), 3: Q3 (Delegate), 4: Q4 (Delete)
+  final int quadrant; // 0: Inbox, 1: Q1 (Do), 2: Q2 (Decide), 3: Q3 (Delegate), 4: Q4 (Delete)
+  final int? categoryId;
+  final int? routineId;
+  final DateTime targetDate;
   final bool isCompleted;
   final bool isTrash;
   final DateTime? dueDate;
@@ -13,18 +16,24 @@ class Todo {
     this.id,
     required this.title,
     required this.quadrant,
+    this.categoryId,
+    this.routineId,
+    DateTime? targetDate,
     this.isCompleted = false,
     this.isTrash = false,
     this.dueDate,
     required this.createdAt,
     this.completedAt,
     this.deletedAt,
-  });
+  }) : targetDate = targetDate ?? DateTime.now();
 
   Todo copyWith({
     int? id,
     String? title,
     int? quadrant,
+    int? categoryId,
+    int? routineId,
+    DateTime? targetDate,
     bool? isCompleted,
     bool? isTrash,
     DateTime? dueDate,
@@ -36,6 +45,9 @@ class Todo {
       id: id ?? this.id,
       title: title ?? this.title,
       quadrant: quadrant ?? this.quadrant,
+      categoryId: categoryId ?? this.categoryId,
+      routineId: routineId ?? this.routineId,
+      targetDate: targetDate ?? this.targetDate,
       isCompleted: isCompleted ?? this.isCompleted,
       isTrash: isTrash ?? this.isTrash,
       dueDate: dueDate ?? this.dueDate,
@@ -46,10 +58,14 @@ class Todo {
   }
 
   Map<String, dynamic> toMap() {
+    final targetDateStr = "${targetDate.year.toString().padLeft(4, '0')}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}";
     return {
       if (id != null) 'id': id,
       'title': title,
       'quadrant': quadrant,
+      'category_id': categoryId,
+      'routine_id': routineId,
+      'target_date': targetDateStr,
       'is_completed': isCompleted ? 1 : 0,
       'is_trash': isTrash ? 1 : 0,
       'due_date': dueDate?.toIso8601String(),
@@ -60,10 +76,28 @@ class Todo {
   }
 
   factory Todo.fromMap(Map<String, dynamic> map) {
+    DateTime parsedTargetDate = DateTime.now();
+    if (map['target_date'] != null) {
+      final parts = (map['target_date'] as String).split('-');
+      if (parts.length == 3) {
+        parsedTargetDate = DateTime(
+          int.parse(parts[0]),
+          int.parse(parts[1]),
+          int.parse(parts[2]),
+        );
+      }
+    } else if (map['created_at'] != null) {
+      final parsedCreated = DateTime.parse(map['created_at'] as String);
+      parsedTargetDate = DateTime(parsedCreated.year, parsedCreated.month, parsedCreated.day);
+    }
+
     return Todo(
       id: map['id'] as int?,
       title: map['title'] as String,
       quadrant: map['quadrant'] as int,
+      categoryId: map['category_id'] as int?,
+      routineId: map['routine_id'] as int?,
+      targetDate: parsedTargetDate,
       isCompleted: (map['is_completed'] as int) == 1,
       isTrash: (map['is_trash'] as int) == 1,
       dueDate: map['due_date'] != null ? DateTime.parse(map['due_date'] as String) : null,
@@ -73,3 +107,4 @@ class Todo {
     );
   }
 }
+
