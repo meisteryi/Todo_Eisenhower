@@ -11,6 +11,7 @@ import '../widgets/routine_manage_dialog.dart';
 import '../widgets/mini_map_tracker.dart';
 import '../widgets/todo_list_page.dart';
 import '../widgets/add_task_sheet.dart';
+import '../widgets/help_guide_dialog.dart';
 import 'trash_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -191,6 +192,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openHelpGuideDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => const HelpGuideDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final trashCount = widget.provider.trashTodos.length;
@@ -252,6 +260,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   )
                 : null,
             actions: [
+              IconButton(
+                icon: const Icon(Icons.help_outline_rounded),
+                tooltip: '사용 설명서',
+                onPressed: _openHelpGuideDialog,
+              ),
               IconButton(
                 icon: const Icon(Icons.category_outlined),
                 tooltip: '카테고리 관리',
@@ -336,6 +349,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
+                                  ListTile(
+                                    leading: const Icon(Icons.help_outline, color: Colors.blue),
+                                    title: const Text('사용 설명서'),
+                                    onTap: _openHelpGuideDialog,
+                                    dense: true,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
                                   ListTile(
                                     leading: const Icon(Icons.category, color: Colors.indigo),
                                     title: const Text('카테고리 관리'),
