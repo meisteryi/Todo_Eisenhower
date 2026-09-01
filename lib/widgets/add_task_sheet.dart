@@ -288,6 +288,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           _selectedTargetDate = target;
           _selectedDueDate = null;
           _isSelectingRangeEnd = false;
+          _isCalendarExpanded = false;
         });
       } else if (tapped.isBefore(target)) {
         // Tapped earlier day => Swap start and end
@@ -295,6 +296,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           _selectedTargetDate = tapped;
           _selectedDueDate = target;
           _isSelectingRangeEnd = false;
+          _isCalendarExpanded = false;
         });
       } else {
         // Tapped later day => Range from target to tapped
@@ -302,6 +304,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           _selectedTargetDate = target;
           _selectedDueDate = tapped;
           _isSelectingRangeEnd = false;
+          _isCalendarExpanded = false;
         });
       }
     }
@@ -544,11 +547,14 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textTheme = Theme.of(context).textTheme;
 
+    final maxHeight = MediaQuery.of(context).size.height * 0.85;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
+        constraints: BoxConstraints(maxHeight: maxHeight),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : Colors.white,
           borderRadius: const BorderRadius.only(
