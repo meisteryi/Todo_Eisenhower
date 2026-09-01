@@ -169,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             } else {
+              final enteringQ4 = quadrant == 4 && todoToEdit.quadrant != 4;
               final updated = todoToEdit.copyWith(
                 title: title,
                 quadrant: quadrant,
@@ -180,6 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 memo: memo,
                 hasNotification: hasNotification,
                 notificationOffset: notificationOffset,
+                createdAt: enteringQ4 ? DateTime.now() : todoToEdit.createdAt,
               );
               widget.provider.updateTodo(updated);
             }

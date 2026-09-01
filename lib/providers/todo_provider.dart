@@ -256,7 +256,13 @@ class TodoProvider with ChangeNotifier {
   // Move todo quadrant
   Future<void> moveTodo(Todo todo, int newQuadrant) async {
     if (newQuadrant < 0 || newQuadrant > 4) return;
-    final updatedTodo = todo.copyWith(quadrant: newQuadrant);
+
+    // Reset createdAt to now when entering Q4 so 7-day incineration countdown starts from entry moment
+    final shouldResetTimer = newQuadrant == 4 && todo.quadrant != 4;
+    final updatedTodo = todo.copyWith(
+      quadrant: newQuadrant,
+      createdAt: shouldResetTimer ? DateTime.now() : todo.createdAt,
+    );
 
     try {
       await _dbHelper.update(updatedTodo);

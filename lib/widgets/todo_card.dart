@@ -238,22 +238,28 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
                                       : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
                                 ),
                               ),
-                              if (widget.todo.timeStr != null || widget.todo.location != null || widget.todo.dueDate != null || widget.todo.hasNotification) ...[
-                                const SizedBox(height: 4),
-                                Wrap(
-                                  spacing: 6,
-                                  runSpacing: 4,
-                                  children: [
-                                    if (widget.todo.hasNotification)
-                                      _InfoChip(
-                                        icon: Icons.notifications_active_rounded,
-                                        label: widget.todo.notificationOffset == 0
-                                            ? '알림'
-                                            : (widget.todo.notificationOffset == 60
-                                                ? '1시간 전'
-                                                : '${widget.todo.notificationOffset}분 전'),
-                                        color: Colors.amber[800]!,
-                                      ),
+                               if (widget.todo.timeStr != null ||
+                                  widget.todo.location != null ||
+                                  widget.todo.dueDate != null ||
+                                  widget.todo.hasNotification ||
+                                  (widget.todo.quadrant == 4 && !widget.todo.isCompleted)) ...[
+                                 const SizedBox(height: 4),
+                                 Wrap(
+                                   spacing: 6,
+                                   runSpacing: 4,
+                                   children: [
+                                     if (widget.todo.quadrant == 4 && !widget.todo.isCompleted)
+                                       _IncineratorBadge(todo: widget.todo),
+                                     if (widget.todo.hasNotification)
+                                       _InfoChip(
+                                         icon: Icons.notifications_active_rounded,
+                                         label: widget.todo.notificationOffset == 0
+                                             ? '알림'
+                                             : (widget.todo.notificationOffset == 60
+                                                 ? '1시간 전'
+                                                 : '${widget.todo.notificationOffset}분 전'),
+                                         color: Colors.amber[800]!,
+                                       ),
                                     if (widget.todo.timeStr != null && widget.todo.timeStr!.isNotEmpty)
                                       _InfoChip(
                                         icon: Icons.access_time_rounded,
@@ -536,6 +542,54 @@ class _InfoChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _IncineratorBadge extends StatelessWidget {
+  final Todo todo;
+
+  const _IncineratorBadge({required this.todo});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final creationDate = todo.createdAt;
+    final expiryDate = creationDate.add(const Duration(days: 7));
+    final remainingDuration = expiryDate.difference(now);
+
+    final daysRemaining = remainingDuration.inDays;
+    final hoursRemaining = remainingDuration.inHours;
+
+    Color color;
+    String label;
+
+    if (hoursRemaining <= 0) {
+      color = Colors.red[700]!;
+      label = '🔥 오늘 소각 예정';
+    } else if (daysRemaining < 1) {
+      color = Colors.red[600]!;
+      label = '🔥 $hoursRemaining시간 후 소각';
+    } else {
+      color = Colors.deepOrange;
+      label = '🔥 $daysRemaining일 후 소각';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
       ),
     );
   }
