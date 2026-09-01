@@ -24,8 +24,8 @@ class TodoProvider with ChangeNotifier {
     DateTime.now().day,
   );
 
-  // Active Main View Mode: 'todomate', 'eisenhower', 'routines'
-  String _activeViewMode = 'todomate';
+  // Active Main View Mode: 'eisenhower', 'todomate', 'routines'
+  String _activeViewMode = 'eisenhower';
 
   // Pomodoro Focus Timer State
   int? _pomodoroTodoId;

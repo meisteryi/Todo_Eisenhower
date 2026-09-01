@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'providers/todo_provider.dart';
 import 'screens/home_screen.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ko', null);
 
   final provider = TodoProvider();
   runApp(MyApp(provider: provider));
@@ -23,6 +26,16 @@ class MyApp extends StatelessWidget {
       builder: (context, _) {
         return MaterialApp(
           title: '아이젠하워 투두',
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('ko', 'KR'),
+            Locale('en', 'US'),
+          ],
+          locale: const Locale('ko', 'KR'),
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode:

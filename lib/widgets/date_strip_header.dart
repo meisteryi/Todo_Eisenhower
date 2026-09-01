@@ -13,10 +13,14 @@ class DateStripHeader extends StatelessWidget {
     final selected = provider.selectedDate;
 
     final monday = selected.subtract(Duration(days: selected.weekday - 1));
-    final weekDays = List.generate(7, (index) => monday.add(Duration(days: index)));
+    final weekDays = List.generate(
+      7,
+      (index) => monday.add(Duration(days: index)),
+    );
 
     final monthFormat = DateFormat('yyyy년 M월', 'ko');
-    final isTodaySelected = selected.year == DateTime.now().year &&
+    final isTodaySelected =
+        selected.year == DateTime.now().year &&
         selected.month == DateTime.now().month &&
         selected.day == DateTime.now().day;
 
@@ -53,7 +57,10 @@ class DateStripHeader extends StatelessWidget {
                         provider.setSelectedDate(DateTime.now());
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(12),
@@ -75,7 +82,9 @@ class DateStripHeader extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.chevron_left, size: 20),
                     onPressed: () {
-                      provider.setSelectedDate(selected.subtract(const Duration(days: 7)));
+                      provider.setSelectedDate(
+                        selected.subtract(const Duration(days: 7)),
+                      );
                     },
                     tooltip: '이전 주',
                     constraints: const BoxConstraints(),
@@ -101,7 +110,9 @@ class DateStripHeader extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.chevron_right, size: 20),
                     onPressed: () {
-                      provider.setSelectedDate(selected.add(const Duration(days: 7)));
+                      provider.setSelectedDate(
+                        selected.add(const Duration(days: 7)),
+                      );
                     },
                     tooltip: '다음 주',
                     constraints: const BoxConstraints(),
@@ -116,17 +127,23 @@ class DateStripHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: weekDays.map((day) {
-              final isSelected = day.year == selected.year &&
+              final isSelected =
+                  day.year == selected.year &&
                   day.month == selected.month &&
                   day.day == selected.day;
-              final isToday = day.year == DateTime.now().year &&
+              final isToday =
+                  day.year == DateTime.now().year &&
                   day.month == DateTime.now().month &&
                   day.day == DateTime.now().day;
 
-              final dayTodos = provider.todos.where((t) =>
-                  t.targetDate.year == day.year &&
-                  t.targetDate.month == day.month &&
-                  t.targetDate.day == day.day).toList();
+              final dayTodos = provider.todos
+                  .where(
+                    (t) =>
+                        t.targetDate.year == day.year &&
+                        t.targetDate.month == day.month &&
+                        t.targetDate.day == day.day,
+                  )
+                  .toList();
               final hasCompleted = dayTodos.any((t) => t.isCompleted);
               final totalCount = dayTodos.length;
 
@@ -146,11 +163,18 @@ class DateStripHeader extends StatelessWidget {
                       color: isSelected
                           ? theme.colorScheme.primary
                           : (isToday
-                              ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                              : Colors.transparent),
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.1,
+                                  )
+                                : Colors.transparent),
                       borderRadius: BorderRadius.circular(16),
                       border: isToday && !isSelected
-                          ? Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.4), width: 1.5)
+                          ? Border.all(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.4,
+                              ),
+                              width: 1.5,
+                            )
                           : null,
                     ),
                     child: Column(
@@ -163,8 +187,11 @@ class DateStripHeader extends StatelessWidget {
                             color: isSelected
                                 ? theme.colorScheme.onPrimary
                                 : (day.weekday == 7
-                                    ? Colors.red
-                                    : (day.weekday == 6 ? Colors.blue : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
+                                      ? Colors.red
+                                      : (day.weekday == 6
+                                            ? Colors.blue
+                                            : theme.textTheme.bodyMedium?.color
+                                                  ?.withValues(alpha: 0.7))),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -190,7 +217,9 @@ class DateStripHeader extends StatelessWidget {
                                   shape: BoxShape.circle,
                                   color: isSelected
                                       ? theme.colorScheme.onPrimary
-                                      : (hasCompleted ? Colors.green : Colors.orange),
+                                      : (hasCompleted
+                                            ? Colors.green
+                                            : Colors.orange),
                                 ),
                               )
                             else

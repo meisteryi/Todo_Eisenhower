@@ -203,29 +203,54 @@ class _HomeScreenState extends State<HomeScreen> {
         return Scaffold(
           appBar: AppBar(
             title: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.check_box_outlined, color: Colors.indigo),
                 const SizedBox(width: 8),
                 const Text(
-                  'Todo Mate & Matrix',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  '아이젠하워 투두',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
                 ),
-                const SizedBox(width: 16),
-                Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(20),
+                if (isDesktop) ...[
+                  const SizedBox(width: 16),
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildModeChip('eisenhower', '매트릭스 뷰', Icons.grid_view),
+                        _buildModeChip('todomate', '투두메이트 뷰', Icons.calendar_view_day),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      _buildModeChip('todomate', '투두메이트 뷰', Icons.calendar_view_day),
-                      _buildModeChip('eisenhower', '매트릭스 뷰', Icons.grid_view),
-                    ],
-                  ),
-                ),
+                ],
               ],
             ),
+            bottom: !isDesktop
+                ? PreferredSize(
+                    preferredSize: const Size.fromHeight(42),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildModeChip('eisenhower', '매트릭스 뷰', Icons.grid_view),
+                            _buildModeChip('todomate', '투두메이트 뷰', Icons.calendar_view_day),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                : null,
             actions: [
               IconButton(
                 icon: const Icon(Icons.category_outlined),
