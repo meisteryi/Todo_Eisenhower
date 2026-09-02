@@ -230,64 +230,92 @@ class _TodoMateViewState extends State<TodoMateView> {
             ...pendingRoutines.map((routine) {
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.05)
                       : Colors.black.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                  leading: Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isDark ? Colors.white12 : Colors.black12,
-                    ),
-                    child: Icon(
-                      Icons.autorenew_rounded,
-                      size: 16,
-                      color: isDark ? Colors.white54 : Colors.black45,
-                    ),
-                  ),
-                  title: Text(
-                    routine.title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: (isDark ? Colors.white70 : Colors.black87).withValues(alpha: 0.6),
-                    ),
-                  ),
-                  subtitle: Text(
-                    '반복 루틴${routine.timeStr != null ? ' • ${routine.timeStr}' : ''}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark ? Colors.white38 : Colors.black38,
-                    ),
-                  ),
-                  trailing: TextButton.icon(
-                    onPressed: () async {
-                      await widget.provider.instantiateRoutineAsTodo(
-                        routine,
-                        widget.provider.selectedDate,
-                      );
-                    },
-                    icon: const Icon(Icons.add_rounded, size: 16, color: AppColors.q2),
-                    label: const Text(
-                      '추가',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.q2,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark ? Colors.white12 : Colors.black12,
+                      ),
+                      child: Icon(
+                        Icons.autorenew_rounded,
+                        size: 15,
+                        color: isDark ? Colors.white54 : Colors.black45,
                       ),
                     ),
-                    style: TextButton.styleFrom(
-                      backgroundColor: AppColors.q2.withValues(alpha: 0.15),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            routine.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 1),
+                          Text(
+                            '반복 루틴${routine.timeStr != null ? ' • ${routine.timeStr}' : ''}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () async {
+                        await widget.provider.instantiateRoutineAsTodo(
+                          routine,
+                          widget.provider.selectedDate,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.q2.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add_rounded, size: 15, color: AppColors.q2),
+                            SizedBox(width: 2),
+                            Text(
+                              '추가',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.q2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }),

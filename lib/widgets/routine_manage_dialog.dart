@@ -22,37 +22,38 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => AddRoutineSheet(
         provider: widget.provider,
-        onAddRoutine: (
-          title,
-          quadrant,
-          categoryId,
-          repeatType,
-          repeatDays,
-          startDate,
-          endDate,
-          location,
-          timeStr,
-          dueTimeStr,
-          memo,
-          hasNotification,
-          notificationOffset,
-        ) async {
-          await widget.provider.addRoutine(
-            title: title,
-            quadrant: quadrant,
-            categoryId: categoryId,
-            repeatType: repeatType,
-            repeatDays: repeatDays,
-            startDate: startDate,
-            endDate: endDate,
-            location: location,
-            timeStr: timeStr,
-            dueTimeStr: dueTimeStr,
-            memo: memo,
-            hasNotification: hasNotification,
-            notificationOffset: notificationOffset,
-          );
-        },
+        onAddRoutine:
+            (
+              title,
+              quadrant,
+              categoryId,
+              repeatType,
+              repeatDays,
+              startDate,
+              endDate,
+              location,
+              timeStr,
+              dueTimeStr,
+              memo,
+              hasNotification,
+              notificationOffset,
+            ) async {
+              await widget.provider.addRoutine(
+                title: title,
+                quadrant: quadrant,
+                categoryId: categoryId,
+                repeatType: repeatType,
+                repeatDays: repeatDays,
+                startDate: startDate,
+                endDate: endDate,
+                location: location,
+                timeStr: timeStr,
+                dueTimeStr: dueTimeStr,
+                memo: memo,
+                hasNotification: hasNotification,
+                notificationOffset: notificationOffset,
+              );
+            },
       ),
     );
   }
@@ -67,8 +68,11 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
         final routines = widget.provider.routines;
 
         return Dialog(
+          clipBehavior: Clip.antiAlias,
           backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Container(
             padding: const EdgeInsets.all(20),
             constraints: const BoxConstraints(maxWidth: 500, maxHeight: 620),
@@ -79,14 +83,20 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.autorenew_rounded, color: AppColors.q2, size: 24),
+                        const Icon(
+                          Icons.autorenew_rounded,
+                          color: AppColors.q2,
+                          size: 24,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           '루틴 관리',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
                           ),
                         ),
                       ],
@@ -104,97 +114,166 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.repeat_rounded, size: 48, color: Colors.grey.withValues(alpha: 0.5)),
+                              Icon(
+                                Icons.repeat_rounded,
+                                size: 48,
+                                color: Colors.grey.withValues(alpha: 0.5),
+                              ),
                               const SizedBox(height: 12),
                               Text(
                                 '등록된 반복 루틴이 없습니다.',
                                 style: TextStyle(
-                                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
                           ),
                         )
-                      : ListView.builder(
-                          itemCount: routines.length,
-                          itemBuilder: (context, index) {
-                            final r = routines[index];
-                            final cat = widget.provider.categories.firstWhere(
-                              (c) => c.id == r.categoryId,
-                              orElse: () => Category(id: null, name: '미분류', colorHex: '#94A3B8', emoji: '📁'),
-                            );
+                      : ClipRect(
+                          child: ListView.builder(
+                            itemCount: routines.length,
+                            itemBuilder: (context, index) {
+                              final r = routines[index];
+                              final cat = widget.provider.categories.firstWhere(
+                                (c) => c.id == r.categoryId,
+                                orElse: () => Category(
+                                  id: null,
+                                  name: '미분류',
+                                  colorHex: '#94A3B8',
+                                  emoji: '📁',
+                                ),
+                              );
 
-                            return Container(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isDark ? AppColors.darkInputBg : AppColors.lightInputBg,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: ListTile(
-                                leading: Container(
-                                  width: 38,
-                                  height: 38,
+                              return Dismissible(
+                                key: ValueKey('routine_${r.id}'),
+                                direction: DismissDirection.endToStart,
+                                background: Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                  ),
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(right: 20),
                                   decoration: BoxDecoration(
-                                    color: AppColors.q2.withValues(alpha: 0.15),
-                                    shape: BoxShape.circle,
+                                    color: Colors.redAccent.shade200,
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                  alignment: Alignment.center,
-                                  child: Text(cat.emoji, style: const TextStyle(fontSize: 18)),
-                                ),
-                                title: Text(
-                                  r.title,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                                    decoration: r.isActive ? null : TextDecoration.lineThrough,
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        '삭제',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      SizedBox(width: 6),
+                                      Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                subtitle: Text(
-                                  '${cat.name} • ${_formatRepeatDays(r.repeatDays)}${r.timeStr != null ? ' (${r.timeStr})' : ''}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                onDismissed: (direction) {
+                                  widget.provider.deleteRoutine(r.id!);
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 4,
                                   ),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Manual spawn button
-                                    IconButton(
-                                      icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.q2, size: 22),
-                                      tooltip: '오늘 할 일로 수동 추가',
-                                      onPressed: () async {
-                                        await widget.provider.instantiateRoutineAsTodo(r);
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text("'${r.title}' 할 일이 추가되었습니다!"),
-                                              duration: const Duration(seconds: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppColors.darkInputBg
+                                        : AppColors.lightInputBg,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.q2.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          cat.emoji,
+                                          style: const TextStyle(fontSize: 18),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              r.title,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                                color: isDark
+                                                    ? AppColors.darkTextPrimary
+                                                    : AppColors
+                                                          .lightTextPrimary,
+                                                decoration: r.isActive
+                                                    ? null
+                                                    : TextDecoration
+                                                          .lineThrough,
+                                              ),
                                             ),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                    Switch.adaptive(
-                                      value: r.isActive,
-                                      activeThumbColor: AppColors.q2,
-                                      onChanged: (val) {
-                                        widget.provider.toggleRoutineActive(r);
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
-                                      onPressed: () {
-                                        widget.provider.deleteRoutine(r.id!);
-                                      },
-                                    ),
-                                  ],
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              '${cat.name} • ${_formatRepeatDays(r.repeatDays)}${r.timeStr != null ? ' (${r.timeStr})' : ''}',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: isDark
+                                                    ? AppColors
+                                                          .darkTextSecondary
+                                                    : AppColors
+                                                          .lightTextSecondary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Transform.scale(
+                                        scale: 0.8,
+                                        child: Switch.adaptive(
+                                          value: r.isActive,
+                                          activeThumbColor: AppColors.q2,
+                                          onChanged: (val) {
+                                            widget.provider.toggleRoutineActive(
+                                              r,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
                 ),
                 const SizedBox(height: 12),
@@ -206,12 +285,17 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
                     icon: const Icon(Icons.add_rounded),
                     label: const Text(
                       '새 루틴 등록하기',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.q2,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       elevation: 0,
                     ),
                   ),
@@ -229,8 +313,19 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
     if (repeatDays == '1,2,3,4,5') return '평일(월~금)';
     if (repeatDays == '6,7') return '주말(토,일)';
 
-    final weekdayLabels = {1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토', 7: '일'};
-    final days = repeatDays.split(',').map((e) => int.tryParse(e.trim())).whereType<int>();
+    final weekdayLabels = {
+      1: '월',
+      2: '화',
+      3: '수',
+      4: '목',
+      5: '금',
+      6: '토',
+      7: '일',
+    };
+    final days = repeatDays
+        .split(',')
+        .map((e) => int.tryParse(e.trim()))
+        .whereType<int>();
     return '매주 ${days.map((d) => weekdayLabels[d]).join(', ')}';
   }
 }
@@ -252,7 +347,8 @@ class AddRoutineSheet extends StatefulWidget {
     String? memo,
     bool hasNotification,
     int notificationOffset,
-  ) onAddRoutine;
+  )
+  onAddRoutine;
 
   const AddRoutineSheet({
     super.key,
@@ -382,7 +478,10 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -391,14 +490,18 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
                         ),
                       ),
                       CupertinoButton(
                         padding: EdgeInsets.zero,
                         onPressed: () {
                           final hStr = selectedHour.toString().padLeft(2, '0');
-                          final mStr = minutesList[selectedMinuteIndex].toString().padLeft(2, '0');
+                          final mStr = minutesList[selectedMinuteIndex]
+                              .toString()
+                              .padLeft(2, '0');
                           setState(() {
                             controller.text = '$hStr:$mStr';
                           });
@@ -425,8 +528,11 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                           squeeze: 1.2,
                           useMagnifier: true,
                           itemExtent: 36,
-                          scrollController: FixedExtentScrollController(initialItem: selectedHour),
-                          onSelectedItemChanged: (int index) => selectedHour = index,
+                          scrollController: FixedExtentScrollController(
+                            initialItem: selectedHour,
+                          ),
+                          onSelectedItemChanged: (int index) =>
+                              selectedHour = index,
                           children: List<Widget>.generate(24, (int index) {
                             return Center(
                               child: Text(
@@ -447,8 +553,11 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                           squeeze: 1.2,
                           useMagnifier: true,
                           itemExtent: 36,
-                          scrollController: FixedExtentScrollController(initialItem: selectedMinuteIndex),
-                          onSelectedItemChanged: (int index) => selectedMinuteIndex = index,
+                          scrollController: FixedExtentScrollController(
+                            initialItem: selectedMinuteIndex,
+                          ),
+                          onSelectedItemChanged: (int index) =>
+                              selectedMinuteIndex = index,
                           children: List<Widget>.generate(12, (int index) {
                             final minVal = index * 5;
                             return Center(
@@ -490,7 +599,9 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Text(
             '알림 시간 직접 설정',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -501,7 +612,10 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                 child: TextField(
                   controller: hoursController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(hintText: '0', suffixText: '시간'),
+                  decoration: const InputDecoration(
+                    hintText: '0',
+                    suffixText: '시간',
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -509,7 +623,10 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                 child: TextField(
                   controller: minsController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(hintText: '0', suffixText: '분 전'),
+                  decoration: const InputDecoration(
+                    hintText: '0',
+                    suffixText: '분 전',
+                  ),
                 ),
               ),
             ],
@@ -562,9 +679,17 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
 
   Widget _buildInlineCalendarGrid(ThemeData theme, bool isDark) {
     final firstOfMonth = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
-    final lastOfMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1, 0);
-    final firstDisplayDate = firstOfMonth.subtract(Duration(days: firstOfMonth.weekday - 1));
-    final lastDisplayDate = lastOfMonth.add(Duration(days: 7 - lastOfMonth.weekday));
+    final lastOfMonth = DateTime(
+      _calendarMonth.year,
+      _calendarMonth.month + 1,
+      0,
+    );
+    final firstDisplayDate = firstOfMonth.subtract(
+      Duration(days: firstOfMonth.weekday - 1),
+    );
+    final lastDisplayDate = lastOfMonth.add(
+      Duration(days: 7 - lastOfMonth.weekday),
+    );
 
     final totalDays = lastDisplayDate.difference(firstDisplayDate).inDays + 1;
     final weeks = <List<DateTime>>[];
@@ -594,19 +719,30 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                 icon: const Icon(Icons.chevron_left, size: 20),
                 onPressed: () {
                   setState(() {
-                    _calendarMonth = DateTime(_calendarMonth.year, _calendarMonth.month - 1, 1);
+                    _calendarMonth = DateTime(
+                      _calendarMonth.year,
+                      _calendarMonth.month - 1,
+                      1,
+                    );
                   });
                 },
               ),
               Text(
                 DateFormat('yyyy년 MM월').format(_calendarMonth),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right, size: 20),
                 onPressed: () {
                   setState(() {
-                    _calendarMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1, 1);
+                    _calendarMonth = DateTime(
+                      _calendarMonth.year,
+                      _calendarMonth.month + 1,
+                      1,
+                    );
                   });
                 },
               ),
@@ -624,7 +760,9 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
                   ),
                 ),
               );
@@ -639,12 +777,26 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: week.map((day) {
                     final dayOnly = DateTime(day.year, day.month, day.day);
-                    final startOnly = DateTime(_startDate.year, _startDate.month, _startDate.day);
-                    final endOnly = _endDate != null ? DateTime(_endDate!.year, _endDate!.month, _endDate!.day) : null;
+                    final startOnly = DateTime(
+                      _startDate.year,
+                      _startDate.month,
+                      _startDate.day,
+                    );
+                    final endOnly = _endDate != null
+                        ? DateTime(
+                            _endDate!.year,
+                            _endDate!.month,
+                            _endDate!.day,
+                          )
+                        : null;
 
                     final isStart = dayOnly.isAtSameMomentAs(startOnly);
-                    final isEnd = endOnly != null && dayOnly.isAtSameMomentAs(endOnly);
-                    final isInRange = endOnly != null && dayOnly.isAfter(startOnly) && dayOnly.isBefore(endOnly);
+                    final isEnd =
+                        endOnly != null && dayOnly.isAtSameMomentAs(endOnly);
+                    final isInRange =
+                        endOnly != null &&
+                        dayOnly.isAfter(startOnly) &&
+                        dayOnly.isBefore(endOnly);
                     final isOutsideMonth = day.month != _calendarMonth.month;
 
                     BoxDecoration cellDeco;
@@ -655,7 +807,11 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         color: _getQColor(_selectedQ),
                         shape: BoxShape.circle,
                       );
-                      textStyle = const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12);
+                      textStyle = const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      );
                     } else if (isInRange) {
                       cellDeco = BoxDecoration(
                         color: _getQColor(_selectedQ).withValues(alpha: 0.2),
@@ -705,7 +861,8 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
 
     String dateRangeText;
     if (_endDate == null) {
-      dateRangeText = '시작: ${DateFormat('yyyy년 MM월 dd일 (E)', 'ko_KR').format(_startDate)}';
+      dateRangeText =
+          '시작: ${DateFormat('yyyy년 MM월 dd일 (E)', 'ko_KR').format(_startDate)}';
     } else {
       dateRangeText =
           '${DateFormat('MM/dd(E)', 'ko_KR').format(_startDate)} ~ ${DateFormat('MM/dd(E)', 'ko_KR').format(_endDate!)}';
@@ -752,7 +909,9 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                     ),
                   ),
                 ],
@@ -774,6 +933,11 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                   TextField(
                     controller: _titleController,
                     autofocus: true,
+                    style: TextStyle(
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
                     decoration: const InputDecoration(
                       hintText: '루틴 제목을 입력하세요 (예: 영양제 먹기)...',
                       prefixIcon: Icon(Icons.autorenew_rounded, size: 20),
@@ -790,9 +954,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                     },
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkInputBg : AppColors.lightInputBg,
+                        color: isDark
+                            ? AppColors.darkInputBg
+                            : AppColors.lightInputBg,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -800,16 +969,28 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.calendar_month_rounded, size: 18, color: _getQColor(_selectedQ)),
+                              Icon(
+                                Icons.calendar_month_rounded,
+                                size: 18,
+                                color: _getQColor(_selectedQ),
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 dateRangeText,
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark
+                                      ? AppColors.darkTextPrimary
+                                      : AppColors.lightTextPrimary,
+                                ),
                               ),
                             ],
                           ),
                           Icon(
-                            _isCalendarExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                            _isCalendarExpanded
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
                             size: 20,
                           ),
                         ],
@@ -817,7 +998,8 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                     ),
                   ),
 
-                  if (_isCalendarExpanded) _buildInlineCalendarGrid(theme, isDark),
+                  if (_isCalendarExpanded)
+                    _buildInlineCalendarGrid(theme, isDark),
                   const SizedBox(height: 12),
 
                   // Weekday Selection Chips
@@ -826,19 +1008,30 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       ChoiceChip(
-                        label: const Text('매일', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          '매일',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         selected: _selectedDays.length == 7,
                         selectedColor: AppColors.q2,
                         showCheckmark: false,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                        visualDensity: const VisualDensity(
+                          horizontal: -2,
+                          vertical: -2,
+                        ),
                         onSelected: (selected) {
                           if (selected) {
                             setState(() {
@@ -849,12 +1042,24 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                       ),
                       const SizedBox(width: 6),
                       ChoiceChip(
-                        label: const Text('평일(월~금)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                        selected: _selectedDays.length == 5 && !_selectedDays.contains(6) && !_selectedDays.contains(7),
+                        label: const Text(
+                          '평일(월~금)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        selected:
+                            _selectedDays.length == 5 &&
+                            !_selectedDays.contains(6) &&
+                            !_selectedDays.contains(7),
                         selectedColor: AppColors.q2,
                         showCheckmark: false,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                        visualDensity: const VisualDensity(
+                          horizontal: -2,
+                          vertical: -2,
+                        ),
                         onSelected: (selected) {
                           if (selected) {
                             setState(() {
@@ -865,12 +1070,24 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                       ),
                       const SizedBox(width: 6),
                       ChoiceChip(
-                        label: const Text('주말(토,일)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                        selected: _selectedDays.length == 2 && _selectedDays.contains(6) && _selectedDays.contains(7),
+                        label: const Text(
+                          '주말(토,일)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        selected:
+                            _selectedDays.length == 2 &&
+                            _selectedDays.contains(6) &&
+                            _selectedDays.contains(7),
                         selectedColor: AppColors.q2,
                         showCheckmark: false,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                        visualDensity: const VisualDensity(
+                          horizontal: -2,
+                          vertical: -2,
+                        ),
                         onSelected: (selected) {
                           if (selected) {
                             setState(() {
@@ -895,22 +1112,35 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark ? Colors.white70 : Colors.black87),
                           ),
                         ),
                         selected: isSelected,
                         selectedColor: AppColors.q2,
-                        backgroundColor: isDark ? AppColors.darkInputBg : AppColors.lightInputBg,
+                        backgroundColor: isDark
+                            ? AppColors.darkInputBg
+                            : AppColors.lightInputBg,
                         showCheckmark: false,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                        visualDensity: const VisualDensity(
+                          horizontal: -2,
+                          vertical: -2,
+                        ),
                         onSelected: (val) {
                           setState(() {
                             if (val) {
-                              if (!_selectedDays.contains(dayNum)) _selectedDays.add(dayNum);
+                              if (!_selectedDays.contains(dayNum)) {
+                                _selectedDays.add(dayNum);
+                              }
                             } else {
-                              if (_selectedDays.length > 1) _selectedDays.remove(dayNum);
+                              if (_selectedDays.length > 1) {
+                                _selectedDays.remove(dayNum);
+                              }
                             }
                           });
                         },
@@ -926,14 +1156,24 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         child: TextField(
                           controller: _timeController,
                           readOnly: true,
-                          onTap: () => _pickTimeForController(_timeController, '시작 시간'),
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                          onTap: () =>
+                              _pickTimeForController(_timeController, '시작 시간'),
                           decoration: InputDecoration(
                             hintText: '시작 시간⏱️',
-                            prefixIcon: const Icon(Icons.access_time_rounded, size: 18),
+                            prefixIcon: const Icon(
+                              Icons.access_time_rounded,
+                              size: 18,
+                            ),
                             suffixIcon: _timeController.text.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear, size: 16),
-                                    onPressed: () => setState(() => _timeController.clear()),
+                                    onPressed: () =>
+                                        setState(() => _timeController.clear()),
                                   )
                                 : null,
                           ),
@@ -943,9 +1183,17 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                       Expanded(
                         child: TextField(
                           controller: _locationController,
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
                           decoration: const InputDecoration(
                             hintText: '위치/장소📍',
-                            prefixIcon: Icon(Icons.location_on_outlined, size: 18),
+                            prefixIcon: Icon(
+                              Icons.location_on_outlined,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),
@@ -957,6 +1205,11 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                   TextField(
                     controller: _memoController,
                     maxLines: 1,
+                    style: TextStyle(
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
                     decoration: const InputDecoration(
                       hintText: '상세 메모 및 주요 노트 입력...',
                       prefixIcon: Icon(Icons.notes_rounded, size: 18),
@@ -973,7 +1226,9 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
                         ),
                       ),
                       SizedBox(
@@ -981,7 +1236,8 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         child: Switch.adaptive(
                           value: _hasNotification,
                           activeThumbColor: Colors.amber[700],
-                          onChanged: (val) => setState(() => _hasNotification = val),
+                          onChanged: (val) =>
+                              setState(() => _hasNotification = val),
                         ),
                       ),
                     ],
@@ -993,48 +1249,88 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                       child: Row(
                         children: [
                           ChoiceChip(
-                            label: const Text('정시', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            label: const Text(
+                              '정시',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             selected: _notificationOffset == 0,
                             selectedColor: Colors.amber[700],
                             showCheckmark: false,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(
+                              horizontal: -2,
+                              vertical: -2,
+                            ),
                             onSelected: (val) {
                               if (val) setState(() => _notificationOffset = 0);
                             },
                           ),
                           const SizedBox(width: 4),
                           ChoiceChip(
-                            label: const Text('10분 전', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            label: const Text(
+                              '10분 전',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             selected: _notificationOffset == 10,
                             selectedColor: Colors.amber[700],
                             showCheckmark: false,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(
+                              horizontal: -2,
+                              vertical: -2,
+                            ),
                             onSelected: (val) {
                               if (val) setState(() => _notificationOffset = 10);
                             },
                           ),
                           const SizedBox(width: 4),
                           ChoiceChip(
-                            label: const Text('30분 전', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            label: const Text(
+                              '30분 전',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             selected: _notificationOffset == 30,
                             selectedColor: Colors.amber[700],
                             showCheckmark: false,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(
+                              horizontal: -2,
+                              vertical: -2,
+                            ),
                             onSelected: (val) {
                               if (val) setState(() => _notificationOffset = 30);
                             },
                           ),
                           const SizedBox(width: 4),
                           ChoiceChip(
-                            label: const Text('1시간 전', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            label: const Text(
+                              '1시간 전',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             selected: _notificationOffset == 60,
                             selectedColor: Colors.amber[700],
                             showCheckmark: false,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(
+                              horizontal: -2,
+                              vertical: -2,
+                            ),
                             onSelected: (val) {
                               if (val) setState(() => _notificationOffset = 60);
                             },
@@ -1048,18 +1344,27 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                                       _notificationOffset != 60
                                   ? '$_notificationOffset분 전'
                                   : '커스텀',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            selected: _notificationOffset != 0 &&
+                            selected:
+                                _notificationOffset != 0 &&
                                 _notificationOffset != 10 &&
                                 _notificationOffset != 30 &&
                                 _notificationOffset != 60,
                             selectedColor: Colors.amber[700],
                             showCheckmark: false,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(
+                              horizontal: -2,
+                              vertical: -2,
+                            ),
                             onSelected: (_) async {
-                              final customMin = await _showCustomMinutesDialog();
+                              final customMin =
+                                  await _showCustomMinutesDialog();
                               if (customMin != null) {
                                 setState(() => _notificationOffset = customMin);
                               }
@@ -1078,7 +1383,9 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -1098,18 +1405,26 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                             ),
                           ),
                           selected: _selectedCategoryId == null,
-                          selectedColor: isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.1),
+                          selectedColor: isDark
+                              ? Colors.white.withValues(alpha: 0.2)
+                              : Colors.black.withValues(alpha: 0.1),
                           backgroundColor: Colors.transparent,
                           showCheckmark: false,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: const VisualDensity(
+                            horizontal: -2,
+                            vertical: -2,
+                          ),
                           onSelected: (val) {
                             if (val) setState(() => _selectedCategoryId = null);
                           },
                         ),
                         ...categories.map((cat) {
                           final isSelected = _selectedCategoryId == cat.id;
-                          final catColor = Color(int.parse(cat.colorHex.replaceFirst('#', '0xFF')));
+                          final catColor = Color(
+                            int.parse(cat.colorHex.replaceFirst('#', '0xFF')),
+                          );
 
                           return ChoiceChip(
                             label: Text(
@@ -1117,17 +1432,27 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark
+                                          ? Colors.white70
+                                          : Colors.black87),
                               ),
                             ),
                             selected: isSelected,
                             selectedColor: catColor,
                             backgroundColor: catColor.withValues(alpha: 0.15),
                             showCheckmark: false,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(
+                              horizontal: -2,
+                              vertical: -2,
+                            ),
                             onSelected: (val) {
-                              if (val) setState(() => _selectedCategoryId = cat.id);
+                              if (val) {
+                                setState(() => _selectedCategoryId = cat.id);
+                              }
                             },
                           );
                         }),
@@ -1142,7 +1467,9 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1159,7 +1486,9 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark ? Colors.white70 : Colors.black87),
                           ),
                         ),
                         selected: isSelected,
@@ -1167,7 +1496,10 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         backgroundColor: color.withValues(alpha: 0.15),
                         showCheckmark: false,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                        visualDensity: const VisualDensity(
+                          horizontal: -2,
+                          vertical: -2,
+                        ),
                         onSelected: (val) {
                           if (val) setState(() => _selectedQ = q);
                         },
@@ -1200,10 +1532,18 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                   repeatDaysStr,
                   _startDate,
                   _endDate,
-                  _locationController.text.trim().isNotEmpty ? _locationController.text.trim() : null,
-                  _timeController.text.trim().isNotEmpty ? _timeController.text.trim() : null,
-                  _dueTimeController.text.trim().isNotEmpty ? _dueTimeController.text.trim() : null,
-                  _memoController.text.trim().isNotEmpty ? _memoController.text.trim() : null,
+                  _locationController.text.trim().isNotEmpty
+                      ? _locationController.text.trim()
+                      : null,
+                  _timeController.text.trim().isNotEmpty
+                      ? _timeController.text.trim()
+                      : null,
+                  _dueTimeController.text.trim().isNotEmpty
+                      ? _dueTimeController.text.trim()
+                      : null,
+                  _memoController.text.trim().isNotEmpty
+                      ? _memoController.text.trim()
+                      : null,
                   _hasNotification,
                   _notificationOffset,
                 );
@@ -1212,7 +1552,9 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _getQColor(_selectedQ),
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 elevation: 0,
               ),
               child: const Text(
