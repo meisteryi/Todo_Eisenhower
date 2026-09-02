@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'providers/todo_provider.dart';
 import 'screens/home_screen.dart';
 import 'theme/app_theme.dart';
@@ -10,9 +12,21 @@ import 'services/notification_service.dart';
 void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Desktop SQLite FFI initialization MUST run before any DB operation
+  if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   await initializeDateFormatting('ko', null);
-  await NotificationService().init();
-  await NotificationService().requestPermissions();
+
+  try {
+    await NotificationService().init();
+    await NotificationService().requestPermissions();
+  } catch (e) {
+    debugPrint('Notification Service init warning: $e');
+  }
 
   final provider = TodoProvider();
   runApp(MyApp(provider: provider));

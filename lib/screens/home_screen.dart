@@ -626,6 +626,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildEisenhowerView() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDesktop = MediaQuery.of(context).size.width >= 700;
     return Column(
       children: [
         // Matrix Filter Header (오늘의 사분면 vs 전체 사분면)
@@ -678,7 +679,7 @@ class _HomeScreenState extends State<HomeScreen> {
         AnimatedContainer(
           duration: const Duration(milliseconds: 350),
           curve: Curves.easeInOut,
-          height: _isPanelVisible ? 185 : 380,
+          height: _isPanelVisible ? 185 : (isDesktop ? 320 : 360),
           child: MiniMapTracker(
             provider: widget.provider,
             onQuadrantSelected: _onQuadrantSelected,
@@ -706,70 +707,68 @@ class _HomeScreenState extends State<HomeScreen> {
                       TodoListPage(quadrant: 4, provider: widget.provider),
                     ],
                   )
-                : Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            height: 125,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? AppColors.darkCard
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(
-                                    alpha: Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.03,
-                                  ),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
+                : SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.darkCard
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                  alpha: Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.03,
                                 ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.format_quote_rounded, color: AppColors.q2.withValues(alpha: 0.7), size: 24),
-                                const SizedBox(height: 6),
-                                Text(
-                                  QuotesData.list[_currentQuoteIndex].text,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    height: 1.4,
-                                    fontWeight: FontWeight.w600,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '- ${QuotesData.list[_currentQuoteIndex].author}',
-                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.touch_app_outlined, size: 16, color: Colors.grey),
-                              SizedBox(width: 8),
-                              Text(
-                                '사분면을 탭하여 세부 할 일 목록을 확인하세요.',
-                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.format_quote_rounded, color: AppColors.q2.withValues(alpha: 0.7), size: 24),
+                              const SizedBox(height: 6),
+                              Text(
+                                QuotesData.list[_currentQuoteIndex].text,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w600,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '- ${QuotesData.list[_currentQuoteIndex].author}',
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.touch_app_outlined, size: 16, color: Colors.grey),
+                            SizedBox(width: 8),
+                            Text(
+                              '사분면을 탭하여 세부 할 일 목록을 확인하세요.',
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
           ),

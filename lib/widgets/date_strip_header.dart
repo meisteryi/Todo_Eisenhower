@@ -72,81 +72,93 @@ class _DateStripHeaderState extends State<DateStripHeader> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isMonthExpanded = !_isMonthExpanded;
-                      });
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          monthFormat.format(selected),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isMonthExpanded = !_isMonthExpanded;
+                          });
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              monthFormat.format(selected),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              _isMonthExpanded
+                                  ? Icons.keyboard_arrow_up_rounded
+                                  : Icons.keyboard_arrow_down_rounded,
+                              size: 20,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (!isTodaySelected)
+                        GestureDetector(
+                          onTap: () {
+                            provider.setSelectedDate(DateTime.now());
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '오늘',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          _isMonthExpanded
-                              ? Icons.keyboard_arrow_up_rounded
-                              : Icons.keyboard_arrow_down_rounded,
-                          size: 20,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (!isTodaySelected)
-                    GestureDetector(
-                      onTap: () {
-                        provider.setSelectedDate(DateTime.now());
-                      },
-                      child: Container(
+                      const SizedBox(width: 8),
+                      Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
-                          vertical: 4,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
+                          color: selectedUncompleted > 0
+                              ? Colors.orange.withValues(alpha: 0.15)
+                              : Colors.teal.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '오늘',
+                          selectedUncompleted > 0
+                              ? '남은 할 일 $selectedUncompleted개'
+                              : (selectedDayTodos.isNotEmpty
+                                    ? '모두 완료! 🎉'
+                                    : '계획 없음'),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onPrimaryContainer,
+                            color: selectedUncompleted > 0
+                                ? Colors.orange[800]
+                                : Colors.teal[800],
                           ),
                         ),
                       ),
-                    ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: selectedUncompleted > 0
-                          ? Colors.orange.withValues(alpha: 0.15)
-                          : Colors.teal.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      selectedUncompleted > 0
-                          ? '남은 할 일 $selectedUncompleted개'
-                          : (selectedDayTodos.isNotEmpty ? '모두 완료! 🎉' : '계획 없음'),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: selectedUncompleted > 0 ? Colors.orange[800] : Colors.teal[800],
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
               Row(
                 children: [
