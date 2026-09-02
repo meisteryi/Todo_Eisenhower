@@ -60,36 +60,42 @@ class _TodoMateViewState extends State<TodoMateView> {
     final categories = widget.provider.categories;
     final groupedTodos = widget.provider.todosGroupedByCategory;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Render each Category section
-          for (final cat in categories) ...[
-            _buildCategorySection(
-              context: context,
-              category: cat,
-              color: _parseColor(cat.colorHex),
-              todos: groupedTodos[cat.id] ?? [],
-            ),
-          ],
-
-          // Uncategorized section if any
-          if ((groupedTodos[null] ?? []).isNotEmpty)
-            _buildCategorySection(
-              context: context,
-              category: Category(
-                id: null,
-                name: '기타 (미분류)',
-                colorHex: '#7F8C8D',
-                emoji: '📌',
+    return RefreshIndicator(
+      onRefresh: () async {
+        await widget.provider.loadTodos();
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Render each Category section
+            for (final cat in categories) ...[
+              _buildCategorySection(
+                context: context,
+                category: cat,
+                color: _parseColor(cat.colorHex),
+                todos: groupedTodos[cat.id] ?? [],
               ),
-              color: Colors.grey,
-              todos: groupedTodos[null]!,
-            ),
+            ],
 
-          const SizedBox(height: 80),
-        ],
+            // Uncategorized section if any
+            if ((groupedTodos[null] ?? []).isNotEmpty)
+              _buildCategorySection(
+                context: context,
+                category: Category(
+                  id: null,
+                  name: '기타 (미분류)',
+                  colorHex: '#7F8C8D',
+                  emoji: '📌',
+                ),
+                color: Colors.grey,
+                todos: groupedTodos[null]!,
+              ),
+
+            const SizedBox(height: 80),
+          ],
+        ),
       ),
     );
   }

@@ -10,12 +10,14 @@ class TodoListPage extends StatelessWidget {
   final int quadrant;
   final TodoProvider provider;
   final ScrollController? scrollController;
+  final VoidCallback? onCloseDetail;
 
   const TodoListPage({
     super.key,
     required this.quadrant,
     required this.provider,
     this.scrollController,
+    this.onCloseDetail,
   });
 
   Color _getQuadrantColor() {
@@ -363,25 +365,77 @@ class TodoListPage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                _getQuadrantTitle(),
-                style: textTheme.titleLarge?.copyWith(color: themeColor, fontSize: 18),
+              Row(
+                children: [
+                  Text(
+                    _getQuadrantTitle(),
+                    style: textTheme.titleLarge?.copyWith(color: themeColor, fontSize: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '(${todos.length}개)',
+                    style: textTheme.bodyMedium?.copyWith(fontSize: 12),
+                  ),
+                ],
               ),
-              Text(
-                '태스크 ${todos.length}개',
-                style: textTheme.bodyMedium?.copyWith(fontSize: 12),
-              ),
+              if (onCloseDetail != null)
+                InkWell(
+                  onTap: onCloseDetail,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.grey.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.close_rounded,
+                          size: 14,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '대시보드로',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
 
         // List
         Expanded(
-          child: todos.isEmpty
-              ? buildEmptyState()
-              : ReorderableListView.builder(
-                  scrollController: scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await provider.loadTodos();
+            },
+            child: todos.isEmpty
+                ? SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: 300,
+                      child: buildEmptyState(),
+                    ),
+                  )
+                : ReorderableListView.builder(
+                    scrollController: scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
                   buildDefaultDragHandles: false,
                   onReorderItem: (oldIndex, newIndex) {
                     provider.reorderTodos(quadrant, oldIndex, newIndex);
@@ -458,6 +512,7 @@ class TodoListPage extends StatelessWidget {
                     );
                   },
                 ),
+          ),
         ),
       ],
     );

@@ -23,7 +23,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late PageController _pageController;
   bool _isPageChanging = false;
   bool _isPanelVisible = false;
@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _currentQuoteIndex = Random().nextInt(QuotesData.list.length);
     _pageController = PageController(
       initialPage: widget.provider.activeQuadrant,
@@ -45,8 +46,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.provider.loadTodos();
+    }
   }
 
   void _checkIncinerationAlert() {
@@ -380,6 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Container(
                               width: 280,
+                              alignment: Alignment.topCenter,
                               decoration: BoxDecoration(
                                 border: Border(
                                   right: BorderSide(
@@ -389,9 +399,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              child: Column(
-                                children: [
-                                  DateStripHeader(provider: widget.provider),
+                              child: SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    DateStripHeader(provider: widget.provider),
                                   const Divider(height: 1),
                                   Padding(
                                     padding: const EdgeInsets.all(16.0),
@@ -480,7 +494,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                             ),
-                            Expanded(
+                          ),
+                          Expanded(
                               child: viewMode == 'todomate'
                                   ? TodoMateView(
                                       provider: widget.provider,
@@ -798,19 +813,57 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
+            layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+              return ClipRect(
+                child: Stack(
+                  alignment: Alignment.topCenter,
+                  children: <Widget>[
+                    ...previousChildren,
+                    ?currentChild,
+                  ],
+                ),
+              );
+            },
             child: _isPanelVisible
                 ? PageView(
+                    key: const ValueKey('matrix_detail_pageview'),
                     controller: _pageController,
                     onPageChanged: _onPageChanged,
                     children: [
-                      TodoListPage(quadrant: 0, provider: widget.provider),
-                      TodoListPage(quadrant: 1, provider: widget.provider),
-                      TodoListPage(quadrant: 2, provider: widget.provider),
-                      TodoListPage(quadrant: 3, provider: widget.provider),
-                      TodoListPage(quadrant: 4, provider: widget.provider),
+                      TodoListPage(
+                        quadrant: 0,
+                        provider: widget.provider,
+                        onCloseDetail: () =>
+                            setState(() => _isPanelVisible = false),
+                      ),
+                      TodoListPage(
+                        quadrant: 1,
+                        provider: widget.provider,
+                        onCloseDetail: () =>
+                            setState(() => _isPanelVisible = false),
+                      ),
+                      TodoListPage(
+                        quadrant: 2,
+                        provider: widget.provider,
+                        onCloseDetail: () =>
+                            setState(() => _isPanelVisible = false),
+                      ),
+                      TodoListPage(
+                        quadrant: 3,
+                        provider: widget.provider,
+                        onCloseDetail: () =>
+                            setState(() => _isPanelVisible = false),
+                      ),
+                      TodoListPage(
+                        quadrant: 4,
+                        provider: widget.provider,
+                        onCloseDetail: () =>
+                            setState(() => _isPanelVisible = false),
+                      ),
                     ],
                   )
                 : SingleChildScrollView(
+                    key: const ValueKey('matrix_dashboard_scrollview'),
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,

@@ -65,7 +65,7 @@ class _DateStripHeaderState extends State<DateStripHeader> {
           ),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Column(
         children: [
           // Month navigation header
@@ -98,13 +98,13 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                               _isMonthExpanded
                                   ? Icons.keyboard_arrow_up_rounded
                                   : Icons.keyboard_arrow_down_rounded,
-                              size: 20,
+                              size: 18,
                               color: theme.colorScheme.primary,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       if (!isTodaySelected)
                         GestureDetector(
                           onTap: () {
@@ -112,8 +112,8 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 6,
+                              vertical: 3,
                             ),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primaryContainer,
@@ -129,10 +129,10 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                             ),
                           ),
                         ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
+                          horizontal: 6,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
@@ -143,7 +143,7 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                         ),
                         child: Text(
                           selectedUncompleted > 0
-                              ? '남은 할 일 $selectedUncompleted개'
+                              ? '남은 $selectedUncompleted개'
                               : (selectedDayTodos.isNotEmpty
                                     ? '모두 완료! 🎉'
                                     : '계획 없음'),
@@ -161,9 +161,10 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                 ),
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, size: 20),
+                    icon: const Icon(Icons.chevron_left, size: 18),
                     onPressed: () {
                       if (_isMonthExpanded) {
                         provider.setSelectedDate(
@@ -177,12 +178,12 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                     },
                     tooltip: _isMonthExpanded ? '이전 달' : '이전 주',
                     constraints: const BoxConstraints(),
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(3),
                   ),
                   IconButton(
                     icon: Icon(
                       _isMonthExpanded ? Icons.calendar_view_month : Icons.calendar_today,
-                      size: 18,
+                      size: 16,
                       color: _isMonthExpanded ? theme.colorScheme.primary : null,
                     ),
                     onPressed: () {
@@ -192,10 +193,10 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                     },
                     tooltip: _isMonthExpanded ? '주간 보기로 접기' : '월간 달력 펼치기',
                     constraints: const BoxConstraints(),
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(3),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right, size: 20),
+                    icon: const Icon(Icons.chevron_right, size: 18),
                     onPressed: () {
                       if (_isMonthExpanded) {
                         provider.setSelectedDate(
@@ -209,7 +210,7 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                     },
                     tooltip: _isMonthExpanded ? '다음 달' : '다음 주',
                     constraints: const BoxConstraints(),
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(3),
                   ),
                 ],
               ),
@@ -259,7 +260,7 @@ class _DateStripHeaderState extends State<DateStripHeader> {
     return Column(
       children: monthWeeks.map((week) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 6.0),
+          padding: const EdgeInsets.only(bottom: 4.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: week.map((day) {
@@ -270,6 +271,7 @@ class _DateStripHeaderState extends State<DateStripHeader> {
                 selected: selected,
                 day: day,
                 isOutsideMonth: isOutside,
+                isCompact: true,
               );
             }).toList(),
           ),
@@ -284,6 +286,7 @@ class _DateStripHeaderState extends State<DateStripHeader> {
     required DateTime selected,
     required DateTime day,
     required bool isOutsideMonth,
+    bool isCompact = false,
   }) {
     final isSelected =
         day.year == selected.year &&
@@ -315,8 +318,8 @@ class _DateStripHeaderState extends State<DateStripHeader> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          margin: const EdgeInsets.symmetric(horizontal: 1.5),
+          padding: EdgeInsets.symmetric(vertical: isCompact ? 4 : 6),
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primary
