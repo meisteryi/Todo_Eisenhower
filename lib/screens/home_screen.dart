@@ -526,7 +526,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       value: 'help',
                       child: Row(
                         children: [
-                          Icon(Icons.help_outline, color: Colors.blue, size: 20),
+                          Icon(
+                            Icons.help_outline,
+                            color: Colors.blue,
+                            size: 20,
+                          ),
                           SizedBox(width: 10),
                           Text('사용 설명서'),
                         ],
