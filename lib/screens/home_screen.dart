@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.provider.addListener(_onProviderChanged);
     _currentQuoteIndex = Random().nextInt(QuotesData.list.length);
     _pageController = PageController(
       initialPage: widget.provider.activeQuadrant,
@@ -46,8 +47,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  void _onProviderChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    widget.provider.removeListener(_onProviderChanged);
     WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     super.dispose();
@@ -1056,6 +1064,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildEisenhowerView() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isDesktop = MediaQuery.of(context).size.width >= 700;
+
+    if (_isPanelVisible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pageController.hasClients &&
+            _pageController.page?.round() != widget.provider.activeQuadrant) {
+          _pageController.jumpToPage(widget.provider.activeQuadrant);
+        }
+      });
+    }
+
     return Column(
       children: [
         // Matrix Filter Header (오늘의 사분면 vs 전체 사분면)
@@ -1105,6 +1123,49 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
         ),
+        if (widget.provider.q0Todos.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: GestureDetector(
+              onTap: () => _onQuadrantSelected(0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.inbox, color: Colors.amber, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '미분류(인박스) 할 일 ${widget.provider.q0Todos.length}개가 있습니다. 탭하여 사분면으로 지정하세요!',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isDark
+                              ? Colors.amberAccent
+                              : Colors.amber.shade900,
+                        ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right,
+                      size: 16,
+                      color: Colors.amber,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         AnimatedContainer(
           duration: const Duration(milliseconds: 350),
           curve: Curves.easeInOut,

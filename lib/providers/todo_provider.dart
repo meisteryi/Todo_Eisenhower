@@ -61,24 +61,30 @@ class TodoProvider with ChangeNotifier {
 
   // Get filtered Todos for a quadrant based on isMatrixFilterTodayOnly
   List<Todo> getQuadrantTodos(int q) {
+    final now = DateTime.now();
     return _todos.where((t) {
       if (t.quadrant != q || t.isCompleted || t.isTrash) return false;
       if (!_isMatrixFilterTodayOnly) return true; // 전체 사분면
 
       // 오늘의 사분면 조건:
-      // 1) targetDate가 선택된 날짜인 경우 (오늘 할 일)
-      final isSameTargetDate = t.targetDate.year == _selectedDate.year &&
+      // 1) targetDate가 선택된 날짜 또는 오늘(Today)인 경우
+      final isToday = t.targetDate.year == now.year &&
+          t.targetDate.month == now.month &&
+          t.targetDate.day == now.day;
+
+      final isSelectedDate = t.targetDate.year == _selectedDate.year &&
           t.targetDate.month == _selectedDate.month &&
           t.targetDate.day == _selectedDate.day;
 
-      // 2) dueDate가 선택된 날짜 이전이거나 당일인 경우 (마감 임박/지연 과제)
+      // 2) dueDate가 오늘 또는 선택된 날짜 이전이거나 당일인 경우 (마감 임박/지연 과제)
       final isDueTodayOrPast = t.dueDate != null &&
-          (t.dueDate!.isBefore(_selectedDate) ||
-              (t.dueDate!.year == _selectedDate.year &&
-                  t.dueDate!.month == _selectedDate.month &&
-                  t.dueDate!.day == _selectedDate.day));
+          (t.dueDate!.isBefore(now) ||
+              t.dueDate!.isBefore(_selectedDate) ||
+              (t.dueDate!.year == now.year &&
+                  t.dueDate!.month == now.month &&
+                  t.dueDate!.day == now.day));
 
-      return isSameTargetDate || isDueTodayOrPast;
+      return isToday || isSelectedDate || isDueTodayOrPast;
     }).toList();
   }
 
@@ -228,8 +234,9 @@ class TodoProvider with ChangeNotifier {
     try {
       final insertedId = await _dbHelper.insert(newTodo);
       final todoWithId = newTodo.copyWith(id: insertedId);
-      await SyncService.instance.pushTodo(todoWithId);
-      await loadTodos();
+      _todos.insert(0, todoWithId);
+      notifyListeners();
+      SyncService.instance.pushTodo(todoWithId);
     } catch (e) {
       debugPrint("Error instantiating routine: $e");
     }
@@ -255,6 +262,11 @@ class TodoProvider with ChangeNotifier {
     int notificationOffset = 0,
   }) async {
     final todoTargetDate = targetDate ?? _selectedDate;
+    _selectedDate = DateTime(
+      todoTargetDate.year,
+      todoTargetDate.month,
+      todoTargetDate.day,
+    );
     final newTodo = Todo(
       title: title,
       quadrant: quadrant,
@@ -277,8 +289,9 @@ class TodoProvider with ChangeNotifier {
     try {
       final insertedId = await _dbHelper.insert(newTodo);
       final todoWithId = newTodo.copyWith(id: insertedId);
-      await SyncService.instance.pushTodo(todoWithId);
-      await loadTodos();
+      _todos.insert(0, todoWithId);
+      notifyListeners();
+      SyncService.instance.pushTodo(todoWithId);
     } catch (e) {
       debugPrint("Error adding todo: $e");
     }
@@ -291,13 +304,19 @@ class TodoProvider with ChangeNotifier {
       completedAt: !todo.isCompleted ? DateTime.now() : null,
     );
 
+    // 1. Immediately update in-memory list & notify UI (0ms latency!)
+    final index = _todos.indexWhere((t) => t.id == todo.id);
+    if (index != -1) {
+      _todos[index] = updatedTodo;
+      notifyListeners();
+    }
+
     try {
       await _dbHelper.update(updatedTodo);
-      await SyncService.instance.pushTodo(updatedTodo);
       if (updatedTodo.isCompleted && _pomodoroTodoId == todo.id) {
         stopPomodoro();
       }
-      await loadTodos();
+      SyncService.instance.pushTodo(updatedTodo);
     } catch (e) {
       debugPrint("Error updating todo completion: $e");
     }
@@ -314,10 +333,15 @@ class TodoProvider with ChangeNotifier {
       createdAt: shouldResetTimer ? DateTime.now() : todo.createdAt,
     );
 
+    final index = _todos.indexWhere((t) => t.id == todo.id);
+    if (index != -1) {
+      _todos[index] = updatedTodo;
+      notifyListeners();
+    }
+
     try {
       await _dbHelper.update(updatedTodo);
-      await SyncService.instance.pushTodo(updatedTodo);
-      await loadTodos();
+      SyncService.instance.pushTodo(updatedTodo);
     } catch (e) {
       debugPrint("Error moving todo: $e");
     }
@@ -325,10 +349,15 @@ class TodoProvider with ChangeNotifier {
 
   // Update complete todo
   Future<void> updateTodo(Todo todo) async {
+    final index = _todos.indexWhere((t) => t.id == todo.id);
+    if (index != -1) {
+      _todos[index] = todo;
+      notifyListeners();
+    }
+
     try {
       await _dbHelper.update(todo);
-      await SyncService.instance.pushTodo(todo);
-      await loadTodos();
+      SyncService.instance.pushTodo(todo);
     } catch (e) {
       debugPrint("Error updating todo: $e");
     }
@@ -372,10 +401,12 @@ class TodoProvider with ChangeNotifier {
         final todo = reorderedList[i];
         final newCreatedAt = now.subtract(Duration(seconds: i * 2));
         final updatedTodo = todo.copyWith(createdAt: newCreatedAt);
+        final idx = _todos.indexWhere((t) => t.id == todo.id);
+        if (idx != -1) _todos[idx] = updatedTodo;
         await _dbHelper.update(updatedTodo);
-        await SyncService.instance.pushTodo(updatedTodo);
+        SyncService.instance.pushTodo(updatedTodo);
       }
-      await loadTodos();
+      notifyListeners();
     } catch (e) {
       debugPrint("Error reordering todos: $e");
     }
@@ -385,13 +416,16 @@ class TodoProvider with ChangeNotifier {
   Future<void> softDeleteTodo(Todo todo) async {
     final updatedTodo = todo.copyWith(isTrash: true, deletedAt: DateTime.now());
 
+    _todos.removeWhere((t) => t.id == todo.id);
+    _trashTodos.insert(0, updatedTodo);
+    notifyListeners();
+
     try {
       await _dbHelper.update(updatedTodo);
-      await SyncService.instance.pushTodo(updatedTodo);
       if (_pomodoroTodoId == todo.id) {
         stopPomodoro();
       }
-      await loadTodos();
+      SyncService.instance.pushTodo(updatedTodo);
     } catch (e) {
       debugPrint("Error soft deleting todo: $e");
     }
@@ -413,10 +447,13 @@ class TodoProvider with ChangeNotifier {
       completedAt: todo.completedAt,
     );
 
+    _trashTodos.removeWhere((t) => t.id == todo.id);
+    _todos.insert(0, restoredTodo);
+    notifyListeners();
+
     try {
       await _dbHelper.update(restoredTodo);
-      await SyncService.instance.pushTodo(restoredTodo);
-      await loadTodos();
+      SyncService.instance.pushTodo(restoredTodo);
     } catch (e) {
       debugPrint("Error restoring todo: $e");
     }
@@ -424,13 +461,16 @@ class TodoProvider with ChangeNotifier {
 
   // Permanent Delete
   Future<void> deleteTodoPermanently(int id) async {
+    _todos.removeWhere((t) => t.id == id);
+    _trashTodos.removeWhere((t) => t.id == id);
+    notifyListeners();
+
     try {
       await _dbHelper.deletePermanently(id);
-      await SyncService.instance.removeTodo(id);
       if (_pomodoroTodoId == id) {
         stopPomodoro();
       }
-      await loadTodos();
+      SyncService.instance.removeTodo(id);
     } catch (e) {
       debugPrint("Error permanently deleting todo: $e");
     }

@@ -27,11 +27,17 @@ class TodoCard extends StatefulWidget {
   State<TodoCard> createState() => _TodoCardState();
 }
 
-class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin {
+class _TodoCardState extends State<TodoCard> with TickerProviderStateMixin {
   late AnimationController _slideController;
+  late AnimationController _completionController;
+  late Animation<Offset> _slideRightAnimation;
+  late Animation<double> _fadeAnimation;
+
   double _dragOffset = 0.0;
   final double _maxDragWidth = 180.0; // width of action buttons
   bool _isOpened = false;
+  bool _isCompleting = false;
+  bool _isVisualChecked = false;
 
   @override
   void initState() {
@@ -45,20 +51,72 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
         _dragOffset = _slideController.value * -_maxDragWidth;
       });
     });
+
+    _completionController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+
+    _slideRightAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(1.2, 0.0), // Slide off to the right!
+    ).animate(
+      CurvedAnimation(
+        parent: _completionController,
+        curve: Curves.easeInCubic,
+      ),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _completionController,
+        curve: Curves.easeOut,
+      ),
+    );
   }
 
   @override
   void dispose() {
     _slideController.dispose();
+    _completionController.dispose();
     super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant TodoCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If todo changes (e.g. moved quadrant or completed), reset slide
-    if (oldWidget.todo.id != widget.todo.id || oldWidget.todo.quadrant != widget.todo.quadrant) {
+    // If todo changes (e.g. moved quadrant or completed), reset slide & animation
+    if (oldWidget.todo.id != widget.todo.id ||
+        oldWidget.todo.quadrant != widget.todo.quadrant ||
+        oldWidget.todo.isCompleted != widget.todo.isCompleted) {
       _resetSlide();
+      _completionController.reset();
+      _isCompleting = false;
+      _isVisualChecked = false;
+    }
+  }
+
+  void _triggerCompletionAnimation() async {
+    if (_isCompleting) return;
+
+    if (!widget.todo.isCompleted) {
+      setState(() {
+        _isCompleting = true;
+        _isVisualChecked = true;
+      });
+
+      // 1. Wait for checkmark fill animation (180ms)
+      await Future.delayed(const Duration(milliseconds: 180));
+
+      // 2. Slide off right smoothly with fade out
+      if (mounted) {
+        await _completionController.forward();
+      }
+
+      // 3. Toggle actual state in provider
+      widget.onToggleComplete();
+    } else {
+      widget.onToggleComplete();
     }
   }
 
@@ -100,6 +158,7 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textTheme = Theme.of(context).textTheme;
+    final isEffectiveCompleted = _isCompleting ? _isVisualChecked : widget.todo.isCompleted;
 
     // Determine adjacent quadrants for moving
     List<int> adjacentQuadrants = [1, 2, 3, 4];
@@ -179,66 +238,70 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
             onHorizontalDragEnd: _handleDragEnd,
             onTap: _isOpened ? _resetSlide : null,
             onLongPress: widget.onLongPress,
-            child: Transform.translate(
-              offset: Offset(_dragOffset, 0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            child: SlideTransition(
+              position: _slideRightAnimation,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Transform.translate(
+                  offset: Offset(_dragOffset, 0),
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      children: [
-                        // Left edge color bar
-                        Container(
-                          width: 5,
-                          decoration: BoxDecoration(
-                            color: widget.quadrantColor,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(20),
-                              bottomLeft: Radius.circular(20),
-                            ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-                      const SizedBox(width: 8),
-
-                      // Animated custom checkbox
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                        child: _CustomCheckbox(
-                          value: widget.todo.isCompleted,
-                          color: widget.quadrantColor,
-                          onChanged: (_) => widget.onToggleComplete(),
-                        ),
+                        ],
                       ),
-
-                      // Todo details
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                widget.todo.title,
-                                style: textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  decoration: widget.todo.isCompleted ? TextDecoration.lineThrough : null,
-                                  color: widget.todo.isCompleted
-                                      ? (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)
-                                      : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            // Left edge color bar
+                            Container(
+                              width: 5,
+                              decoration: BoxDecoration(
+                                color: widget.quadrantColor,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  bottomLeft: Radius.circular(20),
                                 ),
                               ),
+                            ),
+                          const SizedBox(width: 8),
+
+                          // Animated custom checkbox
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                            child: _CustomCheckbox(
+                              value: isEffectiveCompleted,
+                              color: widget.quadrantColor,
+                              onChanged: (_) => _triggerCompletionAnimation(),
+                            ),
+                          ),
+
+                          // Todo details
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    widget.todo.title,
+                                    style: textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      decoration: isEffectiveCompleted ? TextDecoration.lineThrough : null,
+                                      color: isEffectiveCompleted
+                                          ? (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)
+                                          : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                                    ),
+                                  ),
                                if (widget.todo.timeStr != null ||
                                   widget.todo.location != null ||
                                   widget.todo.dueDate != null ||
@@ -321,10 +384,12 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
             ),
           ),
         ),
-      ],
+      ),
     ),
-  );
-  }
+  ],
+),
+);
+}
 
   Color _getQuadrantColor(int quadrant) {
     switch (quadrant) {
@@ -418,29 +483,33 @@ class _CustomCheckboxState extends State<_CustomCheckbox> with SingleTickerProvi
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         widget.onChanged(!widget.value);
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          color: widget.value ? widget.color : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: widget.value
-                ? widget.color
-                : widget.color.withValues(alpha: 0.6),
-            width: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: widget.value ? widget.color : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: widget.value
+                  ? widget.color
+                  : widget.color.withValues(alpha: 0.6),
+              width: 2,
+            ),
           ),
-        ),
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: const Icon(
-            Icons.check,
-            size: 16,
-            color: Colors.white,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: const Icon(
+              Icons.check,
+              size: 16,
+              color: Colors.white,
+            ),
           ),
         ),
       ),

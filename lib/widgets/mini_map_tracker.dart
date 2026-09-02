@@ -260,15 +260,31 @@ class MiniMapTracker extends StatelessWidget {
                                       ),
                                       child: Row(
                                         children: [
-                                          Container(
-                                            width: 3.5,
-                                            height: 3.5,
-                                            decoration: BoxDecoration(
-                                              color: themeColor,
-                                              shape: BoxShape.circle,
+                                          GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: () {
+                                              provider.toggleTodoCompletion(
+                                                todo,
+                                              );
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                right: 6,
+                                              ),
+                                              child: Icon(
+                                                todo.isCompleted
+                                                    ? Icons.check_box_rounded
+                                                    : Icons
+                                                        .check_box_outline_blank_rounded,
+                                                size: 14,
+                                                color: todo.isCompleted
+                                                    ? themeColor
+                                                    : themeColor.withValues(
+                                                        alpha: 0.7,
+                                                      ),
+                                              ),
                                             ),
                                           ),
-                                          const SizedBox(width: 6),
                                           Expanded(
                                             child: Text(
                                               todo.title,
@@ -276,9 +292,13 @@ class MiniMapTracker extends StatelessWidget {
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
                                                 fontSize: 9.5,
+                                                decoration: todo.isCompleted
+                                                    ? TextDecoration.lineThrough
+                                                    : null,
                                                 color: isDark
                                                     ? AppColors.darkTextPrimary
-                                                    : AppColors.lightTextPrimary,
+                                                    : AppColors
+                                                        .lightTextPrimary,
                                               ),
                                             ),
                                           ),
