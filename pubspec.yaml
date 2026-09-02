@@ -35,13 +35,17 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   sqflite: ^2.3.0
-  sqflite_common_ffi: ^2.3.0+2
+  sqflite_common_ffi: ^2.3.4+1
+  sqlite3: ^2.4.5
   path_provider: ^2.1.1
   path: ^1.9.0
-  share_plus: ^9.0.0
+  share_plus: ^13.3.0
   intl: ^0.20.2
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.4
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
 
 dev_dependencies:
   flutter_test:

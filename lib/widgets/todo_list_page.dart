@@ -290,6 +290,7 @@ class TodoListPage extends StatelessWidget {
           : '';
       final shareText = '📢 이 업무의 진행을 정중히 위임/요청드립니다.\n할 일: "${todo.title}"$dueStr\n확인 후 협조 부탁드립니다. 감사합니다!';
 
+      // ignore: deprecated_member_use
       Share.share(shareText, subject: '업무 위임 요청');
     }
 
