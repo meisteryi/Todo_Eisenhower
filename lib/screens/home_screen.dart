@@ -407,9 +407,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   );
                 }
               } catch (e) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text('로그인 중 오류가 발생했습니다: $e')),
-                );
+                if (context.mounted) {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: const Row(
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.orangeAccent,
+                          ),
+                          SizedBox(width: 8),
+                          Text('구글 로그인 안내', style: TextStyle(fontSize: 16)),
+                        ],
+                      ),
+                      content: SelectableText(
+                        '오류 메세지:\n$e',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('확인'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
               }
             },
           );
