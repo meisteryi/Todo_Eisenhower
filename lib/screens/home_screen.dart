@@ -403,99 +403,99 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 physics: const BouncingScrollPhysics(),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     DateStripHeader(provider: widget.provider),
-                                  const Divider(height: 1),
-                                  Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          '빠른 실행',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        ListTile(
-                                          leading: const Icon(
-                                            Icons.help_outline,
-                                            color: Colors.blue,
-                                          ),
-                                          title: const Text('사용 설명서'),
-                                          onTap: _openHelpGuideDialog,
-                                          dense: true,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
+                                    const Divider(height: 1),
+                                    Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            '빠른 실행',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.grey,
                                             ),
                                           ),
-                                        ),
-                                        ListTile(
-                                          leading: const Icon(
-                                            Icons.category,
-                                            color: Colors.indigo,
-                                          ),
-                                          title: const Text('카테고리 관리'),
-                                          onTap: _openCategoryManageDialog,
-                                          dense: true,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
+                                          const SizedBox(height: 8),
+                                          ListTile(
+                                            leading: const Icon(
+                                              Icons.help_outline,
+                                              color: Colors.blue,
+                                            ),
+                                            title: const Text('사용 설명서'),
+                                            onTap: _openHelpGuideDialog,
+                                            dense: true,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
                                           ),
-                                        ),
-                                        ListTile(
-                                          leading: const Icon(
-                                            Icons.autorenew,
-                                            color: Colors.teal,
-                                          ),
-                                          title: const Text('루틴 관리'),
-                                          onTap: _openRoutineManageDialog,
-                                          dense: true,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
+                                          ListTile(
+                                            leading: const Icon(
+                                              Icons.category,
+                                              color: Colors.indigo,
+                                            ),
+                                            title: const Text('카테고리 관리'),
+                                            onTap: _openCategoryManageDialog,
+                                            dense: true,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
                                           ),
-                                        ),
-                                        ListTile(
-                                          leading: const Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.redAccent,
-                                          ),
-                                          title: Text('소각장 보관함 ($trashCount)'),
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    TrashScreen(
-                                                      provider: widget.provider,
-                                                    ),
-                                              ),
-                                            );
-                                          },
-                                          dense: true,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
+                                          ListTile(
+                                            leading: const Icon(
+                                              Icons.autorenew,
+                                              color: Colors.teal,
+                                            ),
+                                            title: const Text('루틴 관리'),
+                                            onTap: _openRoutineManageDialog,
+                                            dense: true,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                          ListTile(
+                                            leading: const Icon(
+                                              Icons.delete_outline,
+                                              color: Colors.redAccent,
+                                            ),
+                                            title: Text(
+                                              '소각장 보관함 ($trashCount)',
+                                            ),
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      TrashScreen(
+                                                        provider:
+                                                            widget.provider,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                            dense: true,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          Expanded(
+                            Expanded(
                               child: viewMode == 'todomate'
                                   ? TodoMateView(
                                       provider: widget.provider,
@@ -525,16 +525,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ],
             ),
           ),
-          floatingActionButton: FloatingActionButton.extended(
+          floatingActionButton: FloatingActionButton(
             onPressed: () => _showAddTaskSheet(),
             backgroundColor: Theme.of(context).primaryColor,
             foregroundColor: Colors.white,
-            icon: const Icon(Icons.add),
-            label: const Text(
-              '할 일 추가',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
             elevation: 4,
+            child: const Icon(Icons.add),
           ),
         );
       },
@@ -813,17 +809,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Expanded(
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
-            layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
-              return ClipRect(
-                child: Stack(
-                  alignment: Alignment.topCenter,
-                  children: <Widget>[
-                    ...previousChildren,
-                    ?currentChild,
-                  ],
-                ),
-              );
-            },
+            layoutBuilder:
+                (Widget? currentChild, List<Widget> previousChildren) {
+                  return ClipRect(
+                    child: Stack(
+                      alignment: Alignment.topCenter,
+                      children: <Widget>[...previousChildren, ?currentChild],
+                    ),
+                  );
+                },
             child: _isPanelVisible
                 ? PageView(
                     key: const ValueKey('matrix_detail_pageview'),

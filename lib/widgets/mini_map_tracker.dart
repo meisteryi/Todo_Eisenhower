@@ -212,74 +212,86 @@ class MiniMapTracker extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               // Preview uncompleted tasks (Max 3, only in dashboard mode)
-              if (isDashboard) ...[
-                const SizedBox(height: 4),
-                Expanded(
-                  child: previewTodos.isEmpty
-                      ? Center(
-                          child: Text(
-                            '대기 중인 태스크가 없습니다.',
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontStyle: FontStyle.italic,
-                              color: isDark 
-                                  ? AppColors.darkTextSecondary 
-                                  : AppColors.lightTextSecondary,
-                            ),
-                          ),
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(previewTodos.length, (todoIdx) {
-                            final todo = previewTodos[todoIdx];
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 1.5),
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                                decoration: BoxDecoration(
-                                  color: isDark 
-                                      ? Colors.black.withValues(alpha: 0.15) 
-                                      : Colors.grey[50]!.withValues(alpha: 0.5),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                                    width: 0.5,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 3.5,
-                                      height: 3.5,
-                                      decoration: BoxDecoration(
-                                        color: themeColor,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        todo.title,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 9.5,
-                                          color: isDark 
-                                              ? AppColors.darkTextPrimary 
-                                              : AppColors.lightTextPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+              Expanded(
+                child: AnimatedOpacity(
+                  opacity: isDashboard ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: isDashboard ? Curves.easeIn : Curves.easeOut,
+                  child: isDashboard
+                      ? (previewTodos.isEmpty
+                          ? Center(
+                              child: Text(
+                                '대기 중인 태스크가 없습니다.',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontStyle: FontStyle.italic,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
                                 ),
                               ),
-                            );
-                          }),
-                        ),
+                            )
+                          : ClipRect(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(previewTodos.length, (todoIdx) {
+                                  final todo = previewTodos[todoIdx];
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 1.5),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3.5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? Colors.black.withValues(alpha: 0.15)
+                                            : Colors.grey[50]!.withValues(
+                                                alpha: 0.5,
+                                              ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: isDark
+                                              ? AppColors.darkDivider
+                                              : AppColors.lightDivider,
+                                          width: 0.5,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 3.5,
+                                            height: 3.5,
+                                            decoration: BoxDecoration(
+                                              color: themeColor,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              todo.title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 9.5,
+                                                color: isDark
+                                                    ? AppColors.darkTextPrimary
+                                                    : AppColors.lightTextPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ))
+                      : const SizedBox.shrink(),
                 ),
-              ],
-              if (!isDashboard) const Spacer(),
+              ),
               SizedBox(height: isDashboard ? 6 : 4),
               // Occupancy Bar Gauge (Progress Bar only, offset asymmetrically to avoid curves)
               Padding(
