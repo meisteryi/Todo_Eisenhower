@@ -5,9 +5,14 @@ import '../models/routine_model.dart';
 import '../models/todo_model.dart';
 import '../services/database_helper.dart';
 import '../services/notification_service.dart';
+import '../services/sync_service.dart';
 
 class TodoProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  TodoProvider() {
+    SyncService.instance.initializeSync(() => loadTodos());
+  }
 
   List<Todo> _todos = [];
   List<Todo> _trashTodos = [];
@@ -221,7 +226,9 @@ class TodoProvider with ChangeNotifier {
     );
 
     try {
-      await _dbHelper.insert(newTodo);
+      final insertedId = await _dbHelper.insert(newTodo);
+      final todoWithId = newTodo.copyWith(id: insertedId);
+      await SyncService.instance.pushTodo(todoWithId);
       await loadTodos();
     } catch (e) {
       debugPrint("Error instantiating routine: $e");
@@ -268,7 +275,9 @@ class TodoProvider with ChangeNotifier {
     );
 
     try {
-      await _dbHelper.insert(newTodo);
+      final insertedId = await _dbHelper.insert(newTodo);
+      final todoWithId = newTodo.copyWith(id: insertedId);
+      await SyncService.instance.pushTodo(todoWithId);
       await loadTodos();
     } catch (e) {
       debugPrint("Error adding todo: $e");
@@ -284,6 +293,7 @@ class TodoProvider with ChangeNotifier {
 
     try {
       await _dbHelper.update(updatedTodo);
+      await SyncService.instance.pushTodo(updatedTodo);
       if (updatedTodo.isCompleted && _pomodoroTodoId == todo.id) {
         stopPomodoro();
       }
@@ -306,6 +316,7 @@ class TodoProvider with ChangeNotifier {
 
     try {
       await _dbHelper.update(updatedTodo);
+      await SyncService.instance.pushTodo(updatedTodo);
       await loadTodos();
     } catch (e) {
       debugPrint("Error moving todo: $e");
@@ -316,6 +327,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> updateTodo(Todo todo) async {
     try {
       await _dbHelper.update(todo);
+      await SyncService.instance.pushTodo(todo);
       await loadTodos();
     } catch (e) {
       debugPrint("Error updating todo: $e");
@@ -361,6 +373,7 @@ class TodoProvider with ChangeNotifier {
         final newCreatedAt = now.subtract(Duration(seconds: i * 2));
         final updatedTodo = todo.copyWith(createdAt: newCreatedAt);
         await _dbHelper.update(updatedTodo);
+        await SyncService.instance.pushTodo(updatedTodo);
       }
       await loadTodos();
     } catch (e) {
@@ -374,6 +387,7 @@ class TodoProvider with ChangeNotifier {
 
     try {
       await _dbHelper.update(updatedTodo);
+      await SyncService.instance.pushTodo(updatedTodo);
       if (_pomodoroTodoId == todo.id) {
         stopPomodoro();
       }
@@ -401,6 +415,7 @@ class TodoProvider with ChangeNotifier {
 
     try {
       await _dbHelper.update(restoredTodo);
+      await SyncService.instance.pushTodo(restoredTodo);
       await loadTodos();
     } catch (e) {
       debugPrint("Error restoring todo: $e");
@@ -411,6 +426,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> deleteTodoPermanently(int id) async {
     try {
       await _dbHelper.deletePermanently(id);
+      await SyncService.instance.removeTodo(id);
       if (_pomodoroTodoId == id) {
         stopPomodoro();
       }
