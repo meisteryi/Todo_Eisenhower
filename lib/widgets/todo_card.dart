@@ -10,6 +10,7 @@ class TodoCard extends StatefulWidget {
   final Function(int) onMoveToQuadrant;
   final VoidCallback onDelete;
   final VoidCallback? onLongPress;
+  final Widget? trailing;
 
   const TodoCard({
     super.key,
@@ -19,6 +20,7 @@ class TodoCard extends StatefulWidget {
     required this.onMoveToQuadrant,
     required this.onDelete,
     this.onLongPress,
+    this.trailing,
   });
 
   @override
@@ -135,40 +137,41 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
       child: Stack(
         children: [
           // Background Slide Actions
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                color: isDark ? AppColors.darkCard.withValues(alpha: 0.8) : Colors.grey[200],
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    // Button 1: Adjacent Q1/Q2
-                    buildActionButton(
-                      _getQShortTitle(adjacentQuadrants[0]),
-                      Icons.swap_horiz,
-                      _getQuadrantColor(adjacentQuadrants[0]),
-                      () => widget.onMoveToQuadrant(adjacentQuadrants[0]),
-                    ),
-                    // Button 2: Adjacent Q3/Q4
-                    buildActionButton(
-                      _getQShortTitle(adjacentQuadrants[1]),
-                      Icons.swap_vert,
-                      _getQuadrantColor(adjacentQuadrants[1]),
-                      () => widget.onMoveToQuadrant(adjacentQuadrants[1]),
-                    ),
-                    // Button 3: Delete (Trash Bin)
-                    buildActionButton(
-                      '삭제',
-                      Icons.delete_outline,
-                      Colors.redAccent,
-                      widget.onDelete,
-                    ),
-                  ],
+          if (_dragOffset < -2)
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  color: isDark ? AppColors.darkCard.withValues(alpha: 0.8) : Colors.grey[200],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Button 1: Adjacent Q1/Q2
+                      buildActionButton(
+                        _getQShortTitle(adjacentQuadrants[0]),
+                        Icons.swap_horiz,
+                        _getQuadrantColor(adjacentQuadrants[0]),
+                        () => widget.onMoveToQuadrant(adjacentQuadrants[0]),
+                      ),
+                      // Button 2: Adjacent Q3/Q4
+                      buildActionButton(
+                        _getQShortTitle(adjacentQuadrants[1]),
+                        Icons.swap_vert,
+                        _getQuadrantColor(adjacentQuadrants[1]),
+                        () => widget.onMoveToQuadrant(adjacentQuadrants[1]),
+                      ),
+                      // Button 3: Delete (Trash Bin)
+                      buildActionButton(
+                        '삭제',
+                        Icons.delete_outline,
+                        Colors.redAccent,
+                        widget.onDelete,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
           // Foreground Card Content
           GestureDetector(
@@ -178,32 +181,34 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
             onLongPress: widget.onLongPress,
             child: Transform.translate(
               offset: Offset(_dragOffset, 0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: IntrinsicHeight(
-                  child: Row(
-                    children: [
-                      // Left edge color bar
-                      Container(
-                        width: 5,
-                        decoration: BoxDecoration(
-                          color: widget.quadrantColor,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      children: [
+                        // Left edge color bar
+                        Container(
+                          width: 5,
+                          decoration: BoxDecoration(
+                            color: widget.quadrantColor,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              bottomLeft: Radius.circular(20),
+                            ),
                           ),
                         ),
-                      ),
                       const SizedBox(width: 8),
 
                       // Animated custom checkbox
@@ -302,16 +307,23 @@ class _TodoCardState extends State<TodoCard> with SingleTickerProviderStateMixin
                       ),
 
                       // Space reserved for action buttons and drag handles on the far right
-                      const SizedBox(width: 48),
+                      if (widget.trailing != null)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: widget.trailing!,
+                        )
+                      else
+                        const SizedBox(width: 12),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
   }
 
   Color _getQuadrantColor(int quadrant) {
@@ -405,8 +417,6 @@ class _CustomCheckboxState extends State<_CustomCheckbox> with SingleTickerProvi
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return GestureDetector(
       onTap: () {
         widget.onChanged(!widget.value);
@@ -421,7 +431,7 @@ class _CustomCheckboxState extends State<_CustomCheckbox> with SingleTickerProvi
           border: Border.all(
             color: widget.value
                 ? widget.color
-                : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
+                : widget.color.withValues(alpha: 0.6),
             width: 2,
           ),
         ),

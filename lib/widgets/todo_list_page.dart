@@ -444,71 +444,64 @@ class TodoListPage extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 80),
                   itemBuilder: (context, index) {
                     final todo = todos[index];
-                    return Stack(
+                    return TodoCard(
                       key: ValueKey(todo.id!),
-                      alignment: Alignment.centerRight,
-                      children: [
-                        TodoCard(
-                          todo: todo,
-                          quadrantColor: themeColor,
-                          onToggleComplete: () => provider.toggleTodoCompletion(todo),
-                          onMoveToQuadrant: (q) => provider.moveTodo(todo, q),
-                          onDelete: () => provider.softDeleteTodo(todo),
-                          onLongPress: () => showRepositionSheet(todo),
-                        ),
-                        // Quadrant Specific Overlay Icons for quick action
-                        Positioned(
-                          right: 16,
-                          top: 0,
-                          bottom: 0,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Q1 Focus trigger
-                              if (quadrant == 1 && !todo.isCompleted)
-                                IconButton(
-                                  icon: Icon(
-                                    provider.pomodoroTodoId == todo.id && provider.isTimerRunning
-                                        ? Icons.pause_circle_outline
-                                        : Icons.play_circle_outline,
-                                    color: AppColors.q1,
-                                    size: 20,
-                                  ),
-                                  onPressed: () {
-                                    if (provider.pomodoroTodoId == todo.id && provider.isTimerRunning) {
-                                      provider.pausePomodoro();
-                                    } else {
-                                      provider.startPomodoro(todo.id!);
-                                    }
-                                  },
-                                ),
-
-                              // Q3 Share trigger
-                              if (quadrant == 3 && !todo.isCompleted)
-                                IconButton(
-                                  icon: const Icon(Icons.share, size: 18, color: AppColors.q3),
-                                  onPressed: () => triggerQ3Share(todo),
-                                ),
-                              // Q4 Incinerator countdown warning
-                              if (quadrant == 4 && !todo.isCompleted)
-                                _IncineratorCountdown(todo: todo),
-                              
-                              // Reorder Drag Handle (2-line horizontal handle)
-                              ReorderableDragStartListener(
-                                index: index,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                                  child: Icon(
-                                    Icons.drag_handle,
-                                    color: isDark ? Colors.grey[600] : Colors.grey[400],
-                                    size: 20,
-                                  ),
-                                ),
+                      todo: todo,
+                      quadrantColor: themeColor,
+                      onToggleComplete: () => provider.toggleTodoCompletion(todo),
+                      onMoveToQuadrant: (q) => provider.moveTodo(todo, q),
+                      onDelete: () => provider.softDeleteTodo(todo),
+                      onLongPress: () => showRepositionSheet(todo),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Q1 Focus trigger
+                          if (quadrant == 1 && !todo.isCompleted)
+                            IconButton(
+                              icon: Icon(
+                                provider.pomodoroTodoId == todo.id && provider.isTimerRunning
+                                    ? Icons.pause_circle_outline
+                                    : Icons.play_circle_outline,
+                                color: AppColors.q1,
+                                size: 20,
                               ),
-                            ],
+                              onPressed: () {
+                                if (provider.pomodoroTodoId == todo.id && provider.isTimerRunning) {
+                                  provider.pausePomodoro();
+                                } else {
+                                  provider.startPomodoro(todo.id!);
+                                }
+                              },
+                              constraints: const BoxConstraints(),
+                              padding: const EdgeInsets.all(4),
+                            ),
+
+                          // Q3 Share trigger
+                          if (quadrant == 3 && !todo.isCompleted)
+                            IconButton(
+                              icon: const Icon(Icons.share, size: 18, color: AppColors.q3),
+                              onPressed: () => triggerQ3Share(todo),
+                              constraints: const BoxConstraints(),
+                              padding: const EdgeInsets.all(4),
+                            ),
+                          // Q4 Incinerator countdown warning
+                          if (quadrant == 4 && !todo.isCompleted)
+                            _IncineratorCountdown(todo: todo),
+                          
+                          // Reorder Drag Handle
+                          ReorderableDragStartListener(
+                            index: index,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                              child: Icon(
+                                Icons.drag_handle,
+                                color: isDark ? Colors.grey[600] : Colors.grey[400],
+                                size: 20,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 ),
