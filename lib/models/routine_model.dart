@@ -4,7 +4,8 @@ class Routine {
   final String title;
   final int quadrant;
   final String repeatType; // 'daily', 'weekly', 'monthly'
-  final String repeatDays; // Comma-separated weekdays (1=Mon, 7=Sun) or monthly day numbers
+  final String
+  repeatDays; // Comma-separated weekdays (1=Mon, 7=Sun) or monthly day numbers
   final DateTime startDate;
   final DateTime? endDate;
   final String? location;
