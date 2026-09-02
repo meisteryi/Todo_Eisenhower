@@ -56,7 +56,10 @@ class _HomeScreenState extends State<HomeScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.local_fire_department, color: Colors.orangeAccent),
+              const Icon(
+                Icons.local_fire_department,
+                color: Colors.orangeAccent,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -142,52 +145,69 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return AddTaskSheet(
-          initialQuadrant: todoToEdit?.quadrant ?? widget.provider.activeQuadrant,
+          initialQuadrant:
+              todoToEdit?.quadrant ?? widget.provider.activeQuadrant,
           categories: widget.provider.categories,
           initialCategoryId: todoToEdit?.categoryId,
-          initialTargetDate: todoToEdit?.targetDate ?? widget.provider.selectedDate,
+          initialTargetDate:
+              todoToEdit?.targetDate ?? widget.provider.selectedDate,
           initialTodo: todoToEdit,
-          onAddTask: (title, quadrant, categoryId, targetDate, dueDate, location, timeStr, dueTimeStr, memo, hasNotification, notificationOffset) {
-            if (todoToEdit == null) {
-              widget.provider.addTodo(
+          onAddTask:
+              (
                 title,
                 quadrant,
-                categoryId: categoryId,
-                targetDate: targetDate,
-                dueDate: dueDate,
-                location: location,
-                timeStr: timeStr,
-                dueTimeStr: dueTimeStr,
-                memo: memo,
-                hasNotification: hasNotification,
-                notificationOffset: notificationOffset,
-              );
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('"$title" 할 일이 추가되었습니다.'),
-                  behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            } else {
-              final enteringQ4 = quadrant == 4 && todoToEdit.quadrant != 4;
-              final updated = todoToEdit.copyWith(
-                title: title,
-                quadrant: quadrant,
-                categoryId: categoryId,
-                targetDate: targetDate,
-                dueDate: dueDate,
-                location: location,
-                timeStr: timeStr,
-                dueTimeStr: dueTimeStr,
-                memo: memo,
-                hasNotification: hasNotification,
-                notificationOffset: notificationOffset,
-                createdAt: enteringQ4 ? DateTime.now() : todoToEdit.createdAt,
-              );
-              widget.provider.updateTodo(updated);
-            }
-          },
+                categoryId,
+                targetDate,
+                dueDate,
+                location,
+                timeStr,
+                dueTimeStr,
+                memo,
+                hasNotification,
+                notificationOffset,
+              ) {
+                if (todoToEdit == null) {
+                  widget.provider.addTodo(
+                    title,
+                    quadrant,
+                    categoryId: categoryId,
+                    targetDate: targetDate,
+                    dueDate: dueDate,
+                    location: location,
+                    timeStr: timeStr,
+                    dueTimeStr: dueTimeStr,
+                    memo: memo,
+                    hasNotification: hasNotification,
+                    notificationOffset: notificationOffset,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('"$title" 할 일이 추가되었습니다.'),
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                } else {
+                  final enteringQ4 = quadrant == 4 && todoToEdit.quadrant != 4;
+                  final updated = todoToEdit.copyWith(
+                    title: title,
+                    quadrant: quadrant,
+                    categoryId: categoryId,
+                    targetDate: targetDate,
+                    dueDate: dueDate,
+                    location: location,
+                    timeStr: timeStr,
+                    dueTimeStr: dueTimeStr,
+                    memo: memo,
+                    hasNotification: hasNotification,
+                    notificationOffset: notificationOffset,
+                    createdAt: enteringQ4
+                        ? DateTime.now()
+                        : todoToEdit.createdAt,
+                  );
+                  widget.provider.updateTodo(updated);
+                }
+              },
         );
       },
     );
@@ -208,10 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openHelpGuideDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => const HelpGuideDialog(),
-    );
+    showDialog(context: context, builder: (ctx) => const HelpGuideDialog());
   }
 
   @override
@@ -239,13 +256,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [
                         _buildModeChip('eisenhower', '매트릭스 뷰', Icons.grid_view),
-                        _buildModeChip('todomate', '투두메이트 뷰', Icons.calendar_view_day),
+                        _buildModeChip(
+                          'todomate',
+                          '투두메이트 뷰',
+                          Icons.calendar_view_day,
+                        ),
                       ],
                     ),
                   ),
@@ -260,14 +283,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _buildModeChip('eisenhower', '매트릭스 뷰', Icons.grid_view),
-                            _buildModeChip('todomate', '투두메이트 뷰', Icons.calendar_view_day),
+                            _buildModeChip(
+                              'eisenhower',
+                              '매트릭스 뷰',
+                              Icons.grid_view,
+                            ),
+                            _buildModeChip(
+                              'todomate',
+                              '투두메이트 뷰',
+                              Icons.calendar_view_day,
+                            ),
                           ],
                         ),
                       ),
@@ -300,7 +333,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TrashScreen(provider: widget.provider),
+                          builder: (context) =>
+                              TrashScreen(provider: widget.provider),
                         ),
                       );
                       widget.provider.loadTodos();
@@ -316,7 +350,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.redAccent,
                           shape: BoxShape.circle,
                         ),
-                        constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                        constraints: const BoxConstraints(
+                          minWidth: 14,
+                          minHeight: 14,
+                        ),
                         child: Text(
                           '$trashCount',
                           style: const TextStyle(
@@ -346,7 +383,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               decoration: BoxDecoration(
                                 border: Border(
                                   right: BorderSide(
-                                    color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                                    color: Theme.of(
+                                      context,
+                                    ).dividerColor.withValues(alpha: 0.1),
                                   ),
                                 ),
                               ),
@@ -357,7 +396,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Padding(
                                     padding: const EdgeInsets.all(16.0),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         const Text(
                                           '빠른 실행',
@@ -369,39 +409,70 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                         const SizedBox(height: 8),
                                         ListTile(
-                                          leading: const Icon(Icons.help_outline, color: Colors.blue),
+                                          leading: const Icon(
+                                            Icons.help_outline,
+                                            color: Colors.blue,
+                                          ),
                                           title: const Text('사용 설명서'),
                                           onTap: _openHelpGuideDialog,
                                           dense: true,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
                                         ),
                                         ListTile(
-                                          leading: const Icon(Icons.category, color: Colors.indigo),
+                                          leading: const Icon(
+                                            Icons.category,
+                                            color: Colors.indigo,
+                                          ),
                                           title: const Text('카테고리 관리'),
                                           onTap: _openCategoryManageDialog,
                                           dense: true,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
                                         ),
                                         ListTile(
-                                          leading: const Icon(Icons.autorenew, color: Colors.teal),
+                                          leading: const Icon(
+                                            Icons.autorenew,
+                                            color: Colors.teal,
+                                          ),
                                           title: const Text('루틴 관리'),
                                           onTap: _openRoutineManageDialog,
                                           dense: true,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
                                         ),
                                         ListTile(
-                                          leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                          leading: const Icon(
+                                            Icons.delete_outline,
+                                            color: Colors.redAccent,
+                                          ),
                                           title: Text('소각장 보관함 ($trashCount)'),
                                           onTap: () {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) => TrashScreen(provider: widget.provider),
+                                                builder: (context) =>
+                                                    TrashScreen(
+                                                      provider: widget.provider,
+                                                    ),
                                               ),
                                             );
                                           },
                                           dense: true,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -413,7 +484,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: viewMode == 'todomate'
                                   ? TodoMateView(
                                       provider: widget.provider,
-                                      onEditTodo: (todo) => _showAddTaskSheet(todoToEdit: todo),
+                                      onEditTodo: (todo) =>
+                                          _showAddTaskSheet(todoToEdit: todo),
                                     )
                                   : _buildEisenhowerView(),
                             ),
@@ -421,12 +493,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                       : Column(
                           children: [
-                            if (viewMode == 'todomate') DateStripHeader(provider: widget.provider),
+                            if (viewMode == 'todomate')
+                              DateStripHeader(provider: widget.provider),
                             Expanded(
                               child: viewMode == 'todomate'
                                   ? TodoMateView(
                                       provider: widget.provider,
-                                      onEditTodo: (todo) => _showAddTaskSheet(todoToEdit: todo),
+                                      onEditTodo: (todo) =>
+                                          _showAddTaskSheet(todoToEdit: todo),
                                     )
                                   : _buildEisenhowerView(),
                             ),
@@ -441,7 +515,10 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Theme.of(context).primaryColor,
             foregroundColor: Colors.white,
             icon: const Icon(Icons.add),
-            label: const Text('할 일 추가', style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text(
+              '할 일 추가',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             elevation: 4,
           ),
         );
@@ -485,13 +562,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const Text(
                     '⏱️ 뽀모도로 몰입 중',
-                    style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     activeTodo.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -516,7 +601,9 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 4),
             IconButton(
               icon: Icon(
-                provider.isTimerRunning ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                provider.isTimerRunning
+                    ? Icons.pause_circle_filled
+                    : Icons.play_circle_fill,
                 color: Colors.white,
                 size: 26,
               ),
@@ -534,7 +621,11 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(4),
             ),
             IconButton(
-              icon: const Icon(Icons.check_circle, color: Colors.white, size: 24),
+              icon: const Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: 24,
+              ),
               onPressed: () {
                 provider.toggleTodoCompletion(activeTodo);
               },
@@ -543,7 +634,11 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(4),
             ),
             IconButton(
-              icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 20),
+              icon: const Icon(
+                Icons.close_rounded,
+                color: Colors.white70,
+                size: 20,
+              ),
               onPressed: () {
                 provider.stopPomodoro();
               },
@@ -568,7 +663,9 @@ class _HomeScreenState extends State<HomeScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -576,7 +673,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(
               icon,
               size: 14,
-              color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+              color: isSelected
+                  ? Colors.white
+                  : Theme.of(context).textTheme.bodyMedium?.color,
             ),
             const SizedBox(width: 4),
             Text(
@@ -584,7 +683,9 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
           ],
@@ -689,7 +790,9 @@ class _HomeScreenState extends State<HomeScreen> {
         AnimatedCrossFade(
           firstChild: const Divider(height: 1),
           secondChild: const SizedBox.shrink(),
-          crossFadeState: _isPanelVisible ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          crossFadeState: _isPanelVisible
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
           duration: const Duration(milliseconds: 300),
         ),
         Expanded(
@@ -709,22 +812,33 @@ class _HomeScreenState extends State<HomeScreen> {
                   )
                 : SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
                                 ? AppColors.darkCard
                                 : Colors.white,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(
-                                  alpha: Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.03,
+                                  alpha:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? 0.15
+                                      : 0.03,
                                 ),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
@@ -734,7 +848,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.format_quote_rounded, color: AppColors.q2.withValues(alpha: 0.7), size: 24),
+                              Icon(
+                                Icons.format_quote_rounded,
+                                color: AppColors.q2.withValues(alpha: 0.7),
+                                size: 24,
+                              ),
                               const SizedBox(height: 6),
                               Text(
                                 QuotesData.list[_currentQuoteIndex].text,
@@ -751,7 +869,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 8),
                               Text(
                                 '- ${QuotesData.list[_currentQuoteIndex].author}',
-                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -760,11 +881,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.touch_app_outlined, size: 16, color: Colors.grey),
+                            Icon(
+                              Icons.touch_app_outlined,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
                             SizedBox(width: 8),
                             Text(
                               '사분면을 탭하여 세부 할 일 목록을 확인하세요.',
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
