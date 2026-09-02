@@ -7,6 +7,8 @@ import 'providers/todo_provider.dart';
 import 'screens/home_screen.dart';
 import 'theme/app_theme.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'services/notification_service.dart';
 
 void main() async {
@@ -20,6 +22,14 @@ void main() async {
   }
 
   await initializeDateFormatting('ko', null);
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint('Firebase init warning: $e');
+  }
 
   try {
     await NotificationService().init();
