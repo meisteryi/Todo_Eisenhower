@@ -109,12 +109,22 @@ class TodoProvider with ChangeNotifier {
     return '$minutes:$seconds';
   }
 
-  // Selected date's active todos
+  // Selected date's active todos (Uncompleted past/undated tasks carry forward until completed!)
   List<Todo> get selectedDateTodos {
+    final selectedDay = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
     return _todos.where((t) {
-      return t.targetDate.year == _selectedDate.year &&
-          t.targetDate.month == _selectedDate.month &&
-          t.targetDate.day == _selectedDate.day;
+      if (t.isTrash) return false;
+
+      // Completed items show strictly on the date they were completed (or targetDate if completedAt null)
+      if (t.isCompleted) {
+        final compDate = t.completedAt ?? t.targetDate;
+        final compDay = DateTime(compDate.year, compDate.month, compDate.day);
+        return compDay.isAtSameMomentAs(selectedDay);
+      }
+
+      // Uncompleted items: show if target date is today/selected date OR if created/assigned on a past date (carry forward until completed)
+      final targetDay = DateTime(t.targetDate.year, t.targetDate.month, t.targetDate.day);
+      return targetDay.isAtSameMomentAs(selectedDay) || targetDay.isBefore(selectedDay);
     }).toList();
   }
 
