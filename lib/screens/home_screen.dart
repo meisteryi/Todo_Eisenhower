@@ -14,6 +14,7 @@ import '../widgets/add_task_sheet.dart';
 import '../widgets/help_guide_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
+import '../widgets/settings_dialog.dart';
 import 'trash_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -250,116 +251,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     showDialog(context: context, builder: (ctx) => const HelpGuideDialog());
   }
 
-  void _showProfileDialog(User user) {
+  void _openSettingsDialog() {
     showDialog(
       context: context,
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Row(
-            children: [
-              Icon(Icons.account_circle, color: AppColors.q2),
-              SizedBox(width: 8),
-              Text('내 계정 정보'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (user.photoURL != null)
-                CircleAvatar(
-                  radius: 36,
-                  backgroundImage: NetworkImage(user.photoURL!),
-                )
-              else
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: AppColors.q2,
-                  child: Text(
-                    (user.displayName ?? user.email ?? 'U')[0].toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 24,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              Text(
-                user.displayName ?? '구글 사용자',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                user.email ?? '',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.cloud_done_rounded,
-                      size: 14,
-                      color: Colors.green,
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Google 계정 연동 완료',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton.icon(
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                Navigator.pop(context);
-                await AuthService().signOut();
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('로그아웃 되었습니다.')),
-                );
-              },
-              icon: const Icon(Icons.logout, color: Colors.redAccent, size: 18),
-              label: const Text(
-                '로그아웃',
-                style: TextStyle(color: Colors.redAccent),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('닫기'),
-            ),
-          ],
-        );
-      },
+      builder: (ctx) => SettingsDialog(provider: widget.provider),
     );
   }
 
@@ -370,11 +265,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         final user = snapshot.data;
         if (user != null) {
           return GestureDetector(
-            onTap: () => _showProfileDialog(user),
+            onTap: _openSettingsDialog,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
               child: Tooltip(
-                message: '${user.displayName ?? "프로필"} 계정 정보',
+                message: '${user.displayName ?? "계정"} - 앱 전체 설정',
                 child: user.photoURL != null
                     ? CircleAvatar(
                         radius: 14,
@@ -398,55 +293,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           );
         } else {
           return IconButton(
-            icon: const Icon(Icons.login_rounded, color: AppColors.q2),
-            tooltip: '구글 계정 로그인',
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                final credential = await AuthService().signInWithGoogle();
-                if (credential != null) {
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '🎉 ${credential.user?.displayName ?? "사용자"}님 환영합니다!',
-                      ),
-                      backgroundColor: Colors.green[700],
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      title: const Row(
-                        children: [
-                          Icon(
-                            Icons.warning_amber_rounded,
-                            color: Colors.orangeAccent,
-                          ),
-                          SizedBox(width: 8),
-                          Text('구글 로그인 안내', style: TextStyle(fontSize: 16)),
-                        ],
-                      ),
-                      content: SelectableText(
-                        '오류 메세지:\n$e',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('확인'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              }
-            },
+            icon: const Icon(Icons.settings_outlined, color: AppColors.q2),
+            tooltip: '앱 전체 설정 및 계정 로그인',
+            onPressed: _openSettingsDialog,
           );
         }
       },
@@ -614,6 +463,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                   tooltip: '더보기 메뉴',
                   onSelected: (value) async {
+                    if (value == 'settings') _openSettingsDialog();
                     if (value == 'help') _openHelpGuideDialog();
                     if (value == 'category') _openCategoryManageDialog();
                     if (value == 'routine') _openRoutineManageDialog();
@@ -629,6 +479,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     }
                   },
                   itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'settings',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.settings_rounded,
+                            color: AppColors.q2,
+                            size: 20,
+                          ),
+                          SizedBox(width: 10),
+                          Text('앱 전체 설정'),
+                        ],
+                      ),
+                    ),
                     const PopupMenuItem(
                       value: 'help',
                       child: Row(
