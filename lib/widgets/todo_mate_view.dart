@@ -122,24 +122,24 @@ class _TodoMateViewState extends State<TodoMateView> {
         .toList();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category Header Bar
+          // Category Header Bar (Original text/icon size, compact padding)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -185,6 +185,8 @@ class _TodoMateViewState extends State<TodoMateView> {
                     color: color,
                     size: 22,
                   ),
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(4),
                   onPressed: () {
                     setState(() {
                       _inlineInputActive[category.id] = !isInputActive;
@@ -362,6 +364,7 @@ class _TodoMateViewState extends State<TodoMateView> {
                   },
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                    onTap: () => widget.onEditTodo(todo),
                     leading: GestureDetector(
                       onTap: () {
                         widget.provider.toggleTodoCompletion(todo);
@@ -504,12 +507,6 @@ class _TodoMateViewState extends State<TodoMateView> {
                             constraints: const BoxConstraints(),
                             padding: const EdgeInsets.all(6),
                           ),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          onPressed: () => widget.onEditTodo(todo),
-                          constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(6),
-                        ),
                       ],
                     ),
                   ),

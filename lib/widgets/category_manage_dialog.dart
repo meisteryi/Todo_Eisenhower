@@ -11,6 +11,13 @@ class CategoryManageDialog extends StatefulWidget {
   State<CategoryManageDialog> createState() => _CategoryManageDialogState();
 }
 
+class EmojiCategoryData {
+  final String title;
+  final List<String> emojis;
+
+  const EmojiCategoryData(this.title, this.emojis);
+}
+
 class _CategoryManageDialogState extends State<CategoryManageDialog> {
   final List<String> _presetColors = [
     '#4A90E2', // Blue
@@ -25,14 +32,211 @@ class _CategoryManageDialogState extends State<CategoryManageDialog> {
     '#F1C40F', // Yellow
   ];
 
-  final List<String> _presetEmojis = [
-    '📝', '💪', '🛒', '🎨', '💼', '📚', '🏠', '✈️', '🎮', '❤️', '💡', '🎵'
+  static const List<EmojiCategoryData> _unicodeEmojiCategories = [
+    EmojiCategoryData('😀 감정 & 사람', [
+      '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊',
+      '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪',
+      '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏',
+      '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕',
+      '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓',
+      '🧐', '😕', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '📁',
+      '👏', '👍', '👎', '👊', '✊', '🤛', '🤜', '🤞', '✌️', '🤟', '🤘', '👌',
+      '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐️', '🖖', '👋', '🤙', '💪',
+    ]),
+    EmojiCategoryData('💼 업무 & 공부', [
+      '📝', '📚', '📖', '💻', '🖥️', '📊', '📈', '📉', '📜', '📄', '📂', '📁',
+      '📅', '📆', '✒️', '✏️', '🖊️', '🔍', '🔎', '💡', '📌', '📍', '📎', '✂️',
+      '💼', '🗂️', '📦', '🏷️', '✉️', '📧', '📥', '📤', '🔔', '🔕', '⏰', '⏱️',
+    ]),
+    EmojiCategoryData('⚽ 운동 & 취미', [
+      '⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🏓', '🏸',
+      '🏒', '🏑', '🏏', '🎯', '⛳', '🪁', '🏹', '🎣', '🥊', '🥋', '🎽', '🛹',
+      '🛷', '⛸️', '🥌', '🎿', '⛷️', '🏂', '🏋️', '🤸', '🤺', '🤼', '🤽', '🤾',
+      '🏄', '🏊', '🚣', '🧗', '🚵', '🚴', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️',
+      '🎨', '🎮', '🎲', '🧩', '🎬', '🎤', '🎧', '🎼', '🎵', '🎶', '🎹', '🥁',
+    ]),
+    EmojiCategoryData('🍎 음식 & 카페', [
+      '🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍈', '🍒', '🍑',
+      '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌽', '🥕',
+      '🍞', '🥐', '🥖', '🥨', '🥯', '🥞', '🧀', '🍖', '🍗', '🥩', '🥓', '🍔',
+      '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🍳', '🥘', '🍲', '🥣', '🥗', '🍿',
+      '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🍝', '🍠', '🍢', '🍣', '🍤', '🍥',
+      '🍡', '🥟', '🥠', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', '🧁', '🥧',
+      '🍫', '🍬', '🍭', '🍮', '🍯', '☕', '🍵', '🍶', '🍾', '🍷', '🍸', '🍹',
+      '🍺', '🍻', '🥂', '🥃', '🥤', '🥢',
+    ]),
+    EmojiCategoryData('✈️ 여행 & 일상', [
+      '🚗', '🚕', '🚙', '🚌', '🏎️', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜',
+      '🛵', '🏍️', '🚲', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃',
+      '🚋', '🚝', '<ctrl42>', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫',
+      '🛬', '🛩️', '💺', '🛰️', '🚀', '🛸', '🚁', '🛶', '⛵', '🚤', '🛥️', '🛳️',
+      '⛴️', '🚢', '⚓', '⛽', '🚧', '🚦', '🚥', '🏠', '🏡', '🏢', '🏣', '🏥',
+      '🏦', '🏨', '🏪', '🏫', '🏬', '🏭', '🏰', '🏯', '💒', '🗼', '🗽', '⛪',
+      '🕌', '🕍', '⛩️', '🕋', '⛲', '⛺', '🌁', '🌃', '🏙️', '🌄', '🌅',
+    ]),
+    EmojiCategoryData('🐻 동물 & 자연', [
+      '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮',
+      '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤',
+      '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛',
+      '🦋', '🐌', '🐞', '🐜', '🦟', '<ctrl42>', '🕷️', '🕸️', '🦂', '🐢', '🐍', '🦎',
+      '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳',
+      '🐋', '🦈', '🐊', '🐅', '🐆', 'Z', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪',
+      '🐫', '🦒', '🦘', '🦙', '🕊️', '🐕', '🐩', '🐈', '🐓', '🦃', '🦚', '🦜',
+      '🌲', '🌳', '🌴', '🌱', '🌿', '☘️', '🍀', '🎍', '🎋', '🍃', '🍂', '🍁',
+      '🍄', '🌾', '💐', '🌷', '🌹', '🥀', '🌺', '🌸', '🌼', '🌻', '🌞', '🌝',
+      '🌛', '🌜', '🌚', '🌕', '🌖', '🌗', '🌘', '🌑', '🌒', '🌓', '🌔', '🌙',
+      '🌎', '🌍', '🌏', '💫', '⭐️', '🌟', '✨', '⚡️', '☄️', '💥', '🔥', '🌪️',
+      '🌈', '☀️', '🌤️', '⛅️', '🌥️', '☁️', '🌦️', '🌧️', '⛈️', '🌩️', '🌨️', '❄️',
+    ]),
+    EmojiCategoryData('🔣 기호 & 하트', [
+      '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💔', '❣️', '💕', '💞', '💓',
+      '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯',
+      '🕎', '☯️', '☦️', '🛐', '⛎', '♈️', '♉️', '♊️', '♋️', '<ctrl42>', '♍️', '♎️',
+      '♏️', '🏹', '♑️', '♒️', '♓️', '🆔', '⚛️', '☣️', '☢️', '📴', '📳', '🈶',
+      '🈚️', '🈸', '🈺', '🈷️', '✴️', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌',
+      '⭕️', '🛑', '⛔️', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '<ctrl42>',
+      '🔞', '📵', '🚭', '❗️', '❕', '❓', '❔', '‼️', '⁉️', '🔆', '🔅', '⚠️',
+      '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯️', '📊', '📈', '📉', '❇️', '✳️',
+      '❎', '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧', '🚾', '♿️', '🅿️', '🈳', '🈂️',
+      '🛂', '🛃', '🛄', '🛅', '🚹', '<ctrl42>', '🚼', '🚻', '🚮', '🎦', '📶', '🈁',
+    ]),
   ];
+
+  void _showUnicodeEmojiPicker(BuildContext context, Function(String emoji) onSelect) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return DefaultTabController(
+          length: _unicodeEmojiCategories.length,
+          child: Container(
+            height: MediaQuery.of(ctx).size.height * 0.65,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            padding: const EdgeInsets.only(top: 16),
+            child: Column(
+              children: [
+                // Modal Handle Bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[700] : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Title Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.emoji_emotions_outlined, color: Colors.amber),
+                          SizedBox(width: 8),
+                          Text(
+                            '유니코드 이모지 선택',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                // Category Tabs
+                TabBar(
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  indicatorColor: Theme.of(ctx).primaryColor,
+                  labelColor: Theme.of(ctx).primaryColor,
+                  unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
+                  tabs: _unicodeEmojiCategories.map((cat) {
+                    final firstEmoji = cat.emojis.first;
+                    final titleParts = cat.title.split(' ');
+                    final categoryName = titleParts.length > 1 ? titleParts.sublist(1).join(' ') : cat.title;
+                    return Tab(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(firstEmoji, style: const TextStyle(fontSize: 24)),
+                            const SizedBox(width: 6),
+                            Text(
+                              categoryName,
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                // Tab Views (Emoji Grids)
+                Expanded(
+                  child: TabBarView(
+                    children: _unicodeEmojiCategories.map((cat) {
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 6,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                        ),
+                        itemCount: cat.emojis.length,
+                        itemBuilder: (context, index) {
+                          final emoji = cat.emojis[index];
+                          return InkWell(
+                            onTap: () {
+                              onSelect(emoji);
+                              Navigator.pop(ctx);
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.05)
+                                    : Colors.black.withValues(alpha: 0.03),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                emoji,
+                                style: const TextStyle(fontSize: 30),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void _showAddOrEditCategoryDialog({Category? category}) {
     final nameController = TextEditingController(text: category?.name ?? '');
+    String selectedEmoji = category?.emoji ?? '📝';
     String selectedColor = category?.colorHex ?? _presetColors.first;
-    String selectedEmoji = category?.emoji ?? _presetEmojis.first;
 
     showDialog(
       context: context,
@@ -47,42 +251,67 @@ class _CategoryManageDialogState extends State<CategoryManageDialog> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: '카테고리 이름',
-                        hintText: '예: 공부, 운동, 일상',
-                        border: OutlineInputBorder(),
-                      ),
-                      autofocus: true,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('이모지 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _presetEmojis.map((emoji) {
-                        final isSelected = emoji == selectedEmoji;
-                        return GestureDetector(
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Left: Unicode Emoji Picker Selector Button
+                        InkWell(
                           onTap: () {
-                            setDialogState(() {
-                              selectedEmoji = emoji;
+                            _showUnicodeEmojiPicker(context, (emoji) {
+                              setDialogState(() {
+                                selectedEmoji = emoji;
+                              });
                             });
                           },
+                          borderRadius: BorderRadius.circular(12),
                           child: Container(
-                            padding: const EdgeInsets.all(8),
+                            width: 72,
+                            height: 60,
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.grey.withValues(alpha: 0.3) : Colors.transparent,
-                              shape: BoxShape.circle,
-                              border: isSelected ? Border.all(color: Theme.of(context).primaryColor, width: 2) : null,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                                width: 1.5,
+                              ),
                             ),
-                            child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(selectedEmoji, style: const TextStyle(fontSize: 28)),
+                                const Text(
+                                  '이모지 변경',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      }).toList(),
+                        ),
+                        const SizedBox(width: 10),
+                        // Right: Category Name Input Field
+                        Expanded(
+                          child: TextField(
+                            controller: nameController,
+                            decoration: InputDecoration(
+                              labelText: '카테고리 이름',
+                              hintText: '예: 공부, 운동, 일상',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            autofocus: true,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     const Text('테마 색상 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 8),
                     Wrap(

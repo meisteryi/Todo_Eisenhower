@@ -385,6 +385,22 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     Navigator.pop(context);
   }
 
+  void _postponeTask(int days) {
+    final now = DateTime.now();
+    final baseDate = DateTime(now.year, now.month, now.day);
+    final newTargetDate = baseDate.add(Duration(days: days));
+
+    setState(() {
+      if (_selectedDueDate != null) {
+        final diff = _selectedDueDate!.difference(_selectedTargetDate);
+        _selectedDueDate = newTargetDate.add(diff);
+      }
+      _selectedTargetDate = newTargetDate;
+    });
+
+    _submitTask();
+  }
+
   void _onInlineCalendarDayTap(DateTime day) {
     final tapped = DateTime(day.year, day.month, day.day);
     final target = DateTime(
@@ -1344,6 +1360,62 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     : const SizedBox.shrink(),
               ),
               const SizedBox(height: 16),
+
+              // Postpone Action Buttons (Show when editing an existing task)
+              if (widget.initialTodo != null) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: BorderSide(
+                            color: isDark ? Colors.orange.shade300 : Colors.orange,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.wb_sunny_outlined, size: 16, color: Colors.orange),
+                        label: const Text(
+                          '내일로 미루기',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        onPressed: () => _postponeTask(1),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: BorderSide(
+                            color: isDark ? Colors.indigo.shade300 : Colors.indigo,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.update_rounded, size: 16, color: Colors.indigo),
+                        label: const Text(
+                          '다음주로 미루기',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.indigo,
+                          ),
+                        ),
+                        onPressed: () => _postponeTask(7),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
 
               // Submit Button
               ElevatedButton(

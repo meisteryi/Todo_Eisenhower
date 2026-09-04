@@ -226,6 +226,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         : todoToEdit.createdAt,
                   );
                   widget.provider.updateTodo(updated);
+
+                  final today = DateTime(
+                    DateTime.now().year,
+                    DateTime.now().month,
+                    DateTime.now().day,
+                  );
+                  if (targetDate != null && targetDate.isAfter(today)) {
+                    final diffDays = targetDate.difference(today).inDays;
+                    final msg = diffDays == 1
+                        ? '내일로 미뤄졌습니다 ☀️'
+                        : '$diffDays일 후로 미뤄졌습니다 📅';
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('"$title" $msg'),
+                        behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
                 }
               },
         );
