@@ -70,7 +70,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
 
     final title = _titleController.text.trim();
     final sets = int.tryParse(_setsController.text.trim()) ?? 3;
-    final reps = int.tryParse(_repsController.text.trim()) ?? 10;
+    final reps = int.tryParse(_repsController.text.trim()) ?? 0;
     final weight = double.tryParse(_weightController.text.trim()) ?? 0.0;
     final minutes = int.tryParse(_minutesController.text.trim()) ?? 30;
 
@@ -214,7 +214,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
               const SizedBox(height: 8),
               SegmentedButton<String>(
                 segments: const [
-                  ButtonSegment(value: 'set', label: Text('세트/무게'), icon: Icon(Icons.fitness_center)),
+                  ButtonSegment(value: 'set', label: Text('세트 수'), icon: Icon(Icons.fitness_center)),
                   ButtonSegment(value: 'time', label: Text('시간/목표'), icon: Icon(Icons.timer)),
                   ButtonSegment(value: 'simple', label: Text('단순 체크'), icon: Icon(Icons.check_circle_outline)),
                 ],
@@ -248,7 +248,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                         controller: _repsController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          labelText: '목표 횟수',
+                          labelText: '횟수 (선택)',
                           suffixText: '회',
                           filled: true,
                           fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
@@ -262,7 +262,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                         controller: _weightController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: InputDecoration(
-                          labelText: '무게',
+                          labelText: '무게 (선택)',
                           suffixText: 'kg',
                           filled: true,
                           fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
@@ -291,25 +291,46 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
               // Repeat Days
               Text('반복 요일', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
+              Row(
                 children: _daysOfWeek.map((day) {
                   final isSelected = _selectedRepeatDays.contains(day);
-                  return FilterChip(
-                    label: Text(day),
-                    selected: isSelected,
-                    selectedColor: AppColors.q2.withValues(alpha: 0.2),
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedRepeatDays.add(day);
-                        } else {
-                          if (_selectedRepeatDays.length > 1) {
-                            _selectedRepeatDays.remove(day);
-                          }
-                        }
-                      });
-                    },
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              if (_selectedRepeatDays.length > 1) {
+                                _selectedRepeatDays.remove(day);
+                              }
+                            } else {
+                              _selectedRepeatDays.add(day);
+                            }
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.q2
+                                : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            day,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? Colors.white : theme.textTheme.bodyMedium?.color,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   );
                 }).toList(),
               ),

@@ -384,7 +384,7 @@ class _WorkoutViewState extends State<WorkoutView> {
 
             return Container(
               margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: isSetCompleted
                     ? AppColors.q2.withValues(alpha: 0.08)
@@ -402,14 +402,68 @@ class _WorkoutViewState extends State<WorkoutView> {
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    '${setDetail.weight > 0 ? '${setDetail.weight}kg  ×  ' : ''}${setDetail.reps}회',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: isSetCompleted ? FontWeight.bold : FontWeight.normal,
+                  // Clickable Weight & Reps Chip
+                  InkWell(
+                    onTap: () => _showEditSetDialog(workout, setDetail, sets.length),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSetCompleted
+                              ? AppColors.q2.withValues(alpha: 0.4)
+                              : theme.dividerColor.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (setDetail.weight > 0 && setDetail.reps > 0) ...[
+                            Text(
+                              '${setDetail.weight}kg  ×  ${setDetail.reps}회',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isSetCompleted ? AppColors.q2 : theme.textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                          ] else if (setDetail.weight > 0) ...[
+                            Text(
+                              '${setDetail.weight}kg',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isSetCompleted ? AppColors.q2 : theme.textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                          ] else if (setDetail.reps > 0) ...[
+                            Text(
+                              '${setDetail.reps}회',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isSetCompleted ? AppColors.q2 : theme.textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                          ] else ...[
+                            Text(
+                              '기록 입력',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: theme.hintColor,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(width: 4),
+                          const Icon(Icons.edit_outlined, size: 12, color: Colors.grey),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
+                  // Completion Checkmark
                   InkWell(
                     onTap: () {
                       widget.provider.toggleSetCompletion(
@@ -425,7 +479,7 @@ class _WorkoutViewState extends State<WorkoutView> {
                       child: Icon(
                         isSetCompleted ? Icons.check_circle : Icons.panorama_fish_eye,
                         color: isSetCompleted ? AppColors.q2 : theme.hintColor,
-                        size: 22,
+                        size: 24,
                       ),
                     ),
                   ),
@@ -446,6 +500,78 @@ class _WorkoutViewState extends State<WorkoutView> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showEditSetDialog(Workout workout, SetDetail setDetail, int totalSetsCount) {
+    final weightController = TextEditingController(text: setDetail.weight > 0 ? setDetail.weight.toString() : '');
+    final repsController = TextEditingController(text: setDetail.reps > 0 ? setDetail.reps.toString() : '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            '${setDetail.setIndex}세트 무게 및 횟수 수정',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: weightController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: '무게 (kg, 선택)',
+                  suffixText: 'kg',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: repsController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: '횟수 (회, 선택)',
+                  suffixText: '회',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            if (totalSetsCount > 1)
+              TextButton(
+                onPressed: () {
+                  widget.provider.deleteSetFromWorkout(workout: workout, setIndex: setDetail.setIndex);
+                  Navigator.pop(ctx);
+                },
+                child: const Text('세트 삭제', style: TextStyle(color: Colors.redAccent)),
+              ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final weight = double.tryParse(weightController.text.trim()) ?? 0.0;
+                final reps = int.tryParse(repsController.text.trim()) ?? 0;
+                widget.provider.updateSetDetail(
+                  workout: workout,
+                  setIndex: setDetail.setIndex,
+                  weight: weight,
+                  reps: reps,
+                );
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.q2,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('저장'),
+            ),
+          ],
+        );
+      },
     );
   }
 

@@ -807,6 +807,88 @@ class TodoProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateSetDetail({
+    required Workout workout,
+    required int setIndex,
+    required double weight,
+    required int reps,
+  }) async {
+    final workoutId = workout.id!;
+    final dateStr = _formatDateKey(_selectedDate);
+
+    WorkoutLog existingLog = _todayWorkoutLogs[workoutId] ??
+        WorkoutLog(
+          workoutId: workoutId,
+          date: dateStr,
+          setDetails: List.generate(
+            workout.targetSets,
+            (i) => SetDetail(
+              setIndex: i + 1,
+              weight: workout.targetWeight,
+              reps: workout.targetReps,
+              isCompleted: false,
+            ),
+          ),
+        );
+
+    final updatedSets = List<SetDetail>.from(existingLog.setDetails);
+
+    while (updatedSets.length < setIndex) {
+      updatedSets.add(
+        SetDetail(
+          setIndex: updatedSets.length + 1,
+          weight: workout.targetWeight,
+          reps: workout.targetReps,
+          isCompleted: false,
+        ),
+      );
+    }
+
+    final targetSet = updatedSets[setIndex - 1];
+    updatedSets[setIndex - 1] = targetSet.copyWith(
+      weight: weight,
+      reps: reps,
+    );
+
+    final updatedLog = existingLog.copyWith(setDetails: updatedSets);
+    final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
+    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+
+    notifyListeners();
+  }
+
+  Future<void> deleteSetFromWorkout({
+    required Workout workout,
+    required int setIndex,
+  }) async {
+    final workoutId = workout.id!;
+    WorkoutLog? existingLog = _todayWorkoutLogs[workoutId];
+    if (existingLog == null || existingLog.setDetails.length <= 1) return;
+
+    final updatedSets = List<SetDetail>.from(existingLog.setDetails);
+    updatedSets.removeAt(setIndex - 1);
+
+    final reindexedSets = List<SetDetail>.generate(
+      updatedSets.length,
+      (i) => updatedSets[i].copyWith(setIndex: i + 1),
+    );
+
+    final completedCount = reindexedSets.where((s) => s.isCompleted).length;
+    final isAllCompleted = completedCount >= workout.targetSets;
+
+    final updatedLog = existingLog.copyWith(
+      setDetails: reindexedSets,
+      completedSets: completedCount,
+      isCompleted: isAllCompleted,
+    );
+
+    final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
+    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+
+    await _calculateWorkoutStreak();
+    notifyListeners();
+  }
+
   Future<void> addSetToWorkout(Workout workout) async {
     final workoutId = workout.id!;
     final dateStr = _formatDateKey(_selectedDate);
