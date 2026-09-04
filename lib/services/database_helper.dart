@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/category_model.dart';
 import '../models/routine_model.dart';
 import '../models/todo_model.dart';
+import '../models/workout_model.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -35,7 +36,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -97,9 +98,46 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE workouts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        emoji TEXT NOT NULL DEFAULT '🏋️',
+        category TEXT NOT NULL DEFAULT '웨이트',
+        workout_type TEXT NOT NULL DEFAULT 'set',
+        target_sets INTEGER NOT NULL DEFAULT 3,
+        target_reps INTEGER NOT NULL DEFAULT 10,
+        target_weight REAL NOT NULL DEFAULT 0.0,
+        target_minutes INTEGER NOT NULL DEFAULT 30,
+        repeat_days TEXT NOT NULL DEFAULT '월,화,수,목,금,토,일',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE workout_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        workout_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        completed_sets INTEGER NOT NULL DEFAULT 0,
+        set_details_json TEXT,
+        duration_minutes INTEGER NOT NULL DEFAULT 0,
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        completed_at TEXT,
+        memo TEXT
+      )
+    ''');
+
     // Populate default categories
     for (final cat in Category.defaultCategories()) {
       await db.insert('categories', cat.toMap());
+    }
+
+    // Populate default workouts
+    for (final w in Workout.defaultWorkouts()) {
+      await db.insert('workouts', w.toMap());
     }
   }
 
@@ -172,6 +210,47 @@ class DatabaseHelper {
       try { await db.execute('ALTER TABLE routines ADD COLUMN memo TEXT'); } catch (_) {}
       try { await db.execute('ALTER TABLE routines ADD COLUMN has_notification INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
       try { await db.execute('ALTER TABLE routines ADD COLUMN notification_offset INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+    }
+
+    if (oldVersion < 8) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS workouts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          emoji TEXT NOT NULL DEFAULT '🏋️',
+          category TEXT NOT NULL DEFAULT '웨이트',
+          workout_type TEXT NOT NULL DEFAULT 'set',
+          target_sets INTEGER NOT NULL DEFAULT 3,
+          target_reps INTEGER NOT NULL DEFAULT 10,
+          target_weight REAL NOT NULL DEFAULT 0.0,
+          target_minutes INTEGER NOT NULL DEFAULT 30,
+          repeat_days TEXT NOT NULL DEFAULT '월,화,수,목,금,토,일',
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS workout_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workout_id INTEGER NOT NULL,
+          date TEXT NOT NULL,
+          completed_sets INTEGER NOT NULL DEFAULT 0,
+          set_details_json TEXT,
+          duration_minutes INTEGER NOT NULL DEFAULT 0,
+          is_completed INTEGER NOT NULL DEFAULT 0,
+          completed_at TEXT,
+          memo TEXT
+        )
+      ''');
+
+      final wCheck = await db.rawQuery('SELECT count(*) as count FROM workouts');
+      if ((wCheck.first['count'] as int) == 0) {
+        for (final w in Workout.defaultWorkouts()) {
+          await db.insert('workouts', w.toMap());
+        }
+      }
     }
   }
 
@@ -358,5 +437,93 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  // --- WORKOUTS ---
+
+  Future<List<Workout>> fetchWorkouts() async {
+    final db = await instance.database;
+    final maps = await db.query('workouts', where: 'is_active = 1', orderBy: 'sort_order ASC, id ASC');
+    return maps.map((map) => Workout.fromMap(map)).toList();
+  }
+
+  Future<int> insertWorkout(Workout workout) async {
+    final db = await instance.database;
+    return await db.insert('workouts', workout.toMap());
+  }
+
+  Future<int> updateWorkout(Workout workout) async {
+    final db = await instance.database;
+    return await db.update(
+      'workouts',
+      workout.toMap(),
+      where: 'id = ?',
+      whereArgs: [workout.id],
+    );
+  }
+
+  Future<int> deleteWorkout(int id) async {
+    final db = await instance.database;
+    // Mark as inactive instead of hard delete to keep historical logs
+    return await db.update(
+      'workouts',
+      {'is_active': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // --- WORKOUT LOGS ---
+
+  Future<List<WorkoutLog>> fetchWorkoutLogsForDate(String dateStr) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'workout_logs',
+      where: 'date = ?',
+      whereArgs: [dateStr],
+    );
+    return maps.map((map) => WorkoutLog.fromMap(map)).toList();
+  }
+
+  Future<List<WorkoutLog>> fetchWorkoutLogsForMonth(String yyyyMM) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'workout_logs',
+      where: 'date LIKE ?',
+      whereArgs: ['$yyyyMM%'],
+    );
+    return maps.map((map) => WorkoutLog.fromMap(map)).toList();
+  }
+
+  Future<int> upsertWorkoutLog(WorkoutLog log) async {
+    final db = await instance.database;
+    if (log.id != null) {
+      return await db.update(
+        'workout_logs',
+        log.toMap(),
+        where: 'id = ?',
+        whereArgs: [log.id],
+      );
+    } else {
+      // Check if existing log exists for workout_id + date
+      final existing = await db.query(
+        'workout_logs',
+        where: 'workout_id = ? AND date = ?',
+        whereArgs: [log.workoutId, log.date],
+      );
+      if (existing.isNotEmpty) {
+        final existingId = existing.first['id'] as int;
+        final updatedLog = log.copyWith(id: existingId);
+        await db.update(
+          'workout_logs',
+          updatedLog.toMap(),
+          where: 'id = ?',
+          whereArgs: [existingId],
+        );
+        return existingId;
+      } else {
+        return await db.insert('workout_logs', log.toMap());
+      }
+    }
   }
 }

@@ -148,4 +148,37 @@ class NotificationService {
   Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id);
   }
+
+  Future<void> showImmediateNotification(String title, String body) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'pomodoro_channel',
+      '뽀모도로 완료 알림',
+      channelDescription: '뽀모도로 타이머 완료 알림 서비스',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const DarwinNotificationDetails darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+      macOS: darwinDetails,
+    );
+
+    try {
+      await _notificationsPlugin.show(
+        999999,
+        title,
+        body,
+        platformDetails,
+      );
+    } catch (e) {
+      debugPrint('Immediate notification error: $e');
+    }
+  }
 }

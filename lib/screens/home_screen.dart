@@ -15,6 +15,8 @@ import '../widgets/help_guide_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../widgets/settings_dialog.dart';
+import '../widgets/workout_view.dart';
+import '../widgets/add_workout_sheet.dart';
 import 'trash_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -359,6 +361,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           '투두메이트 뷰',
                           Icons.calendar_view_day,
                         ),
+                        _buildModeChip(
+                          'workout',
+                          '운동 기록',
+                          Icons.fitness_center,
+                        ),
                       ],
                     ),
                   ),
@@ -390,6 +397,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               'todomate',
                               '투두메이트 뷰',
                               Icons.calendar_view_day,
+                            ),
+                            _buildModeChip(
+                              'workout',
+                              '운동 기록',
+                              Icons.fitness_center,
                             ),
                           ],
                         ),
@@ -704,13 +716,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               ),
                             ),
                             Expanded(
-                              child: viewMode == 'todomate'
-                                  ? TodoMateView(
-                                      provider: widget.provider,
-                                      onEditTodo: (todo) =>
-                                          _showAddTaskSheet(todoToEdit: todo),
-                                    )
-                                  : _buildEisenhowerView(),
+                              child: viewMode == 'workout'
+                                  ? WorkoutView(provider: widget.provider)
+                                  : (viewMode == 'todomate'
+                                      ? TodoMateView(
+                                          provider: widget.provider,
+                                          onEditTodo: (todo) =>
+                                              _showAddTaskSheet(todoToEdit: todo),
+                                        )
+                                      : _buildEisenhowerView()),
                             ),
                           ],
                         )
@@ -719,13 +733,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             if (viewMode == 'todomate')
                               DateStripHeader(provider: widget.provider),
                             Expanded(
-                              child: viewMode == 'todomate'
-                                  ? TodoMateView(
-                                      provider: widget.provider,
-                                      onEditTodo: (todo) =>
-                                          _showAddTaskSheet(todoToEdit: todo),
-                                    )
-                                  : _buildEisenhowerView(),
+                              child: viewMode == 'workout'
+                                  ? WorkoutView(provider: widget.provider)
+                                  : (viewMode == 'todomate'
+                                      ? TodoMateView(
+                                          provider: widget.provider,
+                                          onEditTodo: (todo) =>
+                                              _showAddTaskSheet(todoToEdit: todo),
+                                        )
+                                      : _buildEisenhowerView()),
                             ),
                           ],
                         ),
@@ -734,7 +750,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () => _showAddTaskSheet(),
+            onPressed: () {
+              if (viewMode == 'workout') {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (context) => AddWorkoutSheet(provider: widget.provider),
+                );
+              } else {
+                _showAddTaskSheet();
+              }
+            },
             backgroundColor: Theme.of(context).primaryColor,
             foregroundColor: Colors.white,
             elevation: 4,

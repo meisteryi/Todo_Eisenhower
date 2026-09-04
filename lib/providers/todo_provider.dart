@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/category_model.dart';
 import '../models/routine_model.dart';
 import '../models/todo_model.dart';
+import '../models/workout_model.dart';
 import '../services/database_helper.dart';
 import '../services/notification_service.dart';
 import '../services/sync_service.dart';
@@ -18,6 +19,12 @@ class TodoProvider with ChangeNotifier {
   List<Todo> _trashTodos = [];
   List<Category> _categories = [];
   List<Routine> _routines = [];
+
+  // Workout state
+  List<Workout> _workouts = [];
+  Map<int, WorkoutLog> _todayWorkoutLogs = {};
+  List<WorkoutLog> _monthlyWorkoutLogs = [];
+  int _workoutStreak = 0;
 
   bool _isLoading = true;
   int _activeQuadrant = 1; // 1 to 4
@@ -44,6 +51,10 @@ class TodoProvider with ChangeNotifier {
   List<Todo> get trashTodos => _trashTodos;
   List<Category> get categories => _categories;
   List<Routine> get routines => _routines;
+  List<Workout> get workouts => _workouts;
+  Map<int, WorkoutLog> get todayWorkoutLogs => _todayWorkoutLogs;
+  List<WorkoutLog> get monthlyWorkoutLogs => _monthlyWorkoutLogs;
+  int get workoutStreak => _workoutStreak;
   bool get isLoading => _isLoading;
   int get activeQuadrant => _activeQuadrant;
   int get lastIncineratedCount => _lastIncineratedCount;
@@ -152,7 +163,7 @@ class TodoProvider with ChangeNotifier {
 
   // Set active view mode ('todomate', 'eisenhower', 'routines')
   void setViewMode(String mode) {
-    if (['todomate', 'eisenhower', 'routines'].contains(mode)) {
+    if (['todomate', 'eisenhower', 'routines', 'workout'].contains(mode)) {
       _activeViewMode = mode;
       notifyListeners();
     }
@@ -189,7 +200,10 @@ class TodoProvider with ChangeNotifier {
       _todos = await _dbHelper.fetchAllActive();
       _trashTodos = await _dbHelper.fetchTrash();
 
-      // 4. Schedule local notifications for active todos
+      // 4. Fetch workouts & logs
+      await loadWorkouts();
+
+      // 5. Schedule local notifications for active todos
       for (final todo in _todos) {
         if (todo.hasNotification && !todo.isCompleted) {
           NotificationService().scheduleTodoNotification(todo);
@@ -628,7 +642,12 @@ class TodoProvider with ChangeNotifier {
         timer.cancel();
         final todoIndex = _todos.indexWhere((t) => t.id == _pomodoroTodoId);
         if (todoIndex != -1) {
-          toggleTodoCompletion(_todos[todoIndex]);
+          final completedTodo = _todos[todoIndex];
+          toggleTodoCompletion(completedTodo);
+          NotificationService().showImmediateNotification(
+            '🎉 뽀모도로 25분 몰입 완료!',
+            '"${completedTodo.title}" 할 일을 완수했습니다. 5분간 푹 휴식을 취해보세요! ☕',
+          );
         }
         _pomodoroTodoId = null;
         notifyListeners();
@@ -648,6 +667,227 @@ class TodoProvider with ChangeNotifier {
     _pomodoroTimer?.cancel();
     _pomodoroTodoId = null;
     _pomodoroSecondsRemaining = 25 * 60;
+    notifyListeners();
+  }
+
+  // --- WORKOUT METHODS ---
+
+  String _formatDateKey(DateTime dt) {
+    final y = dt.year.toString().padLeft(4, '0');
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
+  Future<void> loadWorkouts() async {
+    try {
+      _workouts = await _dbHelper.fetchWorkouts();
+
+      final todayStr = _formatDateKey(_selectedDate);
+      final logs = await _dbHelper.fetchWorkoutLogsForDate(todayStr);
+
+      _todayWorkoutLogs = {for (var l in logs) l.workoutId: l};
+
+      // Load current month logs for streak/calendar
+      final yyyyMM = todayStr.substring(0, 7);
+      _monthlyWorkoutLogs = await _dbHelper.fetchWorkoutLogsForMonth(yyyyMM);
+
+      await _calculateWorkoutStreak();
+    } catch (e) {
+      debugPrint('Error loading workouts: $e');
+    }
+  }
+
+  Future<void> loadMonthlyWorkoutLogs(String yyyyMM) async {
+    _monthlyWorkoutLogs = await _dbHelper.fetchWorkoutLogsForMonth(yyyyMM);
+    notifyListeners();
+  }
+
+  Future<void> _calculateWorkoutStreak() async {
+    int streak = 0;
+    DateTime checkDate = DateTime.now();
+
+    for (int i = 0; i < 365; i++) {
+      final dateStr = _formatDateKey(checkDate);
+      final logs = await _dbHelper.fetchWorkoutLogsForDate(dateStr);
+      final hasCompletedLog = logs.any((l) => l.isCompleted);
+
+      if (hasCompletedLog) {
+        streak++;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else {
+        // If today hasn't been completed yet, check yesterday to keep active streak
+        if (i == 0) {
+          checkDate = checkDate.subtract(const Duration(days: 1));
+          continue;
+        }
+        break;
+      }
+    }
+
+    _workoutStreak = streak;
+  }
+
+  Future<void> addWorkout(Workout workout) async {
+    await _dbHelper.insertWorkout(workout);
+    await loadWorkouts();
+    notifyListeners();
+  }
+
+  Future<void> updateWorkout(Workout workout) async {
+    await _dbHelper.updateWorkout(workout);
+    await loadWorkouts();
+    notifyListeners();
+  }
+
+  Future<void> deleteWorkout(int id) async {
+    await _dbHelper.deleteWorkout(id);
+    await loadWorkouts();
+    notifyListeners();
+  }
+
+  Future<void> toggleSetCompletion({
+    required Workout workout,
+    required int setIndex,
+    required double weight,
+    required int reps,
+  }) async {
+    final workoutId = workout.id!;
+    final dateStr = _formatDateKey(_selectedDate);
+
+    WorkoutLog existingLog = _todayWorkoutLogs[workoutId] ??
+        WorkoutLog(
+          workoutId: workoutId,
+          date: dateStr,
+          setDetails: List.generate(
+            workout.targetSets,
+            (i) => SetDetail(
+              setIndex: i + 1,
+              weight: workout.targetWeight,
+              reps: workout.targetReps,
+              isCompleted: false,
+            ),
+          ),
+        );
+
+    final updatedSets = List<SetDetail>.from(existingLog.setDetails);
+    
+    while (updatedSets.length < setIndex) {
+      updatedSets.add(
+        SetDetail(
+          setIndex: updatedSets.length + 1,
+          weight: workout.targetWeight,
+          reps: workout.targetReps,
+          isCompleted: false,
+        ),
+      );
+    }
+
+    final targetSet = updatedSets[setIndex - 1];
+    updatedSets[setIndex - 1] = targetSet.copyWith(
+      weight: weight,
+      reps: reps,
+      isCompleted: !targetSet.isCompleted,
+    );
+
+    final completedCount = updatedSets.where((s) => s.isCompleted).length;
+    final isAllCompleted = completedCount >= workout.targetSets;
+
+    final updatedLog = existingLog.copyWith(
+      setDetails: updatedSets,
+      completedSets: completedCount,
+      isCompleted: isAllCompleted,
+      completedAt: isAllCompleted ? DateTime.now().toIso8601String() : null,
+    );
+
+    final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
+    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+
+    await _calculateWorkoutStreak();
+    notifyListeners();
+  }
+
+  Future<void> addSetToWorkout(Workout workout) async {
+    final workoutId = workout.id!;
+    final dateStr = _formatDateKey(_selectedDate);
+
+    WorkoutLog existingLog = _todayWorkoutLogs[workoutId] ??
+        WorkoutLog(
+          workoutId: workoutId,
+          date: dateStr,
+          setDetails: List.generate(
+            workout.targetSets,
+            (i) => SetDetail(
+              setIndex: i + 1,
+              weight: workout.targetWeight,
+              reps: workout.targetReps,
+              isCompleted: false,
+            ),
+          ),
+        );
+
+    final updatedSets = List<SetDetail>.from(existingLog.setDetails);
+    final lastSetWeight = updatedSets.isNotEmpty ? updatedSets.last.weight : workout.targetWeight;
+    final lastSetReps = updatedSets.isNotEmpty ? updatedSets.last.reps : workout.targetReps;
+
+    updatedSets.add(
+      SetDetail(
+        setIndex: updatedSets.length + 1,
+        weight: lastSetWeight,
+        reps: lastSetReps,
+        isCompleted: false,
+      ),
+    );
+
+    final updatedLog = existingLog.copyWith(setDetails: updatedSets);
+    final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
+    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+
+    notifyListeners();
+  }
+
+  Future<void> toggleWorkoutCompletion(Workout workout) async {
+    final workoutId = workout.id!;
+    final dateStr = _formatDateKey(_selectedDate);
+
+    WorkoutLog? existingLog = _todayWorkoutLogs[workoutId];
+    final bool newCompletedState = !(existingLog?.isCompleted ?? false);
+
+    List<SetDetail> updatedSets = [];
+    if (workout.workoutType == 'set') {
+      final baseSets = existingLog?.setDetails ??
+          List.generate(
+            workout.targetSets,
+            (i) => SetDetail(
+              setIndex: i + 1,
+              weight: workout.targetWeight,
+              reps: workout.targetReps,
+              isCompleted: false,
+            ),
+          );
+
+      updatedSets = baseSets
+          .map((s) => s.copyWith(isCompleted: newCompletedState))
+          .toList();
+    }
+
+    final updatedLog = (existingLog ??
+            WorkoutLog(
+              workoutId: workoutId,
+              date: dateStr,
+            ))
+        .copyWith(
+      isCompleted: newCompletedState,
+      completedSets: newCompletedState ? (updatedSets.isNotEmpty ? updatedSets.length : 1) : 0,
+      setDetails: updatedSets,
+      durationMinutes: newCompletedState ? workout.targetMinutes : 0,
+      completedAt: newCompletedState ? DateTime.now().toIso8601String() : null,
+    );
+
+    final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
+    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+
+    await _calculateWorkoutStreak();
     notifyListeners();
   }
 
