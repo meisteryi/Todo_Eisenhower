@@ -229,6 +229,11 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> clearAllTodos() async {
+    final db = await instance.database;
+    return await db.delete('todos');
+  }
+
   /// Finds active (uncompleted) Q4 tasks created more than 7 days ago and soft-deletes them.
   Future<int> incinerateOldQ4Tasks() async {
     final db = await instance.database;

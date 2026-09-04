@@ -292,6 +292,35 @@ class _SettingsDialogState extends State<SettingsDialog> {
                           const Divider(height: 16),
                           Row(
                             children: [
+                              const Icon(Icons.cleaning_services_rounded, color: Colors.deepOrangeAccent, size: 18),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  '전체 일정 초기화',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                height: 30,
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.redAccent,
+                                    side: const BorderSide(color: Colors.redAccent),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                  onPressed: () => _confirmClearAllTodos(context),
+                                  child: const Text('모든 일정 삭제', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 16),
+                          Row(
+                            children: [
                               const Icon(Icons.menu_book_rounded, color: Colors.blue, size: 18),
                               const SizedBox(width: 8),
                               const Expanded(
@@ -567,6 +596,50 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 }
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmClearAllTodos(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+            SizedBox(width: 8),
+            Text('전체 일정 초기화', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          '등록된 모든 일정을 완전히 삭제하시겠습니까?\n이 작업은 복구할 수 없습니다.',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await widget.provider.clearAllTodos();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('🧹 모든 일정 삭제가 완료되었습니다.'),
+                    backgroundColor: Colors.deepOrange,
+                  ),
+                );
+              }
+            },
+            child: const Text('전체 삭제'),
           ),
         ],
       ),

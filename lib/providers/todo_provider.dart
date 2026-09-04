@@ -496,6 +496,16 @@ class TodoProvider with ChangeNotifier {
     }
   }
 
+  // Clear All Todos (Reset schedules)
+  Future<void> clearAllTodos() async {
+    try {
+      await _dbHelper.clearAllTodos();
+      await loadTodos();
+    } catch (e) {
+      debugPrint("Error clearing all todos: $e");
+    }
+  }
+
   // --- CATEGORY OPERATIONS ---
 
   Future<void> addCategory(String name, String colorHex, String emoji) async {
