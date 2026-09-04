@@ -777,29 +777,33 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 decoration: InputDecoration(
                   hintText: '할 일을 입력하세요...',
                   prefixIcon: const Icon(Icons.check_box_outlined, size: 20),
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.grey.withValues(alpha: 0.06),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: isDark
-                          ? AppColors.darkDivider
-                          : AppColors.lightDivider,
-                    ),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
                       color: _getQColor(_selectedQ),
-                      width: 2.0,
+                      width: 1.5,
                     ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
+                    horizontal: 14,
                     vertical: 12,
                   ),
                 ),
                 textInputAction: TextInputAction.next,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
               // Time & Location Inputs Row
               if (_selectedDueDate != null) ...[
@@ -830,8 +834,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                   },
                                 )
                               : null,
+                          filled: true,
+                          fillColor: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.grey.withValues(alpha: 0.06),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -865,8 +874,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                   },
                                 )
                               : null,
+                          filled: true,
+                          fillColor: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.grey.withValues(alpha: 0.06),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -886,8 +900,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       Icons.location_on_outlined,
                       size: 18,
                     ),
+                    filled: true,
+                    fillColor: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.grey.withValues(alpha: 0.06),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -922,8 +941,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                   },
                                 )
                               : null,
+                          filled: true,
+                          fillColor: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.grey.withValues(alpha: 0.06),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -942,8 +966,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                             Icons.location_on_outlined,
                             size: 18,
                           ),
+                          filled: true,
+                          fillColor: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.grey.withValues(alpha: 0.06),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -956,7 +985,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   ],
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
               // Memo / Description Input
               TextField(
@@ -965,8 +994,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 decoration: InputDecoration(
                   hintText: '상세 메모 및 주요 노트 입력...',
                   prefixIcon: const Icon(Icons.notes_rounded, size: 18),
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.grey.withValues(alpha: 0.06),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -1003,6 +1037,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         ),
                         selected: _notificationOffset == 0,
                         selectedColor: Colors.amber[700],
+                        backgroundColor: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.withValues(alpha: 0.08),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         labelStyle: TextStyle(
                           color: _notificationOffset == 0
                               ? Colors.white
@@ -1025,6 +1066,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         ),
                         selected: _notificationOffset == 10,
                         selectedColor: Colors.amber[700],
+                        backgroundColor: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.withValues(alpha: 0.08),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         labelStyle: TextStyle(
                           color: _notificationOffset == 10
                               ? Colors.white
@@ -1047,6 +1095,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         ),
                         selected: _notificationOffset == 30,
                         selectedColor: Colors.amber[700],
+                        backgroundColor: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.withValues(alpha: 0.08),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         labelStyle: TextStyle(
                           color: _notificationOffset == 30
                               ? Colors.white
@@ -1069,6 +1124,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         ),
                         selected: _notificationOffset == 60,
                         selectedColor: Colors.amber[700],
+                        backgroundColor: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.withValues(alpha: 0.08),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         labelStyle: TextStyle(
                           color: _notificationOffset == 60
                               ? Colors.white
@@ -1103,6 +1165,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                             _notificationOffset != 30 &&
                             _notificationOffset != 60,
                         selectedColor: Colors.amber[700],
+                        backgroundColor: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.withValues(alpha: 0.08),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         labelStyle: TextStyle(
                           color:
                               (_notificationOffset != 0 &&
@@ -1124,7 +1193,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
               ],
 
               // Category Selection (Organic Wrap Pastel Pill Selector)
@@ -1160,7 +1229,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       selectedColor: isDark
                           ? Colors.white.withValues(alpha: 0.2)
                           : Colors.black.withValues(alpha: 0.1),
-                      backgroundColor: Colors.transparent,
+                      backgroundColor: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey.withValues(alpha: 0.08),
+                      side: BorderSide.none,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       showCheckmark: false,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
@@ -1193,6 +1268,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         selected: isSelected,
                         selectedColor: catColor,
                         backgroundColor: catColor.withValues(alpha: 0.15),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         showCheckmark: false,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
@@ -1207,7 +1286,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     }),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
               ],
 
               // Priority Quadrant Selection Chips
@@ -1240,8 +1319,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     ),
                     selected: isSelected,
                     selectedColor: qColor,
-                    backgroundColor: qColor.withValues(alpha: 0.1),
-                    side: BorderSide(color: qColor, width: 1.2),
+                    backgroundColor: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : qColor.withValues(alpha: 0.08),
+                    side: BorderSide.none,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     showCheckmark: false,
                     onSelected: (selected) {
                       if (selected) {
@@ -1253,25 +1337,15 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // Inline Range Calendar Selection Header & Expandable Grid
-              InputDecorator(
-                decoration: InputDecoration(
-                  prefixIcon: Icon(
-                    _selectedDueDate != null
-                        ? Icons.date_range_rounded
-                        : Icons.today_rounded,
-                    size: 18,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
+              // Inline Range Calendar Selection Header (Borderless Filled Container)
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.grey.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: InkWell(
                   onTap: () {
@@ -1279,34 +1353,49 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       _isCalendarExpanded = !_isCalendarExpanded;
                     });
                   },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _selectedDueDate == null
-                                ? '실행일: ${DateFormat('yyyy.MM.dd (E)', 'ko').format(_selectedTargetDate)}'
-                                : '기간: ${DateFormat('MM.dd', 'ko').format(_selectedTargetDate)} ~ ${DateFormat('MM.dd', 'ko').format(_selectedDueDate!)}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _selectedDueDate != null
+                              ? Icons.date_range_rounded
+                              : Icons.today_rounded,
+                          size: 18,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _selectedDueDate == null
+                                  ? '실행일: ${DateFormat('yyyy.MM.dd (E)', 'ko').format(_selectedTargetDate)}'
+                                  : '기간: ${DateFormat('MM.dd', 'ko').format(_selectedTargetDate)} ~ ${DateFormat('MM.dd', 'ko').format(_selectedDueDate!)}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          Text(
-                            _selectedDueDate == null
-                                ? '당일 일정 (달력을 2번 눌러 기간 설정)'
-                                : '${_selectedDueDate!.difference(_selectedTargetDate).inDays + 1}일간 진행되는 일정 (마감: ${DateFormat('MM.dd').format(_selectedDueDate!)})',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
+                            Text(
+                              _selectedDueDate == null
+                                  ? '당일 일정 (달력을 2번 눌러 기간 설정)'
+                                  : '${_selectedDueDate!.difference(_selectedTargetDate).inDays + 1}일간 진행되는 일정 (마감: ${DateFormat('MM.dd').format(_selectedDueDate!)})',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       Row(
                         children: [
@@ -1350,6 +1439,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   ),
                 ),
               ),
+            ),
 
               // Expandable Inline Range Calendar Grid
               AnimatedSize(
@@ -1366,50 +1456,60 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
+                      child: InkWell(
+                        onTap: () => _postponeTask(1),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: BorderSide(
-                            color: isDark ? Colors.orange.shade300 : Colors.orange,
-                          ),
-                          shape: RoundedRectangleBorder(
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: isDark ? 0.2 : 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        icon: const Icon(Icons.wb_sunny_outlined, size: 16, color: Colors.orange),
-                        label: const Text(
-                          '내일로 미루기',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange,
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.wb_sunny_outlined, size: 16, color: Colors.orange),
+                              SizedBox(width: 6),
+                              Text(
+                                '내일로 미루기',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        onPressed: () => _postponeTask(1),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
+                      child: InkWell(
+                        onTap: () => _postponeTask(7),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: BorderSide(
-                            color: isDark ? Colors.indigo.shade300 : Colors.indigo,
-                          ),
-                          shape: RoundedRectangleBorder(
+                          decoration: BoxDecoration(
+                            color: Colors.indigo.withValues(alpha: isDark ? 0.2 : 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        icon: const Icon(Icons.update_rounded, size: 16, color: Colors.indigo),
-                        label: const Text(
-                          '다음주로 미루기',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.indigo,
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.update_rounded, size: 16, color: Colors.indigo),
+                              SizedBox(width: 6),
+                              Text(
+                                '다음주로 미루기',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        onPressed: () => _postponeTask(7),
                       ),
                     ),
                   ],
@@ -1423,6 +1523,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   backgroundColor: _getQColor(_selectedQ),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
