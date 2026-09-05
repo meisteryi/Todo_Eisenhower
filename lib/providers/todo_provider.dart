@@ -7,6 +7,7 @@ import '../models/workout_model.dart';
 import '../services/database_helper.dart';
 import '../services/notification_service.dart';
 import '../services/sync_service.dart';
+import '../services/widget_service.dart';
 
 class TodoProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
@@ -213,6 +214,7 @@ class TodoProvider with ChangeNotifier {
       debugPrint("Error loading data: $e");
     } finally {
       _isLoading = false;
+      _syncHomeWidget();
       notifyListeners();
     }
   }
@@ -668,6 +670,15 @@ class TodoProvider with ChangeNotifier {
     _pomodoroTodoId = null;
     _pomodoroSecondsRemaining = 25 * 60;
     notifyListeners();
+  }
+
+  void _syncHomeWidget() {
+    WidgetService.instance.updateHomeScreenWidget(
+      todos: _todos,
+      workouts: _workouts,
+      workoutLogs: _todayWorkoutLogs,
+      streak: _workoutStreak,
+    );
   }
 
   // --- WORKOUT METHODS ---
