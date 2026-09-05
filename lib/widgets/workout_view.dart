@@ -488,16 +488,44 @@ class _WorkoutViewState extends State<WorkoutView> {
             );
           },
         ),
-        const SizedBox(height: 6),
-        TextButton.icon(
-          onPressed: () {
-            widget.provider.addSetToWorkout(workout);
-          },
-          icon: const Icon(Icons.add, size: 16),
-          label: const Text('세트 추가하기', style: TextStyle(fontSize: 12)),
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.q2,
-          ),
+        const SizedBox(height: 2),
+        Row(
+          children: [
+            TextButton.icon(
+              onPressed: () {
+                widget.provider.addSetToWorkout(workout);
+              },
+              icon: const Icon(Icons.add, size: 14),
+              label: const Text('세트 추가', style: TextStyle(fontSize: 12)),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.q2,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+            if (sets.length > 1) ...[
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: () {
+                  widget.provider.deleteSetFromWorkout(
+                    workout: workout,
+                    setIndex: sets.length,
+                  );
+                },
+                icon: const Icon(Icons.remove, size: 14),
+                label: const Text('세트 삭제', style: TextStyle(fontSize: 12)),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.redAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     );
