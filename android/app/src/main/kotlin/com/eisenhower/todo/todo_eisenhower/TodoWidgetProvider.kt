@@ -21,8 +21,8 @@ class TodoWidgetProvider : HomeWidgetProvider() {
                 val q3Count = widgetData.getInt("q3_count", 0)
                 val q4Count = widgetData.getInt("q4_count", 0)
                 val totalPending = widgetData.getInt("total_pending", 0)
-                val completedWorkouts = widgetData.getInt("workout_completed", 0)
-                val totalWorkouts = widgetData.getInt("workout_total", 0)
+                val urgentText = widgetData.getString("urgent_task_text", "없음") ?: "없음"
+                val weeklyText = widgetData.getString("weekly_stats_text", "🏆 오운완 100%") ?: "🏆 오운완 100%"
 
                 setTextViewText(R.id.widget_title, "아이젠하워 & 오운완")
                 setTextViewText(R.id.widget_streak, "🔥 ${streak}일째")
@@ -32,8 +32,9 @@ class TodoWidgetProvider : HomeWidgetProvider() {
                 setTextViewText(R.id.widget_q3, "👥 Q3 대리: ${q3Count}개")
                 setTextViewText(R.id.widget_q4, "🗑 Q4 휴식: ${q4Count}개")
 
-                setTextViewText(R.id.widget_workout_status, "🏃 오늘 운동: ${completedWorkouts}/${totalWorkouts}")
-                setTextViewText(R.id.widget_total_status, "전체 보관: ${totalPending}개")
+                setTextViewText(R.id.widget_urgent_task, "⏰ 최우선: ${urgentText}")
+                setTextViewText(R.id.widget_weekly_stats, weeklyText)
+                setTextViewText(R.id.widget_total_status, "전체: ${totalPending}개")
             }
             appWidgetManager.updateAppWidget(widgetId, views)
         }

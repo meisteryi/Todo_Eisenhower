@@ -37,8 +37,8 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="3dp"
-        android:layout_marginBottom="3dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
         android:background="#333333" />
 
     <!-- 4 Quadrants (2x2 Grid) -->
@@ -101,24 +101,35 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="3dp"
-        android:layout_marginBottom="3dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
         android:background="#333333" />
 
-    <!-- Bottom Row (Workout & Total) -->
+    <!-- Urgent Task & Weekly Stats Row -->
+    <TextView
+        android:id="@+id/widget_urgent_task"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⏰ 최우선: 없음"
+        android:textColor="#FFD54F"
+        android:textSize="10sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:layout_marginTop="2dp"
         android:gravity="center_vertical">
 
         <TextView
-            android:id="@+id/widget_workout_status"
+            android:id="@+id/widget_weekly_stats"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="🏃 운동: 0/0"
-            android:textColor="#FFB74D"
+            android:text="🏆 오운완 100%"
+            android:textColor="#81C784"
             android:textSize="10sp" />
 
         <TextView

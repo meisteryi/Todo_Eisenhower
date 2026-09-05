@@ -672,6 +672,12 @@ class TodoProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    _syncHomeWidget();
+  }
+
   void _syncHomeWidget() {
     WidgetService.instance.updateHomeScreenWidget(
       todos: _todos,

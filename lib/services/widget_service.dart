@@ -23,6 +23,7 @@ class WidgetService {
   }) async {
     try {
       WidgetsFlutterBinding.ensureInitialized();
+      await HomeWidget.setAppGroupId(appGroupId);
       final activeTodos = todos.where((t) => !t.isCompleted && !t.isTrash).toList();
       final q1Todos = activeTodos.where((t) => t.quadrant == 1).toList();
       final q2Todos = activeTodos.where((t) => t.quadrant == 2).toList();
@@ -59,6 +60,22 @@ class WidgetService {
         'updated_at': DateTime.now().toIso8601String(),
       };
 
+      // Urgent task info & Weekly stats info
+      String urgentTaskText = '없음';
+      if (activeTodos.isNotEmpty) {
+        final urgentTask = activeTodos.firstWhere(
+          (t) => t.quadrant == 1 && (t.dueTimeStr != null || t.timeStr != null || t.dueDate != null),
+          orElse: () => q1Todos.isNotEmpty ? q1Todos.first : q2Todos.first,
+        );
+        final timeLabel = urgentTask.dueTimeStr ?? urgentTask.timeStr;
+        urgentTaskText = timeLabel != null ? '[$timeLabel] ${urgentTask.title}' : urgentTask.title;
+      }
+
+      final weeklyRatePercent = (completedWorkouts > 0 && totalWorkouts > 0)
+          ? ((completedWorkouts / totalWorkouts) * 100).toInt()
+          : (streak > 0 ? 100 : 0);
+      final weeklyStatsText = '🏆 오운완 $weeklyRatePercent% ($completedWorkouts/$totalWorkouts)';
+
       await HomeWidget.saveWidgetData<int>('q1_count', q1Todos.length);
       await HomeWidget.saveWidgetData<int>('q2_count', q2Todos.length);
       await HomeWidget.saveWidgetData<int>('q3_count', q3Count);
@@ -74,6 +91,9 @@ class WidgetService {
       await HomeWidget.saveWidgetData<String>('q2_title_1', q2Title1);
       await HomeWidget.saveWidgetData<String>('q2_title_2', q2Title2);
       await HomeWidget.saveWidgetData<String>('q2_title_3', q2Title3);
+
+      await HomeWidget.saveWidgetData<String>('urgent_task_text', urgentTaskText);
+      await HomeWidget.saveWidgetData<String>('weekly_stats_text', weeklyStatsText);
 
       await HomeWidget.saveWidgetData<String>('widget_payload_json', jsonEncode(payload));
 

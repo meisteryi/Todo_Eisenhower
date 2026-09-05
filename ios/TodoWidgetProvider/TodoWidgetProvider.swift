@@ -1,10 +1,22 @@
 import WidgetKit
 import SwiftUI
 
-// MARK: - Dashboard Summary Widget (Q1 ~ Q4 + Workout)
+// MARK: - Dashboard Summary Widget (Q1 ~ Q4 + Workout + Urgent Task + Weekly Badge)
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), streak: 5, q1Count: 2, q2Count: 3, q3Count: 1, q4Count: 0, totalPending: 6, workoutCompleted: 3, workoutTotal: 4)
+        SimpleEntry(
+            date: Date(),
+            streak: 5,
+            q1Count: 2,
+            q2Count: 3,
+            q3Count: 1,
+            q4Count: 0,
+            totalPending: 6,
+            workoutCompleted: 3,
+            workoutTotal: 4,
+            urgentTaskText: "[18:00] 팀 미팅 준비",
+            weeklyStatsText: "🏆 오운완 85% (6/7일)"
+        )
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
@@ -28,6 +40,8 @@ struct Provider: TimelineProvider {
         let totalPending = userDefaults?.integer(forKey: "total_pending") ?? 0
         let workoutCompleted = userDefaults?.integer(forKey: "workout_completed") ?? 0
         let workoutTotal = userDefaults?.integer(forKey: "workout_total") ?? 0
+        let urgentTaskText = userDefaults?.string(forKey: "urgent_task_text") ?? "없음"
+        let weeklyStatsText = userDefaults?.string(forKey: "weekly_stats_text") ?? "🏆 오운완 100%"
         
         return SimpleEntry(
             date: Date(),
@@ -38,7 +52,9 @@ struct Provider: TimelineProvider {
             q4Count: q4Count,
             totalPending: totalPending,
             workoutCompleted: workoutCompleted,
-            workoutTotal: workoutTotal
+            workoutTotal: workoutTotal,
+            urgentTaskText: urgentTaskText,
+            weeklyStatsText: weeklyStatsText
         )
     }
 }
@@ -53,13 +69,15 @@ struct SimpleEntry: TimelineEntry {
     let totalPending: Int
     let workoutCompleted: Int
     let workoutTotal: Int
+    let urgentTaskText: String
+    let weeklyStatsText: String
 }
 
 struct TodoWidgetEntryView : View {
     var entry: Provider.Entry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text("아이젠하워 & 오운완")
                     .font(.caption2)
@@ -99,13 +117,24 @@ struct TodoWidgetEntryView : View {
             
             Divider()
             
+            // Urgent Task & Time Indicator Row
             HStack {
-                Image(systemName: "figure.run")
-                    .foregroundColor(.orange)
+                Text("⏰ 최우선:")
                     .font(.caption2)
-                Text("운동: \(entry.workoutCompleted)/\(entry.workoutTotal)")
+                    .bold()
+                    .foregroundColor(.yellow)
+                Text(entry.urgentTaskText)
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .foregroundColor(.primary)
+            }
+            
+            // Weekly Stats & Total Row
+            HStack {
+                Text(entry.weeklyStatsText)
+                    .font(.caption2)
+                    .bold()
+                    .foregroundColor(.green)
                 Spacer()
                 Text("전체: \(entry.totalPending)개")
                     .font(.caption2)
@@ -124,8 +153,8 @@ struct TodoWidgetProvider: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             TodoWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("아이젠하워 Q1~Q4 요약")
-        .description("Q1 긴급, Q2 목표, Q3 대리, Q4 휴식 할 일 및 운동 스트릭을 확인하세요.")
+        .configurationDisplayName("아이젠하워 종합 대시보드")
+        .description("Q1~Q4 할 일, 최우선 마감 태스크, 주간 오운완 달성률 뱃지를 확인하세요.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
