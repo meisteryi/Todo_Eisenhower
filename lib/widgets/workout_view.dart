@@ -206,7 +206,7 @@ class _WorkoutViewState extends State<WorkoutView> {
           child: filteredWorkouts.isEmpty
               ? _buildEmptyState(theme)
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
                   itemCount: filteredWorkouts.length,
                   itemBuilder: (context, index) {
                     final workout = filteredWorkouts[index];
