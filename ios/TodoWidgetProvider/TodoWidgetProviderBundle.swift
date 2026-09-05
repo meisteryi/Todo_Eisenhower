@@ -12,7 +12,6 @@ import SwiftUI
 struct TodoWidgetProviderBundle: WidgetBundle {
     var body: some Widget {
         TodoWidgetProvider()
-        TodoWidgetProviderControl()
-        TodoWidgetProviderLiveActivity()
+        TodoTasksWidgetProvider()
     }
 }

@@ -31,17 +31,18 @@ class _UnifiedDashboardWidgetState extends State<UnifiedDashboardWidget> {
     final todayLogs = provider.todayWorkoutLogs;
     final streak = provider.workoutStreak;
     final totalWorkouts = workouts.length;
-    final completedWorkouts = workouts.where((w) => todayLogs[w.id]?.isCompleted ?? false).length;
-    final isWorkoutAllDone = totalWorkouts > 0 && completedWorkouts == totalWorkouts;
+    final completedWorkouts = workouts
+        .where((w) => todayLogs[w.id]?.isCompleted ?? false)
+        .length;
+    final isWorkoutAllDone =
+        totalWorkouts > 0 && completedWorkouts == totalWorkouts;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.15),
-        ),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -72,7 +73,10 @@ class _UnifiedDashboardWidgetState extends State<UnifiedDashboardWidget> {
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.q2.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -88,7 +92,9 @@ class _UnifiedDashboardWidgetState extends State<UnifiedDashboardWidget> {
                   ),
                   const SizedBox(width: 8),
                   Icon(
-                    _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
                     color: theme.hintColor,
                     size: 20,
                   ),
@@ -111,11 +117,18 @@ class _UnifiedDashboardWidgetState extends State<UnifiedDashboardWidget> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.grid_view, size: 14, color: AppColors.q1),
+                            const Icon(
+                              Icons.grid_view,
+                              size: 14,
+                              color: AppColors.q1,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '할 일 ($totalPendingTodos)',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
@@ -128,10 +141,26 @@ class _UnifiedDashboardWidgetState extends State<UnifiedDashboardWidget> {
                           crossAxisSpacing: 6,
                           childAspectRatio: 2.2,
                           children: [
-                            _buildQuadrantBadge('Q1 긴급/중요', q1Count, AppColors.q1),
-                            _buildQuadrantBadge('Q2 목표/계획', q2Count, AppColors.q2),
-                            _buildQuadrantBadge('Q3 대리/위임', q3Count, AppColors.q3),
-                            _buildQuadrantBadge('Q4 휴식/소각', q4Count, AppColors.q4),
+                            _buildQuadrantBadge(
+                              'Q1 긴급/중요',
+                              q1Count,
+                              AppColors.q1,
+                            ),
+                            _buildQuadrantBadge(
+                              'Q2 목표/계획',
+                              q2Count,
+                              AppColors.q2,
+                            ),
+                            _buildQuadrantBadge(
+                              'Q3 대리/위임',
+                              q3Count,
+                              AppColors.q3,
+                            ),
+                            _buildQuadrantBadge(
+                              'Q4 휴식/소각',
+                              q4Count,
+                              AppColors.q4,
+                            ),
                           ],
                         ),
                       ],
@@ -152,11 +181,18 @@ class _UnifiedDashboardWidgetState extends State<UnifiedDashboardWidget> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.fitness_center, size: 14, color: AppColors.q2),
+                            const Icon(
+                              Icons.fitness_center,
+                              size: 14,
+                              color: AppColors.q2,
+                            ),
                             const SizedBox(width: 4),
                             const Text(
                               '운동 (오운완)',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
@@ -166,28 +202,37 @@ class _UnifiedDashboardWidgetState extends State<UnifiedDashboardWidget> {
                           decoration: BoxDecoration(
                             color: isWorkoutAllDone
                                 ? const Color(0xFF2ECC71).withValues(alpha: 0.1)
-                                : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                                : theme.colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.4),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    isWorkoutAllDone ? '🎉 완벽 달성' : '$completedWorkouts / $totalWorkouts 완료',
+                                    isWorkoutAllDone
+                                        ? '🎉 완벽 달성'
+                                        : '$completedWorkouts / $totalWorkouts 완료',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
-                                      color: isWorkoutAllDone ? const Color(0xFF2ECC71) : null,
+                                      color: isWorkoutAllDone
+                                          ? const Color(0xFF2ECC71)
+                                          : null,
                                     ),
                                   ),
                                   Text(
                                     totalWorkouts > 0
                                         ? '${((completedWorkouts / totalWorkouts) * 100).toInt()}%'
                                         : '0%',
-                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -195,11 +240,16 @@ class _UnifiedDashboardWidgetState extends State<UnifiedDashboardWidget> {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
                                 child: LinearProgressIndicator(
-                                  value: totalWorkouts > 0 ? (completedWorkouts / totalWorkouts) : 0.0,
+                                  value: totalWorkouts > 0
+                                      ? (completedWorkouts / totalWorkouts)
+                                      : 0.0,
                                   minHeight: 6,
-                                  backgroundColor: theme.dividerColor.withValues(alpha: 0.1),
+                                  backgroundColor: theme.dividerColor
+                                      .withValues(alpha: 0.1),
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    isWorkoutAllDone ? const Color(0xFF2ECC71) : AppColors.q2,
+                                    isWorkoutAllDone
+                                        ? const Color(0xFF2ECC71)
+                                        : AppColors.q2,
                                   ),
                                 ),
                               ),
@@ -236,13 +286,21 @@ class _UnifiedDashboardWidgetState extends State<UnifiedDashboardWidget> {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Text(
             '$count',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ],
       ),
