@@ -21,7 +21,43 @@ class MiniMapTracker extends StatelessWidget {
 
     // Helper to calculate progress ratio
     double getProgressRatio(int quadrant) {
-      final quadrantTodos = provider.todos.where((t) => t.quadrant == quadrant).toList();
+      final now = DateTime.now();
+      final selectedDate = provider.selectedDate;
+
+      final quadrantTodos = provider.todos.where((t) {
+        if (t.quadrant != quadrant || t.isTrash) return false;
+
+        if (!provider.isMatrixFilterTodayOnly) return true;
+
+        final targetDay = DateTime(
+          t.targetDate.year,
+          t.targetDate.month,
+          t.targetDate.day,
+        );
+        final selectedDay = DateTime(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+        );
+        final today = DateTime(now.year, now.month, now.day);
+        final isSelectedToday = selectedDay.isAtSameMomentAs(today);
+
+        if (t.isCompleted) {
+          final compDate = t.completedAt ?? t.targetDate;
+          final compDay = DateTime(
+            compDate.year,
+            compDate.month,
+            compDate.day,
+          );
+          return compDay.isAtSameMomentAs(selectedDay);
+        }
+
+        if (targetDay.isAtSameMomentAs(selectedDay)) return true;
+        if (isSelectedToday && targetDay.isBefore(today)) return true;
+
+        return false;
+      }).toList();
+
       if (quadrantTodos.isEmpty) return 0.0;
       final completed = quadrantTodos.where((t) => t.isCompleted).length;
       return completed / quadrantTodos.length;
