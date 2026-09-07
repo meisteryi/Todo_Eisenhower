@@ -24,14 +24,18 @@ class WidgetService {
     try {
       WidgetsFlutterBinding.ensureInitialized();
       await HomeWidget.setAppGroupId(appGroupId);
-      final activeTodos = todos.where((t) => !t.isCompleted && !t.isTrash).toList();
+      final activeTodos = todos
+          .where((t) => !t.isCompleted && !t.isTrash)
+          .toList();
       final q1Todos = activeTodos.where((t) => t.quadrant == 1).toList();
       final q2Todos = activeTodos.where((t) => t.quadrant == 2).toList();
       final q3Count = activeTodos.where((t) => t.quadrant == 3).length;
       final q4Count = activeTodos.where((t) => t.quadrant == 4).length;
 
       final totalWorkouts = workouts.length;
-      final completedWorkouts = workouts.where((w) => workoutLogs[w.id]?.isCompleted ?? false).length;
+      final completedWorkouts = workouts
+          .where((w) => workoutLogs[w.id]?.isCompleted ?? false)
+          .length;
 
       // Extract top titles for Q1 & Q2
       final q1Title1 = q1Todos.isNotEmpty ? q1Todos[0].title : '';
@@ -64,17 +68,22 @@ class WidgetService {
       String urgentTaskText = '없음';
       if (activeTodos.isNotEmpty) {
         final urgentTask = activeTodos.firstWhere(
-          (t) => t.quadrant == 1 && (t.dueTimeStr != null || t.timeStr != null || t.dueDate != null),
+          (t) =>
+              t.quadrant == 1 &&
+              (t.dueTimeStr != null || t.timeStr != null || t.dueDate != null),
           orElse: () => q1Todos.isNotEmpty ? q1Todos.first : q2Todos.first,
         );
         final timeLabel = urgentTask.dueTimeStr ?? urgentTask.timeStr;
-        urgentTaskText = timeLabel != null ? '[$timeLabel] ${urgentTask.title}' : urgentTask.title;
+        urgentTaskText = timeLabel != null
+            ? '[$timeLabel] ${urgentTask.title}'
+            : urgentTask.title;
       }
 
       final weeklyRatePercent = (completedWorkouts > 0 && totalWorkouts > 0)
           ? ((completedWorkouts / totalWorkouts) * 100).toInt()
           : (streak > 0 ? 100 : 0);
-      final weeklyStatsText = '🏆 오운완 $weeklyRatePercent% ($completedWorkouts/$totalWorkouts)';
+      final weeklyStatsText =
+          '🏆 오운완 $weeklyRatePercent% ($completedWorkouts/$totalWorkouts)';
 
       await HomeWidget.saveWidgetData<int>('q1_count', q1Todos.length);
       await HomeWidget.saveWidgetData<int>('q2_count', q2Todos.length);
@@ -82,7 +91,10 @@ class WidgetService {
       await HomeWidget.saveWidgetData<int>('q4_count', q4Count);
       await HomeWidget.saveWidgetData<int>('total_pending', activeTodos.length);
       await HomeWidget.saveWidgetData<int>('workout_streak', streak);
-      await HomeWidget.saveWidgetData<int>('workout_completed', completedWorkouts);
+      await HomeWidget.saveWidgetData<int>(
+        'workout_completed',
+        completedWorkouts,
+      );
       await HomeWidget.saveWidgetData<int>('workout_total', totalWorkouts);
 
       await HomeWidget.saveWidgetData<String>('q1_title_1', q1Title1);
@@ -92,10 +104,19 @@ class WidgetService {
       await HomeWidget.saveWidgetData<String>('q2_title_2', q2Title2);
       await HomeWidget.saveWidgetData<String>('q2_title_3', q2Title3);
 
-      await HomeWidget.saveWidgetData<String>('urgent_task_text', urgentTaskText);
-      await HomeWidget.saveWidgetData<String>('weekly_stats_text', weeklyStatsText);
+      await HomeWidget.saveWidgetData<String>(
+        'urgent_task_text',
+        urgentTaskText,
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'weekly_stats_text',
+        weeklyStatsText,
+      );
 
-      await HomeWidget.saveWidgetData<String>('widget_payload_json', jsonEncode(payload));
+      await HomeWidget.saveWidgetData<String>(
+        'widget_payload_json',
+        jsonEncode(payload),
+      );
 
       await HomeWidget.updateWidget(
         name: androidWidgetName,

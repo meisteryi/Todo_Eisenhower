@@ -121,22 +121,33 @@ class TodoProvider with ChangeNotifier {
     return '$minutes:$seconds';
   }
 
-  // Selected date's active todos (Uncompleted past/undated tasks carry forward until completed!)
+  // Selected date's active todos (Uncompleted past tasks carry forward to TODAY only!)
   List<Todo> get selectedDateTodos {
     final selectedDay = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final isSelectedToday = selectedDay.isAtSameMomentAs(today);
+
     return _todos.where((t) {
       if (t.isTrash) return false;
 
-      // Completed items show strictly on the date they were completed (or targetDate if completedAt null)
+      final targetDay = DateTime(t.targetDate.year, t.targetDate.month, t.targetDate.day);
+
+      // Completed items show strictly on the date they were completed (or targetDate if completedAt is null)
       if (t.isCompleted) {
         final compDate = t.completedAt ?? t.targetDate;
         final compDay = DateTime(compDate.year, compDate.month, compDate.day);
         return compDay.isAtSameMomentAs(selectedDay);
       }
 
-      // Uncompleted items: show if target date is today/selected date OR if created/assigned on a past date (carry forward until completed)
-      final targetDay = DateTime(t.targetDate.year, t.targetDate.month, t.targetDate.day);
-      return targetDay.isAtSameMomentAs(selectedDay) || targetDay.isBefore(selectedDay);
+      // Uncompleted items:
+      // 1) Target date matches the selected date
+      if (targetDay.isAtSameMomentAs(selectedDay)) return true;
+
+      // 2) If selected date is TODAY, also show uncompleted past tasks (overdue carry-forward to today)
+      if (isSelectedToday && targetDay.isBefore(today)) return true;
+
+      return false;
     }).toList();
   }
 

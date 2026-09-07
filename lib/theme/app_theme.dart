@@ -68,6 +68,18 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.lightInputBg,
+        hintStyle: const TextStyle(
+          fontFamily: appleFont,
+          color: Color(0xFFA0A5B1),
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+        ),
+        labelStyle: const TextStyle(
+          fontFamily: appleFont,
+          color: Color(0xFFA0A5B1),
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -138,6 +150,18 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.darkInputBg,
+        hintStyle: const TextStyle(
+          fontFamily: appleFont,
+          color: Color(0xFF757575),
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+        ),
+        labelStyle: const TextStyle(
+          fontFamily: appleFont,
+          color: Color(0xFF757575),
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
