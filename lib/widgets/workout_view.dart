@@ -184,6 +184,8 @@ class _WorkoutViewState extends State<WorkoutView> {
                   label: Text(cat),
                   selected: isSelected,
                   selectedColor: AppColors.q2,
+                  side: BorderSide.none,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   labelStyle: TextStyle(
                     color: isSelected ? Colors.white : theme.textTheme.bodyMedium?.color,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -259,21 +261,23 @@ class _WorkoutViewState extends State<WorkoutView> {
     final theme = Theme.of(context);
     final isCompleted = log?.isCompleted ?? false;
 
-    return Card(
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isCompleted
-              ? AppColors.q2.withValues(alpha: 0.4)
-              : theme.dividerColor.withValues(alpha: 0.2),
-          width: isCompleted ? 1.5 : 1,
-        ),
+      decoration: BoxDecoration(
+        color: isCompleted
+            ? (isDark ? AppColors.q2.withValues(alpha: 0.12) : AppColors.q2.withValues(alpha: 0.06))
+            : (isDark ? AppColors.darkCard : AppColors.lightCard),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      elevation: 0,
-      color: isCompleted
-          ? AppColors.q2.withValues(alpha: 0.04)
-          : theme.cardColor,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -360,6 +364,7 @@ class _WorkoutViewState extends State<WorkoutView> {
 
   Widget _buildSetTypeBody(Workout workout, WorkoutLog? log) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final sets = log?.setDetails ??
         List.generate(
           workout.targetSets,
@@ -409,13 +414,10 @@ class _WorkoutViewState extends State<WorkoutView> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: theme.cardColor,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.06)
+                            : Colors.black.withValues(alpha: 0.04),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isSetCompleted
-                              ? AppColors.q2.withValues(alpha: 0.4)
-                              : theme.dividerColor.withValues(alpha: 0.3),
-                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -649,14 +651,16 @@ class _WorkoutViewState extends State<WorkoutView> {
           ),
         ),
         if (!isCompleted)
-          OutlinedButton.icon(
+          ElevatedButton.icon(
             onPressed: () {
               widget.provider.toggleWorkoutCompletion(workout);
             },
             icon: const Icon(Icons.check, size: 16),
             label: const Text('완료'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.q2,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.q2,
+              foregroundColor: Colors.white,
+              elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
