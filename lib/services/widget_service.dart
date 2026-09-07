@@ -71,7 +71,11 @@ class WidgetService {
           (t) =>
               t.quadrant == 1 &&
               (t.dueTimeStr != null || t.timeStr != null || t.dueDate != null),
-          orElse: () => q1Todos.isNotEmpty ? q1Todos.first : q2Todos.first,
+          orElse: () {
+            if (q1Todos.isNotEmpty) return q1Todos.first;
+            if (q2Todos.isNotEmpty) return q2Todos.first;
+            return activeTodos.first;
+          },
         );
         final timeLabel = urgentTask.dueTimeStr ?? urgentTask.timeStr;
         urgentTaskText = timeLabel != null
