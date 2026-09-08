@@ -289,39 +289,46 @@ class _WorkoutViewState extends State<WorkoutView> {
                 Text(workout.emoji, style: const TextStyle(fontSize: 24)),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                  child: InkWell(
+                    onTap: () => _showAddWorkoutSheet(workoutToEdit: workout),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            workout.title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              decoration: isCompleted ? TextDecoration.lineThrough : null,
-                              color: isCompleted ? theme.hintColor : null,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                workout.title,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                  color: isCompleted ? theme.hintColor : null,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  workout.category,
+                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              workout.category,
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '반복: ${workout.repeatDays}',
+                            style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: theme.hintColor),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '반복: ${workout.repeatDays}',
-                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: theme.hintColor),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
 

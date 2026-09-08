@@ -1119,30 +1119,40 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         provider: widget.provider,
                         onCloseDetail: () =>
                             setState(() => _isPanelVisible = false),
+                        onEditTodo: (todo) =>
+                            _showAddTaskSheet(todoToEdit: todo),
                       ),
                       TodoListPage(
                         quadrant: 1,
                         provider: widget.provider,
                         onCloseDetail: () =>
                             setState(() => _isPanelVisible = false),
+                        onEditTodo: (todo) =>
+                            _showAddTaskSheet(todoToEdit: todo),
                       ),
                       TodoListPage(
                         quadrant: 2,
                         provider: widget.provider,
                         onCloseDetail: () =>
                             setState(() => _isPanelVisible = false),
+                        onEditTodo: (todo) =>
+                            _showAddTaskSheet(todoToEdit: todo),
                       ),
                       TodoListPage(
                         quadrant: 3,
                         provider: widget.provider,
                         onCloseDetail: () =>
                             setState(() => _isPanelVisible = false),
+                        onEditTodo: (todo) =>
+                            _showAddTaskSheet(todoToEdit: todo),
                       ),
                       TodoListPage(
                         quadrant: 4,
                         provider: widget.provider,
                         onCloseDetail: () =>
                             setState(() => _isPanelVisible = false),
+                        onEditTodo: (todo) =>
+                            _showAddTaskSheet(todoToEdit: todo),
                       ),
                     ],
                   )

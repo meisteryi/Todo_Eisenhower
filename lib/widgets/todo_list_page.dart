@@ -11,6 +11,7 @@ class TodoListPage extends StatelessWidget {
   final TodoProvider provider;
   final ScrollController? scrollController;
   final VoidCallback? onCloseDetail;
+  final Function(Todo)? onEditTodo;
 
   const TodoListPage({
     super.key,
@@ -18,6 +19,7 @@ class TodoListPage extends StatelessWidget {
     required this.provider,
     this.scrollController,
     this.onCloseDetail,
+    this.onEditTodo,
   });
 
   Color _getQuadrantColor() {
@@ -346,6 +348,27 @@ class TodoListPage extends StatelessWidget {
                   child: _buildRepositionButton(context, todo, 0, '미분류 카테고리로 이동', AppColors.q0),
                 ),
                 const SizedBox(height: 12),
+                if (onEditTodo != null) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        onEditTodo!(todo);
+                      },
+                      icon: const Icon(Icons.edit, size: 18),
+                      label: const Text('할 일 상세 내용 수정하기', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ],
             ),
           );
@@ -453,6 +476,7 @@ class TodoListPage extends StatelessWidget {
                       onMoveToQuadrant: (q) => provider.moveTodo(todo, q),
                       onDelete: () => provider.softDeleteTodo(todo),
                       onLongPress: () => showRepositionSheet(todo),
+                      onTap: onEditTodo != null ? () => onEditTodo!(todo) : null,
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

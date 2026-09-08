@@ -1053,6 +1053,7 @@ class _CategoryManageDialogState extends State<CategoryManageDialog> {
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           elevation: 0.5,
                           child: ListTile(
+                            onTap: () => _showAddOrEditCategoryDialog(category: cat),
                             leading: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(

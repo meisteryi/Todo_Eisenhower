@@ -3,6 +3,7 @@ import '../models/category_model.dart';
 import '../models/todo_model.dart';
 import '../providers/todo_provider.dart';
 import '../theme/app_theme.dart';
+import 'routine_manage_dialog.dart';
 
 class TodoMateView extends StatefulWidget {
   final TodoProvider provider;
@@ -262,33 +263,82 @@ class _TodoMateViewState extends State<TodoMateView> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            routine.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
+                      child: InkWell(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (ctx) => AddRoutineSheet(
+                              provider: widget.provider,
+                              initialRoutine: routine,
+                              onAddRoutine: (
+                                title,
+                                quadrant,
+                                categoryId,
+                                repeatType,
+                                repeatDays,
+                                startDate,
+                                endDate,
+                                location,
+                                timeStr,
+                                dueTimeStr,
+                                memo,
+                                hasNotification,
+                                notificationOffset,
+                              ) async {
+                                final updated = routine.copyWith(
+                                  title: title,
+                                  quadrant: quadrant,
+                                  categoryId: categoryId,
+                                  repeatType: repeatType,
+                                  repeatDays: repeatDays,
+                                  startDate: startDate,
+                                  endDate: endDate,
+                                  location: location,
+                                  timeStr: timeStr,
+                                  dueTimeStr: dueTimeStr,
+                                  memo: memo,
+                                  hasNotification: hasNotification,
+                                  notificationOffset: notificationOffset,
+                                );
+                                await widget.provider.updateRoutine(updated);
+                              },
                             ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                routine.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark
+                                      ? AppColors.darkTextPrimary
+                                      : AppColors.lightTextPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                '반복 루틴 (터치하여 수정)${routine.timeStr != null ? ' • ${routine.timeStr}' : ''}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 1),
-                          Text(
-                            '반복 루틴${routine.timeStr != null ? ' • ${routine.timeStr}' : ''}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),

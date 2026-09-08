@@ -10,6 +10,7 @@ class TodoCard extends StatefulWidget {
   final Function(int) onMoveToQuadrant;
   final VoidCallback onDelete;
   final VoidCallback? onLongPress;
+  final VoidCallback? onTap;
   final Widget? trailing;
 
   const TodoCard({
@@ -20,6 +21,7 @@ class TodoCard extends StatefulWidget {
     required this.onMoveToQuadrant,
     required this.onDelete,
     this.onLongPress,
+    this.onTap,
     this.trailing,
   });
 
@@ -236,7 +238,7 @@ class _TodoCardState extends State<TodoCard> with TickerProviderStateMixin {
           GestureDetector(
             onHorizontalDragUpdate: _handleDragUpdate,
             onHorizontalDragEnd: _handleDragEnd,
-            onTap: _isOpened ? _resetSlide : null,
+            onTap: _isOpened ? _resetSlide : widget.onTap,
             onLongPress: widget.onLongPress,
             child: SlideTransition(
               position: _slideRightAnimation,
