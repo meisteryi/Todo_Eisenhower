@@ -625,6 +625,15 @@ class TodoProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateRoutine(Routine routine) async {
+    try {
+      await _dbHelper.updateRoutine(routine);
+      await loadTodos();
+    } catch (e) {
+      debugPrint("Error updating routine: $e");
+    }
+  }
+
   Future<void> deleteRoutine(int id) async {
     try {
       await _dbHelper.deleteRoutine(id);

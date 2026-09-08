@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/category_model.dart';
+import '../models/routine_model.dart';
 import '../providers/todo_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -15,13 +16,14 @@ class RoutineManageDialog extends StatefulWidget {
 }
 
 class _RoutineManageDialogState extends State<RoutineManageDialog> {
-  void _showAddRoutineSheet() {
+  void _showRoutineSheet([Routine? initialRoutine]) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => AddRoutineSheet(
         provider: widget.provider,
+        initialRoutine: initialRoutine,
         onAddRoutine:
             (
               title,
@@ -38,21 +40,40 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
               hasNotification,
               notificationOffset,
             ) async {
-              await widget.provider.addRoutine(
-                title: title,
-                quadrant: quadrant,
-                categoryId: categoryId,
-                repeatType: repeatType,
-                repeatDays: repeatDays,
-                startDate: startDate,
-                endDate: endDate,
-                location: location,
-                timeStr: timeStr,
-                dueTimeStr: dueTimeStr,
-                memo: memo,
-                hasNotification: hasNotification,
-                notificationOffset: notificationOffset,
-              );
+              if (initialRoutine != null) {
+                final updated = initialRoutine.copyWith(
+                  title: title,
+                  quadrant: quadrant,
+                  categoryId: categoryId,
+                  repeatType: repeatType,
+                  repeatDays: repeatDays,
+                  startDate: startDate,
+                  endDate: endDate,
+                  location: location,
+                  timeStr: timeStr,
+                  dueTimeStr: dueTimeStr,
+                  memo: memo,
+                  hasNotification: hasNotification,
+                  notificationOffset: notificationOffset,
+                );
+                await widget.provider.updateRoutine(updated);
+              } else {
+                await widget.provider.addRoutine(
+                  title: title,
+                  quadrant: quadrant,
+                  categoryId: categoryId,
+                  repeatType: repeatType,
+                  repeatDays: repeatDays,
+                  startDate: startDate,
+                  endDate: endDate,
+                  location: location,
+                  timeStr: timeStr,
+                  dueTimeStr: dueTimeStr,
+                  memo: memo,
+                  hasNotification: hasNotification,
+                  notificationOffset: notificationOffset,
+                );
+              }
             },
       ),
     );
@@ -187,88 +208,106 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
                                   margin: const EdgeInsets.symmetric(
                                     vertical: 4,
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 10,
-                                  ),
                                   decoration: BoxDecoration(
                                     color: isDark
                                         ? AppColors.darkInputBg
                                         : AppColors.lightInputBg,
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 36,
-                                        height: 36,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.q2.withValues(
-                                            alpha: 0.15,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(16),
+                                    onTap: () => _showRoutineSheet(r),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 10,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 36,
+                                            height: 36,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.q2.withValues(
+                                                alpha: 0.15,
+                                              ),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              cat.emoji,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                              ),
+                                            ),
                                           ),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          cat.emoji,
-                                          style: const TextStyle(fontSize: 18),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              r.title,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                                color: isDark
-                                                    ? AppColors.darkTextPrimary
-                                                    : AppColors
-                                                          .lightTextPrimary,
-                                                decoration: r.isActive
-                                                    ? null
-                                                    : TextDecoration
-                                                          .lineThrough,
-                                              ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  r.title,
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                    color: isDark
+                                                        ? AppColors
+                                                            .darkTextPrimary
+                                                        : AppColors
+                                                            .lightTextPrimary,
+                                                    decoration: r.isActive
+                                                        ? null
+                                                        : TextDecoration
+                                                            .lineThrough,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  '${cat.name} • ${_formatRepeatDays(r.repeatDays)}${r.timeStr != null ? ' (${r.timeStr})' : ''}',
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: isDark
+                                                        ? AppColors
+                                                            .darkTextSecondary
+                                                        : AppColors
+                                                            .lightTextSecondary,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              '${cat.name} • ${_formatRepeatDays(r.repeatDays)}${r.timeStr != null ? ' (${r.timeStr})' : ''}',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: isDark
-                                                    ? AppColors
-                                                          .darkTextSecondary
-                                                    : AppColors
-                                                          .lightTextSecondary,
-                                              ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Icon(
+                                            Icons.edit_outlined,
+                                            size: 18,
+                                            color: isDark
+                                                ? AppColors.darkTextSecondary
+                                                : AppColors.lightTextSecondary,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Transform.scale(
+                                            scale: 0.8,
+                                            child: Switch.adaptive(
+                                              value: r.isActive,
+                                              activeThumbColor: AppColors.q2,
+                                              onChanged: (val) {
+                                                widget.provider
+                                                    .toggleRoutineActive(r);
+                                              },
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 8),
-                                      Transform.scale(
-                                        scale: 0.8,
-                                        child: Switch.adaptive(
-                                          value: r.isActive,
-                                          activeThumbColor: AppColors.q2,
-                                          onChanged: (val) {
-                                            widget.provider.toggleRoutineActive(
-                                              r,
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               );
@@ -281,7 +320,7 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton.icon(
-                    onPressed: _showAddRoutineSheet,
+                    onPressed: _showRoutineSheet,
                     icon: const Icon(Icons.add_rounded),
                     label: const Text(
                       '새 루틴 등록하기',
@@ -333,6 +372,7 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
 /// Full Feature Routine Creation Sheet matching AddTaskSheet
 class AddRoutineSheet extends StatefulWidget {
   final TodoProvider provider;
+  final Routine? initialRoutine;
   final Function(
     String title,
     int quadrant,
@@ -353,6 +393,7 @@ class AddRoutineSheet extends StatefulWidget {
   const AddRoutineSheet({
     super.key,
     required this.provider,
+    this.initialRoutine,
     required this.onAddRoutine,
   });
 
@@ -383,14 +424,33 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
-    _locationController = TextEditingController();
-    _timeController = TextEditingController();
-    _dueTimeController = TextEditingController();
-    _memoController = TextEditingController();
+    final init = widget.initialRoutine;
+    _titleController = TextEditingController(text: init?.title ?? '');
+    _locationController = TextEditingController(text: init?.location ?? '');
+    _timeController = TextEditingController(text: init?.timeStr ?? '');
+    _dueTimeController = TextEditingController(text: init?.dueTimeStr ?? '');
+    _memoController = TextEditingController(text: init?.memo ?? '');
 
-    if (widget.provider.categories.isNotEmpty) {
-      _selectedCategoryId = widget.provider.categories.first.id;
+    if (init != null) {
+      _selectedQ = init.quadrant;
+      _selectedCategoryId = init.categoryId;
+      _startDate = init.startDate;
+      _endDate = init.endDate;
+      _hasNotification = init.hasNotification;
+      _notificationOffset = init.notificationOffset;
+
+      final parsedDays = init.repeatDays
+          .split(',')
+          .map((e) => int.tryParse(e.trim()))
+          .whereType<int>()
+          .toList();
+      if (parsedDays.isNotEmpty) {
+        _selectedDays = parsedDays;
+      }
+    } else {
+      if (widget.provider.categories.isNotEmpty) {
+        _selectedCategoryId = widget.provider.categories.first.id;
+      }
     }
     _calendarMonth = DateTime(_startDate.year, _startDate.month, 1);
   }
@@ -905,7 +965,7 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '신규 루틴 등록',
+                    widget.initialRoutine != null ? '루틴 편집' : '신규 루틴 등록',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -932,7 +992,7 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                   // Title Input
                   TextField(
                     controller: _titleController,
-                    autofocus: true,
+                    autofocus: widget.initialRoutine == null,
                     style: TextStyle(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -1557,9 +1617,9 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                '루틴 저장하기',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Text(
+                widget.initialRoutine != null ? '루틴 수정하기' : '루틴 저장하기',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
