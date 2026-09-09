@@ -360,6 +360,48 @@ class _CategoryManageDialogState extends State<CategoryManageDialog> {
     );
   }
 
+  Future<bool?> _confirmDeleteCategory(BuildContext context, Category cat) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+            SizedBox(width: 8),
+            Text(
+              '카테고리 삭제',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          '\'${cat.name}\' 카테고리를 삭제하시겠습니까?\n(해당 카테고리에 속한 할 일은 미분류 상태로 유지됩니다)',
+          style: const TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final categories = widget.provider.categories;
@@ -401,7 +443,7 @@ class _CategoryManageDialogState extends State<CategoryManageDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              '💡 항목을 꾹 누르면 순서를 변경할 수 있습니다.',
+              '💡 꾹 누르면 순서 변경, 왼쪽으로 밀면 삭제할 수 있습니다.',
               style: TextStyle(
                 fontSize: 11,
                 color: theme.hintColor,
@@ -431,80 +473,104 @@ class _CategoryManageDialogState extends State<CategoryManageDialog> {
                         return ReorderableDelayedDragStartListener(
                           key: ValueKey('category_${cat.id ?? index}'),
                           index: index,
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppColors.darkInputBg
-                                  : AppColors.lightInputBg,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(16),
-                              child: InkWell(
+                          child: Dismissible(
+                            key: ValueKey('category_dismiss_${cat.id ?? index}'),
+                            direction: DismissDirection.endToStart,
+                            confirmDismiss: (direction) async {
+                              return await _confirmDeleteCategory(context, cat);
+                            },
+                            onDismissed: (direction) {
+                              widget.provider.deleteCategory(cat.id!);
+                            },
+                            background: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent.shade200,
                                 borderRadius: BorderRadius.circular(16),
-                                onTap: () => _showAddOrEditCategoryDialog(category: cat),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 10,
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '삭제',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      // Emoji Icon Container
-                                      Container(
-                                        width: 38,
-                                        height: 38,
-                                        decoration: BoxDecoration(
-                                          color: color.withValues(alpha: 0.18),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          cat.emoji,
-                                          style: const TextStyle(fontSize: 20),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      // Category Name
-                                      Expanded(
-                                        child: Text(
-                                          cat.name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
+                                  SizedBox(width: 6),
+                                  Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkInputBg
+                                    : AppColors.lightInputBg,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(16),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(16),
+                                  onTap: () => _showAddOrEditCategoryDialog(category: cat),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Emoji Icon Container
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: color.withValues(alpha: 0.18),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            cat.emoji,
+                                            style: const TextStyle(fontSize: 18),
                                           ),
                                         ),
-                                      ),
-                                      // Edit Button
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.edit_outlined,
-                                          size: 19,
-                                          color: theme.hintColor,
+                                        const SizedBox(width: 10),
+                                        // Category Name
+                                        Expanded(
+                                          child: Text(
+                                            cat.name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
                                         ),
-                                        onPressed: () {
-                                          _showAddOrEditCategoryDialog(category: cat);
-                                        },
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      // Delete Button
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete_outline_rounded,
-                                          size: 19,
-                                          color: Colors.redAccent,
+                                        // Edit icon button
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.edit_outlined,
+                                            size: 18,
+                                            color: theme.hintColor,
+                                          ),
+                                          onPressed: () {
+                                            _showAddOrEditCategoryDialog(category: cat);
+                                          },
+                                          padding: const EdgeInsets.all(6),
+                                          constraints: const BoxConstraints(),
                                         ),
-                                        onPressed: () {
-                                          widget.provider.deleteCategory(cat.id!);
-                                        },
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
