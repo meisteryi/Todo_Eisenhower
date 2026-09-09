@@ -139,6 +139,25 @@ class DatabaseHelper {
     for (final w in Workout.defaultWorkouts()) {
       await db.insert('workouts', w.toMap());
     }
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS workout_presets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        emoji TEXT NOT NULL DEFAULT '🏋️',
+        category TEXT NOT NULL DEFAULT '웨이트',
+        workout_type TEXT NOT NULL DEFAULT 'set',
+        target_sets INTEGER NOT NULL DEFAULT 3,
+        target_reps INTEGER NOT NULL DEFAULT 10,
+        target_weight REAL NOT NULL DEFAULT 0.0,
+        target_minutes INTEGER NOT NULL DEFAULT 30,
+        is_default INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    for (final p in WorkoutPreset.defaultPresets()) {
+      await db.insert('workout_presets', p.toMap());
+    }
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -525,5 +544,54 @@ class DatabaseHelper {
         return await db.insert('workout_logs', log.toMap());
       }
     }
+  }
+
+  // --- WORKOUT PRESETS ---
+
+  Future<void> _ensureWorkoutPresetsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS workout_presets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        emoji TEXT NOT NULL DEFAULT '🏋️',
+        category TEXT NOT NULL DEFAULT '웨이트',
+        workout_type TEXT NOT NULL DEFAULT 'set',
+        target_sets INTEGER NOT NULL DEFAULT 3,
+        target_reps INTEGER NOT NULL DEFAULT 10,
+        target_weight REAL NOT NULL DEFAULT 0.0,
+        target_minutes INTEGER NOT NULL DEFAULT 30,
+        is_default INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+  }
+
+  Future<List<WorkoutPreset>> fetchWorkoutPresets() async {
+    final db = await instance.database;
+    await _ensureWorkoutPresetsTable(db);
+    final maps = await db.query('workout_presets', orderBy: 'id ASC');
+    if (maps.isEmpty) {
+      for (final p in WorkoutPreset.defaultPresets()) {
+        await db.insert('workout_presets', p.toMap());
+      }
+      final newMaps = await db.query('workout_presets', orderBy: 'id ASC');
+      return newMaps.map((map) => WorkoutPreset.fromMap(map)).toList();
+    }
+    return maps.map((map) => WorkoutPreset.fromMap(map)).toList();
+  }
+
+  Future<int> insertWorkoutPreset(WorkoutPreset preset) async {
+    final db = await instance.database;
+    await _ensureWorkoutPresetsTable(db);
+    return await db.insert('workout_presets', preset.toMap());
+  }
+
+  Future<int> deleteWorkoutPreset(int id) async {
+    final db = await instance.database;
+    await _ensureWorkoutPresetsTable(db);
+    return await db.delete(
+      'workout_presets',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

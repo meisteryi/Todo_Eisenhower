@@ -145,7 +145,7 @@ class Workout {
     );
   }
 
-  // Predefined default exercise routines for user convenience
+  // Predefined default exercises for user convenience
   static List<Workout> defaultWorkouts() {
     return [
       Workout(
@@ -156,7 +156,6 @@ class Workout {
         targetSets: 3,
         targetReps: 10,
         targetWeight: 60.0,
-        repeatDays: '월,수,금',
         sortOrder: 1,
       ),
       Workout(
@@ -165,7 +164,6 @@ class Workout {
         category: '유산소',
         workoutType: 'time',
         targetMinutes: 30,
-        repeatDays: '화,목,토',
         sortOrder: 2,
       ),
       Workout(
@@ -173,8 +171,242 @@ class Workout {
         emoji: '🧘',
         category: '스트레칭',
         workoutType: 'simple',
-        repeatDays: '월,화,수,목,금,토,일',
         sortOrder: 3,
+      ),
+    ];
+  }
+}
+
+class WorkoutPreset {
+  final int? id;
+  final String title;
+  final String emoji;
+  final String category; // '웨이트', '유산소', '스트레칭', '맨몸/기타'
+  final String workoutType; // 'set', 'time', 'simple'
+  final int targetSets;
+  final int targetReps;
+  final double targetWeight;
+  final int targetMinutes;
+  final bool isDefault;
+
+  WorkoutPreset({
+    this.id,
+    required this.title,
+    this.emoji = '🏋️',
+    this.category = '웨이트',
+    this.workoutType = 'set',
+    this.targetSets = 3,
+    this.targetReps = 10,
+    this.targetWeight = 0.0,
+    this.targetMinutes = 30,
+    this.isDefault = false,
+  });
+
+  WorkoutPreset copyWith({
+    int? id,
+    String? title,
+    String? emoji,
+    String? category,
+    String? workoutType,
+    int? targetSets,
+    int? targetReps,
+    double? targetWeight,
+    int? targetMinutes,
+    bool? isDefault,
+  }) {
+    return WorkoutPreset(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      emoji: emoji ?? this.emoji,
+      category: category ?? this.category,
+      workoutType: workoutType ?? this.workoutType,
+      targetSets: targetSets ?? this.targetSets,
+      targetReps: targetReps ?? this.targetReps,
+      targetWeight: targetWeight ?? this.targetWeight,
+      targetMinutes: targetMinutes ?? this.targetMinutes,
+      isDefault: isDefault ?? this.isDefault,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'title': title,
+      'emoji': emoji,
+      'category': category,
+      'workout_type': workoutType,
+      'target_sets': targetSets,
+      'target_reps': targetReps,
+      'target_weight': targetWeight,
+      'target_minutes': targetMinutes,
+      'is_default': isDefault ? 1 : 0,
+    };
+  }
+
+  factory WorkoutPreset.fromMap(Map<String, dynamic> map) {
+    return WorkoutPreset(
+      id: map['id'] as int?,
+      title: map['title'] as String,
+      emoji: (map['emoji'] as String?) ?? '🏋️',
+      category: (map['category'] as String?) ?? '웨이트',
+      workoutType: (map['workout_type'] as String?) ?? 'set',
+      targetSets: (map['target_sets'] as int?) ?? 3,
+      targetReps: (map['target_reps'] as int?) ?? 10,
+      targetWeight: (map['target_weight'] as num?)?.toDouble() ?? 0.0,
+      targetMinutes: (map['target_minutes'] as int?) ?? 30,
+      isDefault: (map['is_default'] as int? ?? 0) == 1,
+    );
+  }
+
+  static List<WorkoutPreset> defaultPresets() {
+    return [
+      WorkoutPreset(
+        title: '벤치프레스',
+        emoji: '🏋️‍♂️',
+        category: '웨이트',
+        workoutType: 'set',
+        targetSets: 4,
+        targetReps: 10,
+        targetWeight: 60.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '바벨 스쿼트',
+        emoji: '🏋️‍♂️',
+        category: '웨이트',
+        workoutType: 'set',
+        targetSets: 4,
+        targetReps: 10,
+        targetWeight: 70.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '데드리프트',
+        emoji: '🏋️‍♂️',
+        category: '웨이트',
+        workoutType: 'set',
+        targetSets: 3,
+        targetReps: 8,
+        targetWeight: 80.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '바벨 로우',
+        emoji: '🏋️‍♂️',
+        category: '웨이트',
+        workoutType: 'set',
+        targetSets: 3,
+        targetReps: 10,
+        targetWeight: 50.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '덤벨 숄더프레스',
+        emoji: '💪',
+        category: '웨이트',
+        workoutType: 'set',
+        targetSets: 3,
+        targetReps: 12,
+        targetWeight: 14.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '렛풀다운',
+        emoji: '💪',
+        category: '웨이트',
+        workoutType: 'set',
+        targetSets: 3,
+        targetReps: 12,
+        targetWeight: 45.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '덤벨 이두 컬',
+        emoji: '💪',
+        category: '웨이트',
+        workoutType: 'set',
+        targetSets: 3,
+        targetReps: 12,
+        targetWeight: 10.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '레그 익스텐션',
+        emoji: '🦵',
+        category: '웨이트',
+        workoutType: 'set',
+        targetSets: 3,
+        targetReps: 15,
+        targetWeight: 40.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '30분 러닝머신',
+        emoji: '🏃',
+        category: '유산소',
+        workoutType: 'time',
+        targetMinutes: 30,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '실내 사이클',
+        emoji: '🚴',
+        category: '유산소',
+        workoutType: 'time',
+        targetMinutes: 25,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '천국의 계단 (스텝밀)',
+        emoji: '🪜',
+        category: '유산소',
+        workoutType: 'time',
+        targetMinutes: 20,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '전신 스트레칭',
+        emoji: '🧘',
+        category: '스트레칭',
+        workoutType: 'simple',
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '폼롤러 근막이완',
+        emoji: '🧘',
+        category: '스트레칭',
+        workoutType: 'simple',
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '플랭크 1분 x 3세트',
+        emoji: '🤸',
+        category: '기타',
+        workoutType: 'set',
+        targetSets: 3,
+        targetReps: 60,
+        targetWeight: 0.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '푸시업 (팔굽혀펴기)',
+        emoji: '🤸',
+        category: '기타',
+        workoutType: 'set',
+        targetSets: 3,
+        targetReps: 20,
+        targetWeight: 0.0,
+        isDefault: true,
+      ),
+      WorkoutPreset(
+        title: '풀업 (턱걸이)',
+        emoji: '🤸',
+        category: '기타',
+        workoutType: 'set',
+        targetSets: 3,
+        targetReps: 8,
+        targetWeight: 0.0,
+        isDefault: true,
       ),
     ];
   }

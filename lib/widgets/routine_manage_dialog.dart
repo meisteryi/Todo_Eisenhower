@@ -998,9 +998,32 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                           ? AppColors.darkTextPrimary
                           : AppColors.lightTextPrimary,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: '루틴 제목을 입력하세요 (예: 영양제 먹기)...',
-                      prefixIcon: Icon(Icons.autorenew_rounded, size: 20),
+                      prefixIcon: const Icon(Icons.autorenew_rounded, size: 20),
+                      filled: true,
+                      fillColor: isDark
+                          ? AppColors.darkInputBg
+                          : AppColors.lightInputBg,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: _getQColor(_selectedQ),
+                          width: 1.5,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1086,7 +1109,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         ),
                         selected: _selectedDays.length == 7,
                         selectedColor: AppColors.q2,
+                        backgroundColor: isDark
+                            ? AppColors.darkInputBg
+                            : AppColors.lightInputBg,
+                        side: BorderSide.none,
                         showCheckmark: false,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: const VisualDensity(
                           horizontal: -2,
@@ -1114,7 +1144,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                             !_selectedDays.contains(6) &&
                             !_selectedDays.contains(7),
                         selectedColor: AppColors.q2,
+                        backgroundColor: isDark
+                            ? AppColors.darkInputBg
+                            : AppColors.lightInputBg,
+                        side: BorderSide.none,
                         showCheckmark: false,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: const VisualDensity(
                           horizontal: -2,
@@ -1142,7 +1179,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                             _selectedDays.contains(6) &&
                             _selectedDays.contains(7),
                         selectedColor: AppColors.q2,
+                        backgroundColor: isDark
+                            ? AppColors.darkInputBg
+                            : AppColors.lightInputBg,
+                        side: BorderSide.none,
                         showCheckmark: false,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: const VisualDensity(
                           horizontal: -2,
@@ -1182,6 +1226,7 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         backgroundColor: isDark
                             ? AppColors.darkInputBg
                             : AppColors.lightInputBg,
+                        side: BorderSide.none,
                         showCheckmark: false,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -1229,6 +1274,25 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                               Icons.access_time_rounded,
                               size: 18,
                             ),
+                            filled: true,
+                            fillColor: isDark
+                                ? AppColors.darkInputBg
+                                : AppColors.lightInputBg,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: _getQColor(_selectedQ),
+                                width: 1.5,
+                              ),
+                            ),
                             suffixIcon: _timeController.text.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear, size: 16),
@@ -1248,11 +1312,30 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                                 ? AppColors.darkTextPrimary
                                 : AppColors.lightTextPrimary,
                           ),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: '위치/장소📍',
-                            prefixIcon: Icon(
+                            prefixIcon: const Icon(
                               Icons.location_on_outlined,
                               size: 18,
+                            ),
+                            filled: true,
+                            fillColor: isDark
+                                ? AppColors.darkInputBg
+                                : AppColors.lightInputBg,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: _getQColor(_selectedQ),
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
@@ -1270,9 +1353,28 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                           ? AppColors.darkTextPrimary
                           : AppColors.lightTextPrimary,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: '상세 메모 및 주요 노트 입력...',
-                      prefixIcon: Icon(Icons.notes_rounded, size: 18),
+                      prefixIcon: const Icon(Icons.notes_rounded, size: 18),
+                      filled: true,
+                      fillColor: isDark
+                          ? AppColors.darkInputBg
+                          : AppColors.lightInputBg,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: _getQColor(_selectedQ),
+                          width: 1.5,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1318,7 +1420,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                             ),
                             selected: _notificationOffset == 0,
                             selectedColor: Colors.amber[700],
+                            backgroundColor: isDark
+                                ? AppColors.darkInputBg
+                                : AppColors.lightInputBg,
+                            side: BorderSide.none,
                             showCheckmark: false,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             visualDensity: const VisualDensity(
@@ -1340,7 +1449,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                             ),
                             selected: _notificationOffset == 10,
                             selectedColor: Colors.amber[700],
+                            backgroundColor: isDark
+                                ? AppColors.darkInputBg
+                                : AppColors.lightInputBg,
+                            side: BorderSide.none,
                             showCheckmark: false,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             visualDensity: const VisualDensity(
@@ -1362,7 +1478,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                             ),
                             selected: _notificationOffset == 30,
                             selectedColor: Colors.amber[700],
+                            backgroundColor: isDark
+                                ? AppColors.darkInputBg
+                                : AppColors.lightInputBg,
+                            side: BorderSide.none,
                             showCheckmark: false,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             visualDensity: const VisualDensity(
@@ -1384,7 +1507,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                             ),
                             selected: _notificationOffset == 60,
                             selectedColor: Colors.amber[700],
+                            backgroundColor: isDark
+                                ? AppColors.darkInputBg
+                                : AppColors.lightInputBg,
+                            side: BorderSide.none,
                             showCheckmark: false,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             visualDensity: const VisualDensity(
@@ -1415,7 +1545,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                                 _notificationOffset != 30 &&
                                 _notificationOffset != 60,
                             selectedColor: Colors.amber[700],
+                            backgroundColor: isDark
+                                ? AppColors.darkInputBg
+                                : AppColors.lightInputBg,
+                            side: BorderSide.none,
                             showCheckmark: false,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             visualDensity: const VisualDensity(
@@ -1468,8 +1605,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                           selectedColor: isDark
                               ? Colors.white.withValues(alpha: 0.2)
                               : Colors.black.withValues(alpha: 0.1),
-                          backgroundColor: Colors.transparent,
+                          backgroundColor: isDark
+                              ? AppColors.darkInputBg
+                              : AppColors.lightInputBg,
+                          side: BorderSide.none,
                           showCheckmark: false,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
                           visualDensity: const VisualDensity(
@@ -1501,8 +1644,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                             ),
                             selected: isSelected,
                             selectedColor: catColor,
-                            backgroundColor: catColor.withValues(alpha: 0.15),
+                            backgroundColor: isDark
+                                ? AppColors.darkInputBg
+                                : AppColors.lightInputBg,
+                            side: BorderSide.none,
                             showCheckmark: false,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             visualDensity: const VisualDensity(
@@ -1553,8 +1702,14 @@ class _AddRoutineSheetState extends State<AddRoutineSheet> {
                         ),
                         selected: isSelected,
                         selectedColor: color,
-                        backgroundColor: color.withValues(alpha: 0.15),
+                        backgroundColor: isDark
+                            ? AppColors.darkInputBg
+                            : AppColors.lightInputBg,
+                        side: BorderSide.none,
                         showCheckmark: false,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: const VisualDensity(
                           horizontal: -2,

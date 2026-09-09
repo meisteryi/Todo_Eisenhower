@@ -28,11 +28,10 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
   late String _selectedEmoji;
   late String _selectedCategory;
   late String _selectedWorkoutType;
-  late Set<String> _selectedRepeatDays;
+  bool _saveAsPreset = false;
 
   final List<String> _categoryOptions = ['웨이트', '유산소', '스트레칭', '기타'];
-  final List<String> _presetEmojis = ['🏋️‍♂️', '🏃', '🧘', '🚴', '🥊', '🏊', '🤸', '⚽', '🏀', '💪'];
-  final List<String> _daysOfWeek = ['월', '화', '수', '목', '금', '토', '일'];
+  final List<String> _presetEmojis = ['🏋️‍♂️', '🏃', '🧘', '🚴', '🥊', '🏊', '🤸', '⚽', '🏀', '💪', '🦵', '🪜', '🔥', '⚡', '🏆'];
 
   @override
   void initState() {
@@ -47,12 +46,6 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
     _selectedEmoji = w?.emoji ?? '🏋️‍♂️';
     _selectedCategory = w?.category ?? '웨이트';
     _selectedWorkoutType = w?.workoutType ?? 'set';
-
-    if (w != null && w.repeatDays.isNotEmpty) {
-      _selectedRepeatDays = w.repeatDays.split(',').toSet();
-    } else {
-      _selectedRepeatDays = _daysOfWeek.toSet();
-    }
   }
 
   @override
@@ -65,6 +58,19 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
     super.dispose();
   }
 
+  void _applyPreset(WorkoutPreset preset) {
+    setState(() {
+      _titleController.text = preset.title;
+      _selectedEmoji = preset.emoji;
+      _selectedCategory = preset.category;
+      _selectedWorkoutType = preset.workoutType;
+      _setsController.text = preset.targetSets.toString();
+      _repsController.text = preset.targetReps.toString();
+      _weightController.text = preset.targetWeight.toString();
+      _minutesController.text = preset.targetMinutes.toString();
+    });
+  }
+
   void _saveWorkout() {
     if (!_formKey.currentState!.validate()) return;
 
@@ -73,8 +79,6 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
     final reps = int.tryParse(_repsController.text.trim()) ?? 0;
     final weight = double.tryParse(_weightController.text.trim()) ?? 0.0;
     final minutes = int.tryParse(_minutesController.text.trim()) ?? 30;
-
-    final repeatDaysStr = _daysOfWeek.where((d) => _selectedRepeatDays.contains(d)).join(',');
 
     final workout = Workout(
       id: widget.workoutToEdit?.id,
@@ -86,7 +90,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
       targetReps: reps,
       targetWeight: weight,
       targetMinutes: minutes,
-      repeatDays: repeatDaysStr.isEmpty ? '월,화,수,목,금,토,일' : repeatDaysStr,
+      repeatDays: '월,화,수,목,금,토,일',
       sortOrder: widget.workoutToEdit?.sortOrder ?? (widget.provider.workouts.length + 1),
     );
 
@@ -96,7 +100,199 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
       widget.provider.addWorkout(workout);
     }
 
+    if (_saveAsPreset) {
+      final newPreset = WorkoutPreset(
+        title: title,
+        emoji: _selectedEmoji,
+        category: _selectedCategory,
+        workoutType: _selectedWorkoutType,
+        targetSets: sets,
+        targetReps: reps,
+        targetWeight: weight,
+        targetMinutes: minutes,
+        isDefault: false,
+      );
+      widget.provider.addWorkoutPreset(newPreset);
+    }
+
     Navigator.pop(context);
+  }
+
+  void _showPresetPickerSheet() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final presets = widget.provider.workoutPresets;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        String filterCat = '전체';
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final filtered = presets.where((p) {
+              if (filterCat == '전체') return true;
+              return p.category == filterCat;
+            }).toList();
+
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.bolt, color: AppColors.q2, size: 22),
+                          SizedBox(width: 6),
+                          Text(
+                            '운동 Set 프리셋 선택',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Category chips inside modal
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: ['전체', '웨이트', '유산소', '스트레칭', '기타'].map((cat) {
+                        final isSel = filterCat == cat;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ChoiceChip(
+                            label: Text(cat),
+                            selected: isSel,
+                            selectedColor: AppColors.q2,
+                            backgroundColor: isDark
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.grey.withValues(alpha: 0.08),
+                            side: BorderSide.none,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            labelStyle: TextStyle(
+                              color: isSel ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                              fontSize: 12,
+                              fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                            ),
+                            showCheckmark: false,
+                            onSelected: (val) {
+                              if (val) setSheetState(() => filterCat = cat);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? const Center(child: Text('해당 카테고리의 프리셋이 없습니다.'))
+                        : ListView.builder(
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final p = filtered[index];
+                              String detailText = '';
+                              if (p.workoutType == 'set') {
+                                detailText = '${p.targetSets}세트';
+                                if (p.targetWeight > 0) detailText += ' · ${p.targetWeight}kg';
+                                if (p.targetReps > 0) detailText += ' · ${p.targetReps}회';
+                              } else if (p.workoutType == 'time') {
+                                detailText = '${p.targetMinutes}분 목표';
+                              } else {
+                                detailText = '완료 체크';
+                              }
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.05)
+                                      : Colors.grey.withValues(alpha: 0.06),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  leading: Text(p.emoji, style: const TextStyle(fontSize: 26)),
+                                  title: Text(
+                                    p.title,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  ),
+                                  subtitle: Text(
+                                    '${p.category} | $detailText',
+                                    style: TextStyle(fontSize: 12, color: theme.hintColor),
+                                  ),
+                                  trailing: p.isDefault
+                                      ? const Icon(Icons.add_circle_outline, color: AppColors.q2)
+                                      : Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.q2.withValues(alpha: 0.15),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: const Text('MY', style: TextStyle(fontSize: 10, color: AppColors.q2, fontWeight: FontWeight.bold)),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                                              onPressed: () {
+                                                if (p.id != null) {
+                                                  widget.provider.deleteWorkoutPreset(p.id!);
+                                                  setSheetState(() {});
+                                                }
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                  onTap: () {
+                                    _applyPreset(p);
+                                    Navigator.pop(ctx);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -104,7 +300,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isEdit = widget.workoutToEdit != null;
-    final maxHeight = MediaQuery.of(context).size.height * 0.85;
+    final maxHeight = MediaQuery.of(context).size.height * 0.88;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -145,7 +341,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      isEdit ? '🏋️ 운동 루틴 수정' : '🏋️ 신규 운동 루틴 추가',
+                      isEdit ? '🏋️ 운동 편집' : '🏋️ 신규 운동 추가',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -159,12 +355,45 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+
+                // Preset Quick Load Button
+                InkWell(
+                  onTap: _showPresetPickerSheet,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.q2.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.q2.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.bolt, color: AppColors.q2, size: 18),
+                        SizedBox(width: 6),
+                        Text(
+                          '⚡ 미리 등록된 운동 Set 프리셋 불러오기',
+                          style: TextStyle(
+                            color: AppColors.q2,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
 
                 // Emoji & Title row
                 Row(
                   children: [
-                    // Emoji selection button (Borderless card container)
+                    // Emoji selection button
                     GestureDetector(
                       onTap: _showEmojiPicker,
                       child: Container(
@@ -182,7 +411,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Title TextField (Borderless input with focus accent)
+                    // Title TextField
                     Expanded(
                       child: TextFormField(
                         controller: _titleController,
@@ -224,7 +453,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                 ),
                 const SizedBox(height: 16),
 
-                // Category Selector (Borderless Choice Chips)
+                // Category Selector
                 Text(
                   '운동 카테고리',
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -267,7 +496,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                 ),
                 const SizedBox(height: 16),
 
-                // Workout Type Selector (Borderless Animated Pill Bar)
+                // Workout Type Selector
                 Text(
                   '기록 측정 방식',
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -292,7 +521,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                 ),
                 const SizedBox(height: 16),
 
-                // Dynamic Input Fields according to Workout Type (Borderless Inputs)
+                // Dynamic Input Fields according to Workout Type
                 if (_selectedWorkoutType == 'set') ...[
                   Row(
                     children: [
@@ -301,7 +530,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                           controller: _setsController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            labelText: '목표 세트 수',
+                            labelText: '목표 세트',
                             suffixText: '세트',
                             filled: true,
                             fillColor: isDark
@@ -421,64 +650,41 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
 
                 const SizedBox(height: 16),
 
-                // Repeat Days (Borderless Animated Container Tiles)
-                Text(
-                  '반복 요일',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: _daysOfWeek.map((day) {
-                    final isSelected = _selectedRepeatDays.contains(day);
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              if (isSelected) {
-                                if (_selectedRepeatDays.length > 1) {
-                                  _selectedRepeatDays.remove(day);
-                                }
-                              } else {
-                                _selectedRepeatDays.add(day);
-                              }
-                            });
+                // Save as Preset Checkbox
+                InkWell(
+                  onTap: () {
+                    setState(() => _saveAsPreset = !_saveAsPreset);
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: _saveAsPreset,
+                          activeColor: AppColors.q2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          onChanged: (val) {
+                            setState(() => _saveAsPreset = val ?? false);
                           },
-                          borderRadius: BorderRadius.circular(10),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppColors.q2
-                                  : (isDark
-                                      ? Colors.white.withValues(alpha: 0.05)
-                                      : Colors.grey.withValues(alpha: 0.08)),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              day,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: isSelected
-                                    ? Colors.white
-                                    : (isDark ? Colors.white70 : Colors.black87),
-                              ),
+                        ),
+                        const Expanded(
+                          child: Text(
+                            '⭐ 이 설정을 나만의 운동 Set 프리셋으로 저장',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      ],
+                    ),
+                  ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 // Action Buttons
                 Row(
@@ -512,7 +718,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                           ),
                         ),
                         child: Text(
-                          isEdit ? '수정 완료' : '운동 루틴 생성',
+                          isEdit ? '수정 완료' : '운동 추가하기',
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,

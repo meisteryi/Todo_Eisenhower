@@ -40,6 +40,215 @@ class _WorkoutViewState extends State<WorkoutView> {
     );
   }
 
+  void _showPresetManagerSheet() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final presets = widget.provider.workoutPresets;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        String filterCat = '전체';
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final filtered = presets.where((p) {
+              if (filterCat == '전체') return true;
+              return p.category == filterCat;
+            }).toList();
+
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.78,
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.bolt, color: AppColors.q2, size: 22),
+                          SizedBox(width: 6),
+                          Text(
+                            '운동 Set 프리셋',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Category chips inside modal
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: ['전체', '웨이트', '유산소', '스트레칭', '기타'].map((cat) {
+                        final isSel = filterCat == cat;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ChoiceChip(
+                            label: Text(cat),
+                            selected: isSel,
+                            selectedColor: AppColors.q2,
+                            backgroundColor: isDark
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.grey.withValues(alpha: 0.08),
+                            side: BorderSide.none,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            labelStyle: TextStyle(
+                              color: isSel ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                              fontSize: 12,
+                              fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                            ),
+                            showCheckmark: false,
+                            onSelected: (val) {
+                              if (val) setSheetState(() => filterCat = cat);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? const Center(child: Text('해당 카테고리의 프리셋이 없습니다.'))
+                        : ListView.builder(
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final p = filtered[index];
+                              String detailText = '';
+                              if (p.workoutType == 'set') {
+                                detailText = '${p.targetSets}세트';
+                                if (p.targetWeight > 0) detailText += ' · ${p.targetWeight}kg';
+                                if (p.targetReps > 0) detailText += ' · ${p.targetReps}회';
+                              } else if (p.workoutType == 'time') {
+                                detailText = '${p.targetMinutes}분 목표';
+                              } else {
+                                detailText = '완료 체크';
+                              }
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.05)
+                                      : Colors.grey.withValues(alpha: 0.06),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  leading: Text(p.emoji, style: const TextStyle(fontSize: 26)),
+                                  title: Text(
+                                    p.title,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  ),
+                                  subtitle: Text(
+                                    '${p.category} | $detailText',
+                                    style: TextStyle(fontSize: 12, color: theme.hintColor),
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (!p.isDefault) ...[
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.q2.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: const Text('MY', style: TextStyle(fontSize: 10, color: AppColors.q2, fontWeight: FontWeight.bold)),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                                          onPressed: () {
+                                            if (p.id != null) {
+                                              widget.provider.deleteWorkoutPreset(p.id!);
+                                              setSheetState(() {});
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          final newWorkout = Workout(
+                                            title: p.title,
+                                            emoji: p.emoji,
+                                            category: p.category,
+                                            workoutType: p.workoutType,
+                                            targetSets: p.targetSets,
+                                            targetReps: p.targetReps,
+                                            targetWeight: p.targetWeight,
+                                            targetMinutes: p.targetMinutes,
+                                            repeatDays: '월,화,수,목,금,토,일',
+                                            sortOrder: widget.provider.workouts.length + 1,
+                                          );
+                                          widget.provider.addWorkout(newWorkout);
+                                          Navigator.pop(ctx);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('${p.title} 운동이 추가되었습니다!'),
+                                              duration: const Duration(seconds: 2),
+                                              behavior: SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.q2,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                          minimumSize: Size.zero,
+                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: const Text('+ 추가', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -109,30 +318,60 @@ class _WorkoutViewState extends State<WorkoutView> {
                       ),
                     ],
                   ),
-                  InkWell(
-                    onTap: _showCalendarDialog,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: _showPresetManagerSheet,
                         borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.calendar_month, color: Colors.white, size: 16),
-                          SizedBox(width: 4),
-                          Text(
-                            '캘린더',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ],
+                          child: const Row(
+                            children: [
+                              Icon(Icons.bolt, color: Colors.white, size: 16),
+                              SizedBox(width: 4),
+                              Text(
+                                'Set 프리셋',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: _showCalendarDialog,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.calendar_month, color: Colors.white, size: 16),
+                              SizedBox(width: 4),
+                              Text(
+                                '캘린더',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -229,7 +468,7 @@ class _WorkoutViewState extends State<WorkoutView> {
           const Text('🏋️', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 12),
           Text(
-            '등록된 운동 루틴이 없습니다.',
+            '등록된 운동이 없습니다.',
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.hintColor,
               fontWeight: FontWeight.bold,
@@ -237,20 +476,37 @@ class _WorkoutViewState extends State<WorkoutView> {
           ),
           const SizedBox(height: 8),
           Text(
-            '매일 운동을 기록하고 습관을 만들어보세요!',
+            '운동을 기록하고 오운완 습관을 만들어보세요!',
             style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () => _showAddWorkoutSheet(),
-            icon: const Icon(Icons.add),
-            label: const Text('신규 운동 루틴 추가'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.q2,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _showPresetManagerSheet,
+                icon: const Icon(Icons.bolt, size: 18),
+                label: const Text('Set 프리셋 불러오기'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.q2,
+                  side: const BorderSide(color: AppColors.q2),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton.icon(
+                onPressed: () => _showAddWorkoutSheet(),
+                icon: const Icon(Icons.add),
+                label: const Text('직접 추가'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.q2,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -323,7 +579,9 @@ class _WorkoutViewState extends State<WorkoutView> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '반복: ${workout.repeatDays}',
+                            workout.workoutType == 'set'
+                                ? '${workout.targetSets}세트${workout.targetWeight > 0 ? ' · ${workout.targetWeight}kg' : ''}${workout.targetReps > 0 ? ' · ${workout.targetReps}회' : ''}'
+                                : (workout.workoutType == 'time' ? '목표: ${workout.targetMinutes}분' : '체크형 운동'),
                             style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: theme.hintColor),
                           ),
                         ],

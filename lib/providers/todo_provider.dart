@@ -23,6 +23,7 @@ class TodoProvider with ChangeNotifier {
 
   // Workout state
   List<Workout> _workouts = [];
+  List<WorkoutPreset> _workoutPresets = [];
   Map<int, WorkoutLog> _todayWorkoutLogs = {};
   List<WorkoutLog> _monthlyWorkoutLogs = [];
   int _workoutStreak = 0;
@@ -53,6 +54,7 @@ class TodoProvider with ChangeNotifier {
   List<Category> get categories => _categories;
   List<Routine> get routines => _routines;
   List<Workout> get workouts => _workouts;
+  List<WorkoutPreset> get workoutPresets => _workoutPresets;
   Map<int, WorkoutLog> get todayWorkoutLogs => _todayWorkoutLogs;
   List<WorkoutLog> get monthlyWorkoutLogs => _monthlyWorkoutLogs;
   int get workoutStreak => _workoutStreak;
@@ -719,6 +721,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> loadWorkouts() async {
     try {
       _workouts = await _dbHelper.fetchWorkouts();
+      _workoutPresets = await _dbHelper.fetchWorkoutPresets();
 
       final todayStr = _formatDateKey(_selectedDate);
       final logs = await _dbHelper.fetchWorkoutLogsForDate(todayStr);
@@ -780,6 +783,18 @@ class TodoProvider with ChangeNotifier {
   Future<void> deleteWorkout(int id) async {
     await _dbHelper.deleteWorkout(id);
     await loadWorkouts();
+    notifyListeners();
+  }
+
+  Future<void> addWorkoutPreset(WorkoutPreset preset) async {
+    await _dbHelper.insertWorkoutPreset(preset);
+    _workoutPresets = await _dbHelper.fetchWorkoutPresets();
+    notifyListeners();
+  }
+
+  Future<void> deleteWorkoutPreset(int id) async {
+    await _dbHelper.deleteWorkoutPreset(id);
+    _workoutPresets = await _dbHelper.fetchWorkoutPresets();
     notifyListeners();
   }
 

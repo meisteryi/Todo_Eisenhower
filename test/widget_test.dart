@@ -3,6 +3,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:todo_eisenhower/models/category_model.dart';
 import 'package:todo_eisenhower/models/routine_model.dart';
 import 'package:todo_eisenhower/models/todo_model.dart';
+import 'package:todo_eisenhower/models/workout_model.dart';
 import 'package:todo_eisenhower/services/database_helper.dart';
 import 'package:todo_eisenhower/providers/todo_provider.dart';
 
@@ -19,6 +20,9 @@ void main() {
     await db.delete('todos');
     await db.delete('categories');
     await db.delete('routines');
+    await db.delete('workouts');
+    await db.delete('workout_logs');
+    await db.delete('workout_presets');
   });
 
   group('Todo & Category & Routine Model Tests', () {
@@ -131,6 +135,34 @@ void main() {
 
       expect(provider.routines.length, 1);
       expect(provider.routines.first.title, '독서 30분');
+    });
+
+    test('Workout and WorkoutPreset management', () async {
+      final provider = TodoProvider();
+      await provider.loadWorkouts();
+
+      expect(provider.workoutPresets.isNotEmpty, isTrue);
+      final initialCount = provider.workoutPresets.length;
+
+      final customPreset = WorkoutPreset(
+        title: '커스텀 덤벨 프레스',
+        emoji: '💪',
+        category: '웨이트',
+        workoutType: 'set',
+        targetSets: 4,
+        targetReps: 12,
+        targetWeight: 20.0,
+      );
+
+      await provider.addWorkoutPreset(customPreset);
+      expect(provider.workoutPresets.length, initialCount + 1);
+      expect(provider.workoutPresets.any((p) => p.title == '커스텀 덤벨 프레스'), isTrue);
+
+      final addedPreset = provider.workoutPresets.firstWhere((p) => p.title == '커스텀 덤벨 프레스');
+      expect(addedPreset.id, isNotNull);
+
+      await provider.deleteWorkoutPreset(addedPreset.id!);
+      expect(provider.workoutPresets.length, initialCount);
     });
   });
 }
