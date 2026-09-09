@@ -395,6 +395,20 @@ class DatabaseHelper {
     );
   }
 
+  Future<void> updateCategoriesOrder(List<Category> categories) async {
+    final db = await instance.database;
+    final batch = db.batch();
+    for (int i = 0; i < categories.length; i++) {
+      batch.update(
+        'categories',
+        {'sort_order': i + 1},
+        where: 'id = ?',
+        whereArgs: [categories[i].id],
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
   Future<int> deleteCategory(int id) async {
     final db = await instance.database;
     // Set category_id to NULL on related todos

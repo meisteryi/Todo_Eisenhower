@@ -135,6 +135,13 @@ void main() {
 
       expect(provider.routines.length, 1);
       expect(provider.routines.first.title, '독서 30분');
+
+      // Test category reordering
+      final originalFirstCat = provider.categories.first;
+      final originalSecondCat = provider.categories[1];
+      await provider.reorderCategories(0, 1);
+      expect(provider.categories.first.id, originalSecondCat.id);
+      expect(provider.categories[1].id, originalFirstCat.id);
     });
 
     test('Workout and WorkoutPreset management', () async {

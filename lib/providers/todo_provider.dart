@@ -575,6 +575,23 @@ class TodoProvider with ChangeNotifier {
     }
   }
 
+  Future<void> reorderCategories(int oldIndex, int newIndex) async {
+    if (oldIndex < 0 || oldIndex >= _categories.length) return;
+    if (newIndex < 0 || newIndex >= _categories.length) return;
+    if (oldIndex == newIndex) return;
+
+    final item = _categories.removeAt(oldIndex);
+    _categories.insert(newIndex, item);
+    notifyListeners();
+
+    try {
+      await _dbHelper.updateCategoriesOrder(_categories);
+    } catch (e) {
+      debugPrint("Error reordering categories: $e");
+      await loadTodos();
+    }
+  }
+
   // --- ROUTINE OPERATIONS ---
 
   Future<void> addRoutine({
