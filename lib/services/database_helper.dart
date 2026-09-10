@@ -493,10 +493,10 @@ class DatabaseHelper {
 
   Future<int> deleteWorkout(int id) async {
     final db = await instance.database;
-    // Mark as inactive instead of hard delete to keep historical logs
-    return await db.update(
+    // Delete logs associated with this deleted workout
+    await db.delete('workout_logs', where: 'workout_id = ?', whereArgs: [id]);
+    return await db.delete(
       'workouts',
-      {'is_active': 0},
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -506,32 +506,32 @@ class DatabaseHelper {
 
   Future<List<WorkoutLog>> fetchWorkoutLogsForDate(String dateStr) async {
     final db = await instance.database;
-    final maps = await db.query(
-      'workout_logs',
-      where: 'date = ?',
-      whereArgs: [dateStr],
-    );
+    final maps = await db.rawQuery('''
+      SELECT wl.* FROM workout_logs wl
+      INNER JOIN workouts w ON wl.workout_id = w.id
+      WHERE wl.date = ? AND w.is_active = 1
+    ''', [dateStr]);
     return maps.map((map) => WorkoutLog.fromMap(map)).toList();
   }
 
   Future<List<WorkoutLog>> fetchWorkoutLogsForMonth(String yyyyMM) async {
     final db = await instance.database;
-    final maps = await db.query(
-      'workout_logs',
-      where: 'date LIKE ?',
-      whereArgs: ['$yyyyMM%'],
-    );
+    final maps = await db.rawQuery('''
+      SELECT wl.* FROM workout_logs wl
+      INNER JOIN workouts w ON wl.workout_id = w.id
+      WHERE wl.date LIKE ? AND w.is_active = 1
+    ''', ['$yyyyMM%']);
     return maps.map((map) => WorkoutLog.fromMap(map)).toList();
   }
 
   Future<List<WorkoutLog>> fetchWorkoutLogsForDateRange(String startDateStr, String endDateStr) async {
     final db = await instance.database;
-    final maps = await db.query(
-      'workout_logs',
-      where: 'date >= ? AND date <= ?',
-      whereArgs: [startDateStr, endDateStr],
-      orderBy: 'date ASC, id ASC',
-    );
+    final maps = await db.rawQuery('''
+      SELECT wl.* FROM workout_logs wl
+      INNER JOIN workouts w ON wl.workout_id = w.id
+      WHERE wl.date >= ? AND wl.date <= ? AND w.is_active = 1
+      ORDER BY wl.date ASC, wl.id ASC
+    ''', [startDateStr, endDateStr]);
     return maps.map((map) => WorkoutLog.fromMap(map)).toList();
   }
 

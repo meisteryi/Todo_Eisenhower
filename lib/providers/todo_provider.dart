@@ -819,6 +819,7 @@ class TodoProvider with ChangeNotifier {
 
   Future<void> deleteWorkout(int id) async {
     await _dbHelper.deleteWorkout(id);
+    _todayWorkoutLogs.remove(id);
     await loadWorkouts();
     notifyListeners();
   }
