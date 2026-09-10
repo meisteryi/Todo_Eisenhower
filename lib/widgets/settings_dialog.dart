@@ -26,8 +26,9 @@ class _SettingsDialogState extends State<SettingsDialog> {
 
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
       ),
+      backgroundColor: isDark ? AppColors.darkCard : Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: Container(
         constraints: BoxConstraints(
@@ -45,7 +46,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.settings_rounded, color: AppColors.q2, size: 24),
+                    Icon(Icons.settings_rounded, color: AppColors.q2, size: 22),
                     SizedBox(width: 8),
                     Text(
                       '앱 전체 설정',
@@ -57,14 +58,14 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 22),
+                  icon: const Icon(Icons.close_rounded),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const Divider(height: 20),
+            const SizedBox(height: 16),
 
             // Scrollable Content
             Expanded(
@@ -110,23 +111,33 @@ class _SettingsDialogState extends State<SettingsDialog> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           SizedBox(
                             width: double.infinity,
                             child: SegmentedButton<String>(
                               showSelectedIcon: false,
-                              style: const ButtonStyle(
+                              style: SegmentedButton.styleFrom(
+                                side: BorderSide.none,
+                                backgroundColor: isDark
+                                    ? Colors.black.withValues(alpha: 0.25)
+                                    : Colors.white.withValues(alpha: 0.7),
+                                selectedBackgroundColor: AppColors.q2,
+                                selectedForegroundColor: Colors.white,
+                                foregroundColor: isDark ? Colors.white70 : Colors.black87,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                                 visualDensity: VisualDensity.compact,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               segments: const [
                                 ButtonSegment(
                                   value: 'eisenhower',
-                                  label: Text('매트릭스 뷰 🎯', style: TextStyle(fontSize: 12)),
+                                  label: Text('매트릭스 뷰 🎯', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                                 ),
                                 ButtonSegment(
                                   value: 'todomate',
-                                  label: Text('투두메이트 뷰 📅', style: TextStyle(fontSize: 12)),
+                                  label: Text('투두메이트 뷰 📅', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                                 ),
                               ],
                               selected: {widget.provider.activeViewMode},
@@ -136,7 +147,13 @@ class _SettingsDialogState extends State<SettingsDialog> {
                               },
                             ),
                           ),
-                          const Divider(height: 20),
+                          Divider(
+                            height: 24,
+                            thickness: 0.5,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.black.withValues(alpha: 0.08),
+                          ),
 
                           // 2. 매트릭스 기본 필터 (한 줄 가로 배치)
                           Row(
@@ -269,10 +286,16 @@ class _SettingsDialogState extends State<SettingsDialog> {
                               const SizedBox(width: 8),
                               SizedBox(
                                 height: 30,
-                                child: OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.q2.withValues(alpha: 0.15),
+                                    foregroundColor: AppColors.q2,
+                                    elevation: 0,
                                     padding: const EdgeInsets.symmetric(horizontal: 10),
                                     visualDensity: VisualDensity.compact,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                   ),
                                   onPressed: () async {
                                     Navigator.pop(context);
@@ -284,12 +307,18 @@ class _SettingsDialogState extends State<SettingsDialog> {
                                     );
                                     widget.provider.loadTodos();
                                   },
-                                  child: const Text('보관함', style: TextStyle(fontSize: 11)),
+                                  child: const Text('보관함', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                 ),
                               ),
                             ],
                           ),
-                          const Divider(height: 16),
+                          Divider(
+                            height: 20,
+                            thickness: 0.5,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.black.withValues(alpha: 0.08),
+                          ),
                           Row(
                             children: [
                               const Icon(Icons.cleaning_services_rounded, color: Colors.deepOrangeAccent, size: 18),
@@ -305,12 +334,16 @@ class _SettingsDialogState extends State<SettingsDialog> {
                               const SizedBox(width: 8),
                               SizedBox(
                                 height: 30,
-                                child: OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent.withValues(alpha: 0.15),
                                     foregroundColor: Colors.redAccent,
-                                    side: const BorderSide(color: Colors.redAccent),
+                                    elevation: 0,
                                     padding: const EdgeInsets.symmetric(horizontal: 10),
                                     visualDensity: VisualDensity.compact,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                   ),
                                   onPressed: () => _confirmClearAllTodos(context),
                                   child: const Text('모든 일정 삭제', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
@@ -318,7 +351,13 @@ class _SettingsDialogState extends State<SettingsDialog> {
                               ),
                             ],
                           ),
-                          const Divider(height: 16),
+                          Divider(
+                            height: 20,
+                            thickness: 0.5,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.black.withValues(alpha: 0.08),
+                          ),
                           Row(
                             children: [
                               const Icon(Icons.menu_book_rounded, color: Colors.blue, size: 18),
@@ -334,10 +373,16 @@ class _SettingsDialogState extends State<SettingsDialog> {
                               const SizedBox(width: 8),
                               SizedBox(
                                 height: 30,
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue.withValues(alpha: 0.15),
+                                    foregroundColor: Colors.blue,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
                                     visualDensity: VisualDensity.compact,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                   ),
                                   onPressed: () {
                                     Navigator.pop(context);
@@ -346,7 +391,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                                       builder: (context) => const HelpGuideDialog(),
                                     );
                                   },
-                                  child: const Text('가이드 보기', style: TextStyle(fontSize: 11)),
+                                  child: const Text('가이드 보기', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                 ),
                               ),
                             ],
@@ -382,10 +427,10 @@ class _SettingsDialogState extends State<SettingsDialog> {
   Widget _buildSectionHeader(String title, BuildContext context) {
     return Text(
       title,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.bold,
-        color: Theme.of(context).primaryColor,
+        color: AppColors.q2,
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
@@ -394,14 +439,10 @@ class _SettingsDialogState extends State<SettingsDialog> {
 
   Widget _buildCardWrapper({required bool isDark, required Widget child}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : Colors.grey[50],
+        color: isDark ? AppColors.darkInputBg : AppColors.lightInputBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-          width: 0.8,
-        ),
       ),
       child: child,
     );
@@ -467,7 +508,13 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 ),
               ],
             ),
-            const Divider(height: 16),
+            Divider(
+              height: 20,
+              thickness: 0.5,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.08),
+            ),
             Wrap(
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -568,13 +615,17 @@ class _SettingsDialogState extends State<SettingsDialog> {
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
-            height: 32,
+            height: 34,
             child: ElevatedButton.icon(
               icon: const Icon(Icons.login_rounded, size: 15),
-              label: const Text('Google 계정 로그인', style: TextStyle(fontSize: 11)),
+              label: const Text('Google 계정 로그인', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.q2,
                 foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 visualDensity: VisualDensity.compact,
               ),
               onPressed: () async {
@@ -606,9 +657,11 @@ class _SettingsDialogState extends State<SettingsDialog> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.darkCard : Colors.white,
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+            Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 22),
             SizedBox(width: 8),
             Text('전체 일정 초기화', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ],
@@ -626,6 +679,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () async {
               Navigator.pop(dialogContext);

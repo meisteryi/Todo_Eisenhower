@@ -524,6 +524,17 @@ class DatabaseHelper {
     return maps.map((map) => WorkoutLog.fromMap(map)).toList();
   }
 
+  Future<List<WorkoutLog>> fetchWorkoutLogsForDateRange(String startDateStr, String endDateStr) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'workout_logs',
+      where: 'date >= ? AND date <= ?',
+      whereArgs: [startDateStr, endDateStr],
+      orderBy: 'date ASC, id ASC',
+    );
+    return maps.map((map) => WorkoutLog.fromMap(map)).toList();
+  }
+
   Future<int> upsertWorkoutLog(WorkoutLog log) async {
     final db = await instance.database;
     if (log.id != null) {

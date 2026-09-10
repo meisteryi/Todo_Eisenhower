@@ -26,6 +26,7 @@ class TodoProvider with ChangeNotifier {
   List<WorkoutPreset> _workoutPresets = [];
   Map<int, WorkoutLog> _todayWorkoutLogs = {};
   List<WorkoutLog> _monthlyWorkoutLogs = [];
+  List<WorkoutLog> _weeklyWorkoutLogs = [];
   int _workoutStreak = 0;
 
   bool _isLoading = true;
@@ -57,6 +58,7 @@ class TodoProvider with ChangeNotifier {
   List<WorkoutPreset> get workoutPresets => _workoutPresets;
   Map<int, WorkoutLog> get todayWorkoutLogs => _todayWorkoutLogs;
   List<WorkoutLog> get monthlyWorkoutLogs => _monthlyWorkoutLogs;
+  List<WorkoutLog> get weeklyWorkoutLogs => _weeklyWorkoutLogs;
   int get workoutStreak => _workoutStreak;
   bool get isLoading => _isLoading;
   int get activeQuadrant => _activeQuadrant;
@@ -186,6 +188,7 @@ class TodoProvider with ChangeNotifier {
   // Set selected date for calendar/date strip
   void setSelectedDate(DateTime date) {
     _selectedDate = DateTime(date.year, date.month, date.day);
+    loadWorkouts();
     notifyListeners();
   }
 
@@ -749,6 +752,9 @@ class TodoProvider with ChangeNotifier {
       final yyyyMM = todayStr.substring(0, 7);
       _monthlyWorkoutLogs = await _dbHelper.fetchWorkoutLogsForMonth(yyyyMM);
 
+      // Load weekly logs
+      await loadWeeklyWorkoutLogs(_selectedDate);
+
       await _calculateWorkoutStreak();
     } catch (e) {
       debugPrint('Error loading workouts: $e');
@@ -758,6 +764,20 @@ class TodoProvider with ChangeNotifier {
   Future<void> loadMonthlyWorkoutLogs(String yyyyMM) async {
     _monthlyWorkoutLogs = await _dbHelper.fetchWorkoutLogsForMonth(yyyyMM);
     notifyListeners();
+  }
+
+  Future<void> loadWeeklyWorkoutLogs([DateTime? refDate]) async {
+    final now = refDate ?? _selectedDate;
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final sunday = monday.add(const Duration(days: 6));
+    final startStr = _formatDateKey(monday);
+    final endStr = _formatDateKey(sunday);
+    _weeklyWorkoutLogs = await _dbHelper.fetchWorkoutLogsForDateRange(startStr, endStr);
+    notifyListeners();
+  }
+
+  Future<List<WorkoutLog>> fetchWorkoutLogsForRange(String startStr, String endStr) async {
+    return await _dbHelper.fetchWorkoutLogsForDateRange(startStr, endStr);
   }
 
   Future<void> _calculateWorkoutStreak() async {

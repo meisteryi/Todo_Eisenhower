@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/workout_model.dart';
 import '../providers/todo_provider.dart';
 import '../theme/app_theme.dart';
 import 'add_workout_sheet.dart';
+import 'weekly_workout_stats_dialog.dart';
 import 'workout_calendar_dialog.dart';
 
 class WorkoutView extends StatefulWidget {
@@ -111,6 +113,13 @@ class _WorkoutViewState extends State<WorkoutView> {
     showDialog(
       context: context,
       builder: (context) => WorkoutCalendarDialog(provider: widget.provider),
+    );
+  }
+
+  void _showWeeklyStatsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => WeeklyWorkoutStatsDialog(provider: widget.provider),
     );
   }
 
@@ -337,9 +346,17 @@ class _WorkoutViewState extends State<WorkoutView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final workouts = widget.provider.workouts;
     final todayLogs = widget.provider.todayWorkoutLogs;
     final streak = widget.provider.workoutStreak;
+
+    final selectedDate = widget.provider.selectedDate;
+    final now = DateTime.now();
+    final todayDate = DateTime(now.year, now.month, now.day);
+    final targetDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+    final isTodaySelected = targetDate.isAtSameMomentAs(todayDate);
+    final isPastSelected = targetDate.isBefore(todayDate);
 
     final filteredWorkouts = workouts.where((w) {
       if (_selectedCategoryFilter == '전체') return true;
@@ -415,11 +432,12 @@ class _WorkoutViewState extends State<WorkoutView> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.bolt, color: Colors.white, size: 16),
                               SizedBox(width: 4),
                               Text(
-                                '운동 프리셋',
+                                '프리셋',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -441,6 +459,7 @@ class _WorkoutViewState extends State<WorkoutView> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.calendar_month, color: Colors.white, size: 16),
                               SizedBox(width: 4),
@@ -465,7 +484,11 @@ class _WorkoutViewState extends State<WorkoutView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    isAllCompleted ? '🎉 오늘 운동 완벽 달성!' : '오늘의 운동 현황',
+                    isTodaySelected
+                        ? (isAllCompleted ? '🎉 오늘 운동 완벽 달성!' : '오늘의 운동 현황')
+                        : (isAllCompleted
+                            ? '🎉 ${DateFormat('M/d(E)', 'ko').format(selectedDate)} 완벽 달성!'
+                            : '${DateFormat('M월 d일 (E)', 'ko').format(selectedDate)} 운동 현황'),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -490,6 +513,278 @@ class _WorkoutViewState extends State<WorkoutView> {
                   backgroundColor: Colors.white.withValues(alpha: 0.3),
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
+              ),
+              const SizedBox(height: 12),
+              // 7-day Weekly Mini Tracker
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: _showWeeklyStatsDialog,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.bar_chart_rounded, color: Colors.white, size: 15),
+                                SizedBox(width: 4),
+                                Text(
+                                  '이번 주 운동 통계',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  '자세히 보기',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.85), size: 15),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // 7 days Monday to Sunday
+                    Builder(
+                      builder: (context) {
+                        final monday = DateTime(selectedDate.year, selectedDate.month, selectedDate.day).subtract(
+                          Duration(days: selectedDate.weekday - 1),
+                        );
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: List.generate(7, (i) {
+                            final dayDate = monday.add(Duration(days: i));
+                            final dayStr = DateFormat('yyyy-MM-dd').format(dayDate);
+                            final dayName = ['월', '화', '수', '목', '금', '토', '일'][i];
+                            final isToday = dayDate.year == now.year && dayDate.month == now.month && dayDate.day == now.day;
+                            final isCurrentDaySelected = dayDate.year == selectedDate.year &&
+                                dayDate.month == selectedDate.month &&
+                                dayDate.day == selectedDate.day;
+                            final isCompletedDay = widget.provider.weeklyWorkoutLogs.any(
+                              (l) => l.date == dayStr && l.isCompleted,
+                            ) || (isCurrentDaySelected && completedWorkoutsCount > 0);
+
+                            return InkWell(
+                              onTap: () {
+                                widget.provider.setSelectedDate(dayDate);
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      dayName,
+                                      style: TextStyle(
+                                        color: isCurrentDaySelected
+                                            ? Colors.white
+                                            : (isToday ? Colors.white : Colors.white.withValues(alpha: 0.7)),
+                                        fontWeight: isCurrentDaySelected || isToday ? FontWeight.bold : FontWeight.normal,
+                                        fontSize: 10.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isCompletedDay
+                                            ? Colors.white
+                                            : (isCurrentDaySelected
+                                                ? Colors.white.withValues(alpha: 0.35)
+                                                : (isToday ? Colors.white.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1))),
+                                        border: isCurrentDaySelected
+                                            ? Border.all(color: Colors.white, width: 2)
+                                            : (isToday ? Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5) : null),
+                                      ),
+                                      child: Center(
+                                        child: isCompletedDay
+                                            ? const Text('🔥', style: TextStyle(fontSize: 12))
+                                            : (isCurrentDaySelected
+                                                ? Container(
+                                                    width: 6,
+                                                    height: 6,
+                                                    decoration: const BoxDecoration(
+                                                      color: Colors.white,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  )
+                                                : null),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Date Navigation Strip
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Prev Day Button
+              InkWell(
+                onTap: () {
+                  final prev = widget.provider.selectedDate.subtract(const Duration(days: 1));
+                  widget.provider.setSelectedDate(prev);
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkInputBg : AppColors.lightInputBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.chevron_left_rounded, size: 20),
+                ),
+              ),
+
+              // Center Date Display & Picker
+              InkWell(
+                onTap: _showCalendarDialog,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.calendar_month_rounded, size: 16, color: AppColors.q2),
+                      const SizedBox(width: 6),
+                      Text(
+                        DateFormat('yyyy년 M월 d일 (E)', 'ko').format(widget.provider.selectedDate),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      if (isTodaySelected)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.q2.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            '오늘',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: AppColors.q2,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.orangeAccent.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            isPastSelected ? '과거' : '예정',
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              color: Colors.orangeAccent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Next Day & Quick "Today" Button
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isTodaySelected) ...[
+                    InkWell(
+                      onTap: () {
+                        widget.provider.setSelectedDate(DateTime.now());
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.q2,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          '오늘로',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  InkWell(
+                    onTap: () {
+                      final next = widget.provider.selectedDate.add(const Duration(days: 1));
+                      widget.provider.setSelectedDate(next);
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkInputBg : AppColors.lightInputBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.chevron_right_rounded, size: 20),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

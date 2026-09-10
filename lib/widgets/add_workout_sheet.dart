@@ -569,7 +569,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                         Icon(Icons.bolt, color: AppColors.q2, size: 18),
                         SizedBox(width: 6),
                         Text(
-                          '⚡ 미리 등록된 운동 프리셋 불러오기',
+                          '미리 등록된 운동 프리셋 불러오기',
                           style: TextStyle(
                             color: AppColors.q2,
                             fontWeight: FontWeight.bold,
