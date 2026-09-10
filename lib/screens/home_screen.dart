@@ -17,6 +17,8 @@ import '../services/auth_service.dart';
 import '../widgets/settings_dialog.dart';
 import '../widgets/workout_view.dart';
 import '../widgets/add_workout_sheet.dart';
+import '../widgets/weekly_workout_stats_dialog.dart';
+import '../widgets/workout_calendar_dialog.dart';
 import 'trash_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -276,6 +278,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     showDialog(
       context: context,
       builder: (ctx) => SettingsDialog(provider: widget.provider),
+    );
+  }
+
+  void _showAddWorkoutSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => AddWorkoutSheet(provider: widget.provider),
+    );
+  }
+
+  void _openWorkoutCalendarDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => WorkoutCalendarDialog(provider: widget.provider),
+    );
+  }
+
+  void _openWeeklyWorkoutStatsDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => WeeklyWorkoutStatsDialog(provider: widget.provider),
     );
   }
 
@@ -607,114 +632,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: isDesktop
                       ? Row(
                           children: [
-                            Container(
-                              width: 280,
-                              alignment: Alignment.topCenter,
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  right: BorderSide(
-                                    color: Theme.of(
-                                      context,
-                                    ).dividerColor.withValues(alpha: 0.1),
-                                  ),
-                                ),
-                              ),
-                              child: SingleChildScrollView(
-                                physics: const BouncingScrollPhysics(),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    DateStripHeader(provider: widget.provider),
-                                    const Divider(height: 1),
-                                    Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            '빠른 실행',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          ListTile(
-                                            leading: const Icon(
-                                              Icons.help_outline,
-                                              color: Colors.blue,
-                                            ),
-                                            title: const Text('사용 설명서'),
-                                            onTap: _openHelpGuideDialog,
-                                            dense: true,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(
-                                              Icons.category,
-                                              color: Colors.indigo,
-                                            ),
-                                            title: const Text('카테고리 관리'),
-                                            onTap: _openCategoryManageDialog,
-                                            dense: true,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(
-                                              Icons.autorenew,
-                                              color: Colors.teal,
-                                            ),
-                                            title: const Text('루틴 관리'),
-                                            onTap: _openRoutineManageDialog,
-                                            dense: true,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(
-                                              Icons.delete_outline,
-                                              color: Colors.redAccent,
-                                            ),
-                                            title: Text(
-                                              '소각장 보관함 ($trashCount)',
-                                            ),
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      TrashScreen(
-                                                        provider:
-                                                            widget.provider,
-                                                      ),
-                                                ),
-                                              );
-                                            },
-                                            dense: true,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                            _buildDesktopSidebar(context, trashCount, viewMode),
                             Expanded(
                               child: viewMode == 'workout'
                                   ? WorkoutView(provider: widget.provider)
@@ -895,6 +813,298 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.all(4),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopSidebar(BuildContext context, int trashCount, String viewMode) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final currentStreak = widget.provider.workoutStreak;
+
+    return Container(
+      width: 270,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : theme.cardColor,
+        border: Border(
+          right: BorderSide(
+            color: theme.dividerColor.withValues(alpha: 0.08),
+          ),
+        ),
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // SECTION 1: View Modes
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: Text(
+                      '메인 뷰',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                        color: isDark ? Colors.white54 : Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _buildSidebarNavItem(
+                    icon: Icons.grid_view_rounded,
+                    iconColor: AppColors.q1,
+                    title: '매트릭스 뷰',
+                    subtitle: '아이젠하워 4분면 우선순위',
+                    isSelected: viewMode == 'eisenhower',
+                    onTap: () => widget.provider.setViewMode('eisenhower'),
+                  ),
+                  _buildSidebarNavItem(
+                    icon: Icons.calendar_view_day_rounded,
+                    iconColor: AppColors.q2,
+                    title: '투두메이트 뷰',
+                    subtitle: '카테고리별 일자 리스트',
+                    isSelected: viewMode == 'todomate',
+                    onTap: () => widget.provider.setViewMode('todomate'),
+                  ),
+                  _buildSidebarNavItem(
+                    icon: Icons.fitness_center_rounded,
+                    iconColor: Colors.orangeAccent,
+                    title: '운동 기록',
+                    subtitle: '루틴 및 세트 일지',
+                    isSelected: viewMode == 'workout',
+                    trailing: currentStreak > 0
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.orangeAccent.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '🔥 $currentStreak일',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orangeAccent,
+                              ),
+                            ),
+                          )
+                        : null,
+                    onTap: () => widget.provider.setViewMode('workout'),
+                  ),
+
+                  const SizedBox(height: 12),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  const SizedBox(height: 12),
+
+                  // SECTION 2: Mode-specific quick action & calendars
+                  if (viewMode == 'workout') ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: Text(
+                        '운동 빠른 실행',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                          color: isDark ? Colors.white54 : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    _buildSidebarNavItem(
+                      icon: Icons.add_circle_outline_rounded,
+                      iconColor: AppColors.q2,
+                      title: '새 운동 추가',
+                      onTap: _showAddWorkoutSheet,
+                    ),
+                    _buildSidebarNavItem(
+                      icon: Icons.insights_rounded,
+                      iconColor: Colors.purpleAccent,
+                      title: '주간 운동 통계',
+                      onTap: _openWeeklyWorkoutStatsDialog,
+                    ),
+                    _buildSidebarNavItem(
+                      icon: Icons.calendar_month_rounded,
+                      iconColor: Colors.orangeAccent,
+                      title: '월간 오운완 달력',
+                      onTap: _openWorkoutCalendarDialog,
+                    ),
+                  ] else ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: Text(
+                        '할 일 빠른 실행',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                          color: isDark ? Colors.white54 : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    _buildSidebarNavItem(
+                      icon: Icons.add_task_rounded,
+                      iconColor: AppColors.q2,
+                      title: '새 할 일 추가',
+                      onTap: () => _showAddTaskSheet(),
+                    ),
+                    const SizedBox(height: 8),
+                    DateStripHeader(provider: widget.provider),
+                  ],
+
+                  const SizedBox(height: 12),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  const SizedBox(height: 12),
+
+                  // SECTION 3: Management & Tools
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: Text(
+                      '관리 및 설정',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                        color: isDark ? Colors.white54 : Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _buildSidebarNavItem(
+                    icon: Icons.category_outlined,
+                    iconColor: Colors.indigo,
+                    title: '카테고리 관리',
+                    onTap: _openCategoryManageDialog,
+                  ),
+                  _buildSidebarNavItem(
+                    icon: Icons.autorenew_rounded,
+                    iconColor: Colors.teal,
+                    title: '루틴 관리',
+                    onTap: _openRoutineManageDialog,
+                  ),
+                  _buildSidebarNavItem(
+                    icon: Icons.delete_outline_rounded,
+                    iconColor: Colors.redAccent,
+                    title: '소각장 보관함',
+                    trailing: trashCount > 0
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '$trashCount',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        : null,
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TrashScreen(provider: widget.provider),
+                        ),
+                      );
+                      widget.provider.loadTodos();
+                    },
+                  ),
+                  _buildSidebarNavItem(
+                    icon: Icons.settings_outlined,
+                    iconColor: AppColors.q2,
+                    title: '앱 전체 설정',
+                    onTap: _openSettingsDialog,
+                  ),
+                  _buildSidebarNavItem(
+                    icon: Icons.help_outline_rounded,
+                    iconColor: Colors.blue,
+                    title: '사용 설명서',
+                    onTap: _openHelpGuideDialog,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebarNavItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    bool isSelected = false,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+      child: Material(
+        color: isSelected
+            ? (isDark
+                ? theme.colorScheme.surfaceContainerHighest
+                : theme.primaryColor.withValues(alpha: 0.12))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: isSelected ? theme.primaryColor : iconColor,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected
+                              ? theme.primaryColor
+                              : (isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87),
+                        ),
+                      ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isDark ? Colors.white54 : Colors.black45,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                ?trailing,
+              ],
+            ),
+          ),
         ),
       ),
     );
