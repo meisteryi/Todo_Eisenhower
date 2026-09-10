@@ -148,7 +148,7 @@ void main() {
       final provider = TodoProvider();
       await provider.loadWorkouts();
 
-      expect(provider.workoutPresets.isNotEmpty, isTrue);
+      expect(provider.workoutPresets.isEmpty, isTrue);
       final initialCount = provider.workoutPresets.length;
 
       final customPreset = WorkoutPreset(

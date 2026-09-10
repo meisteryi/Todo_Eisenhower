@@ -16,6 +16,48 @@ class RoutineManageDialog extends StatefulWidget {
 }
 
 class _RoutineManageDialogState extends State<RoutineManageDialog> {
+  Future<bool?> _confirmDeleteRoutine(BuildContext context, Routine r) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+            SizedBox(width: 8),
+            Text(
+              '루틴 삭제',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          '\'${r.title}\' 루틴을 삭제하시겠습니까?\n(이미 생성된 오늘 및 과거의 할 일은 유지됩니다)',
+          style: const TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showRoutineSheet([Routine? initialRoutine]) {
     showModalBottomSheet(
       context: context,
@@ -171,6 +213,9 @@ class _RoutineManageDialogState extends State<RoutineManageDialog> {
                               return Dismissible(
                                 key: ValueKey('routine_${r.id}'),
                                 direction: DismissDirection.endToStart,
+                                confirmDismiss: (direction) async {
+                                  return await _confirmDeleteRoutine(context, r);
+                                },
                                 background: Container(
                                   margin: const EdgeInsets.symmetric(
                                     vertical: 4,

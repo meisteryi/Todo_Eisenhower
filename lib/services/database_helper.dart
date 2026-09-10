@@ -154,10 +154,6 @@ class DatabaseHelper {
         is_default INTEGER NOT NULL DEFAULT 0
       )
     ''');
-
-    for (final p in WorkoutPreset.defaultPresets()) {
-      await db.insert('workout_presets', p.toMap());
-    }
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -582,14 +578,9 @@ class DatabaseHelper {
   Future<List<WorkoutPreset>> fetchWorkoutPresets() async {
     final db = await instance.database;
     await _ensureWorkoutPresetsTable(db);
+    // Delete any previous default presets
+    await db.delete('workout_presets', where: 'is_default = ?', whereArgs: [1]);
     final maps = await db.query('workout_presets', orderBy: 'id ASC');
-    if (maps.isEmpty) {
-      for (final p in WorkoutPreset.defaultPresets()) {
-        await db.insert('workout_presets', p.toMap());
-      }
-      final newMaps = await db.query('workout_presets', orderBy: 'id ASC');
-      return newMaps.map((map) => WorkoutPreset.fromMap(map)).toList();
-    }
     return maps.map((map) => WorkoutPreset.fromMap(map)).toList();
   }
 

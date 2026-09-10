@@ -31,17 +31,41 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
   bool _saveAsPreset = false;
 
   final List<String> _categoryOptions = ['웨이트', '유산소', '스트레칭', '기타'];
-  final List<String> _presetEmojis = ['🏋️‍♂️', '🏃', '🧘', '🚴', '🥊', '🏊', '🤸', '⚽', '🏀', '💪', '🦵', '🪜', '🔥', '⚡', '🏆'];
+  final List<String> _presetEmojis = [
+    '🏋️‍♂️',
+    '🏃',
+    '🧘',
+    '🚴',
+    '🥊',
+    '🏊',
+    '🤸',
+    '⚽',
+    '🏀',
+    '💪',
+    '🦵',
+    '🪜',
+    '🔥',
+    '⚡',
+    '🏆',
+  ];
 
   @override
   void initState() {
     super.initState();
     final w = widget.workoutToEdit;
     _titleController = TextEditingController(text: w?.title ?? '');
-    _setsController = TextEditingController(text: (w?.targetSets ?? 3).toString());
-    _repsController = TextEditingController(text: (w?.targetReps ?? 10).toString());
-    _weightController = TextEditingController(text: (w?.targetWeight ?? 0.0).toString());
-    _minutesController = TextEditingController(text: (w?.targetMinutes ?? 30).toString());
+    _setsController = TextEditingController(
+      text: (w?.targetSets ?? 3).toString(),
+    );
+    _repsController = TextEditingController(
+      text: (w?.targetReps ?? 10).toString(),
+    );
+    _weightController = TextEditingController(
+      text: (w?.targetWeight ?? 0.0).toString(),
+    );
+    _minutesController = TextEditingController(
+      text: (w?.targetMinutes ?? 30).toString(),
+    );
 
     _selectedEmoji = w?.emoji ?? '🏋️‍♂️';
     _selectedCategory = w?.category ?? '웨이트';
@@ -56,6 +80,116 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
     _weightController.dispose();
     _minutesController.dispose();
     super.dispose();
+  }
+
+  void _confirmDeletePreset(
+    BuildContext context,
+    WorkoutPreset p,
+    VoidCallback onSuccess,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        title: const Row(
+          children: [
+            Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.redAccent,
+              size: 22,
+            ),
+            SizedBox(width: 8),
+            Text(
+              '프리셋 삭제',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          '\'${p.title}\' 운동 프리셋을 삭제하시겠습니까?',
+          style: const TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (p.id != null) {
+                widget.provider.deleteWorkoutPreset(p.id!);
+                onSuccess();
+              }
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteWorkout(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        title: const Row(
+          children: [
+            Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.redAccent,
+              size: 22,
+            ),
+            SizedBox(width: 8),
+            Text(
+              '운동 삭제',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          '\'${widget.workoutToEdit?.title ?? "운동"}\' 기록을 삭제하시겠습니까?',
+          style: const TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (widget.workoutToEdit?.id != null) {
+                widget.provider.deleteWorkout(widget.workoutToEdit!.id!);
+              }
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _applyPreset(WorkoutPreset preset) {
@@ -91,7 +225,9 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
       targetWeight: weight,
       targetMinutes: minutes,
       repeatDays: '월,화,수,목,금,토,일',
-      sortOrder: widget.workoutToEdit?.sortOrder ?? (widget.provider.workouts.length + 1),
+      sortOrder:
+          widget.workoutToEdit?.sortOrder ??
+          (widget.provider.workouts.length + 1),
     );
 
     if (widget.workoutToEdit != null) {
@@ -165,7 +301,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                           Icon(Icons.bolt, color: AppColors.q2, size: 22),
                           SizedBox(width: 6),
                           Text(
-                            '운동 Set 프리셋 선택',
+                            '운동 프리셋 선택',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -202,9 +338,13 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             labelStyle: TextStyle(
-                              color: isSel ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                              color: isSel
+                                  ? Colors.white
+                                  : (isDark ? Colors.white70 : Colors.black87),
                               fontSize: 12,
-                              fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSel
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                             showCheckmark: false,
                             onSelected: (val) {
@@ -218,7 +358,19 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                   const SizedBox(height: 12),
                   Expanded(
                     child: filtered.isEmpty
-                        ? const Center(child: Text('해당 카테고리의 프리셋이 없습니다.'))
+                        ? Center(
+                            child: Text(
+                              presets.isEmpty
+                                  ? '등록된 운동 프리셋이 없습니다.\n운동 추가 시 "내 프리셋으로 저장"을 체크하면\n자주 하는 운동을 바로 불러올 수 있습니다.'
+                                  : '해당 카테고리의 프리셋이 없습니다.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: theme.hintColor,
+                                fontSize: 13,
+                                height: 1.5,
+                              ),
+                            ),
+                          )
                         : ListView.builder(
                             itemCount: filtered.length,
                             itemBuilder: (context, index) {
@@ -226,8 +378,12 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                               String detailText = '';
                               if (p.workoutType == 'set') {
                                 detailText = '${p.targetSets}세트';
-                                if (p.targetWeight > 0) detailText += ' · ${p.targetWeight}kg';
-                                if (p.targetReps > 0) detailText += ' · ${p.targetReps}회';
+                                if (p.targetWeight > 0) {
+                                  detailText += ' · ${p.targetWeight}kg';
+                                }
+                                if (p.targetReps > 0) {
+                                  detailText += ' · ${p.targetReps}회';
+                                }
                               } else if (p.workoutType == 'time') {
                                 detailText = '${p.targetMinutes}분 목표';
                               } else {
@@ -243,36 +399,69 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: ListTile(
-                                  leading: Text(p.emoji, style: const TextStyle(fontSize: 26)),
+                                  leading: Text(
+                                    p.emoji,
+                                    style: const TextStyle(fontSize: 26),
+                                  ),
                                   title: Text(
                                     p.title,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                   subtitle: Text(
                                     '${p.category} | $detailText',
-                                    style: TextStyle(fontSize: 12, color: theme.hintColor),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.hintColor,
+                                    ),
                                   ),
                                   trailing: p.isDefault
-                                      ? const Icon(Icons.add_circle_outline, color: AppColors.q2)
+                                      ? const Icon(
+                                          Icons.add_circle_outline,
+                                          color: AppColors.q2,
+                                        )
                                       : Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
                                               decoration: BoxDecoration(
-                                                color: AppColors.q2.withValues(alpha: 0.15),
-                                                borderRadius: BorderRadius.circular(4),
+                                                color: AppColors.q2.withValues(
+                                                  alpha: 0.15,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
                                               ),
-                                              child: const Text('MY', style: TextStyle(fontSize: 10, color: AppColors.q2, fontWeight: FontWeight.bold)),
+                                              child: const Text(
+                                                'MY',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: AppColors.q2,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
                                             ),
                                             const SizedBox(width: 8),
                                             IconButton(
-                                              icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                                size: 18,
+                                                color: Colors.redAccent,
+                                              ),
                                               onPressed: () {
-                                                if (p.id != null) {
-                                                  widget.provider.deleteWorkoutPreset(p.id!);
-                                                  setSheetState(() {});
-                                                }
+                                                _confirmDeletePreset(
+                                                  context,
+                                                  p,
+                                                  () {
+                                                    setSheetState(() {});
+                                                  },
+                                                );
                                               },
                                             ),
                                           ],
@@ -362,7 +551,10 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                   onTap: _showPresetPickerSheet,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.q2.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -377,7 +569,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                         Icon(Icons.bolt, color: AppColors.q2, size: 18),
                         SizedBox(width: 6),
                         Text(
-                          '⚡ 미리 등록된 운동 Set 프리셋 불러오기',
+                          '⚡ 미리 등록된 운동 프리셋 불러오기',
                           style: TextStyle(
                             color: AppColors.q2,
                             fontWeight: FontWeight.bold,
@@ -481,7 +673,9 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                         color: isSelected
                             ? Colors.white
                             : (isDark ? Colors.white70 : Colors.black87),
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                         fontSize: 12,
                       ),
                       showCheckmark: false,
@@ -507,7 +701,12 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _buildTypeOption('set', '세트 수', Icons.fitness_center, isDark),
+                    _buildTypeOption(
+                      'set',
+                      '세트 수',
+                      Icons.fitness_center,
+                      isDark,
+                    ),
                     const SizedBox(width: 8),
                     _buildTypeOption('time', '시간/목표', Icons.timer, isDark),
                     const SizedBox(width: 8),
@@ -672,7 +871,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                         ),
                         const Expanded(
                           child: Text(
-                            '⭐ 이 설정을 나만의 운동 Set 프리셋으로 저장',
+                            '⭐ 이 설정을 나만의 운동 프리셋으로 저장',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -695,12 +894,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                           Icons.delete_outline,
                           color: Colors.redAccent,
                         ),
-                        onPressed: () {
-                          widget.provider.deleteWorkout(
-                            widget.workoutToEdit!.id!,
-                          );
-                          Navigator.pop(context);
-                        },
+                        onPressed: () => _confirmDeleteWorkout(context),
                       ),
                       const SizedBox(width: 8),
                     ],
@@ -757,8 +951,8 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
             color: isSelected
                 ? AppColors.q2
                 : (isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey.withValues(alpha: 0.08)),
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.grey.withValues(alpha: 0.08)),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -777,7 +971,9 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                     color: isSelected
                         ? Colors.white
                         : (isDark ? Colors.white70 : Colors.black87),

@@ -19,6 +19,80 @@ class _WorkoutViewState extends State<WorkoutView> {
 
   final List<String> _categories = ['전체', '웨이트', '유산소', '스트레칭', '기타'];
 
+  void _confirmDeletePreset(BuildContext context, WorkoutPreset p, VoidCallback onSuccess) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+            SizedBox(width: 8),
+            Text('프리셋 삭제', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text('\'${p.title}\' 운동 프리셋을 삭제하시겠습니까?', style: const TextStyle(fontSize: 13)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('취소')),
+          ElevatedButton(
+            onPressed: () {
+              if (p.id != null) {
+                widget.provider.deleteWorkoutPreset(p.id!);
+                onSuccess();
+              }
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteSet(BuildContext context, Workout workout, int setIndex, {VoidCallback? onConfirmed}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+            SizedBox(width: 8),
+            Text('세트 삭제', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text('$setIndex세트를 삭제하시겠습니까?', style: const TextStyle(fontSize: 13)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('취소')),
+          ElevatedButton(
+            onPressed: () {
+              widget.provider.deleteSetFromWorkout(workout: workout, setIndex: setIndex);
+              Navigator.pop(ctx);
+              onConfirmed?.call();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddWorkoutSheet({Workout? workoutToEdit}) {
     showModalBottomSheet(
       context: context,
@@ -87,7 +161,7 @@ class _WorkoutViewState extends State<WorkoutView> {
                           Icon(Icons.bolt, color: AppColors.q2, size: 22),
                           SizedBox(width: 6),
                           Text(
-                            '운동 Set 프리셋',
+                            '운동 프리셋',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -140,7 +214,19 @@ class _WorkoutViewState extends State<WorkoutView> {
                   const SizedBox(height: 12),
                   Expanded(
                     child: filtered.isEmpty
-                        ? const Center(child: Text('해당 카테고리의 프리셋이 없습니다.'))
+                        ? Center(
+                            child: Text(
+                              presets.isEmpty
+                                  ? '등록된 운동 프리셋이 없습니다.\n운동 추가 시 "내 프리셋으로 저장"을 체크하면\n자주 하는 운동을 바로 불러올 수 있습니다.'
+                                  : '해당 카테고리의 프리셋이 없습니다.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: theme.hintColor,
+                                fontSize: 13,
+                                height: 1.5,
+                              ),
+                            ),
+                          )
                         : ListView.builder(
                             itemCount: filtered.length,
                             itemBuilder: (context, index) {
@@ -190,10 +276,9 @@ class _WorkoutViewState extends State<WorkoutView> {
                                         IconButton(
                                           icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
                                           onPressed: () {
-                                            if (p.id != null) {
-                                              widget.provider.deleteWorkoutPreset(p.id!);
+                                            _confirmDeletePreset(context, p, () {
                                               setSheetState(() {});
-                                            }
+                                            });
                                           },
                                         ),
                                       ],
@@ -334,7 +419,7 @@ class _WorkoutViewState extends State<WorkoutView> {
                               Icon(Icons.bolt, color: Colors.white, size: 16),
                               SizedBox(width: 4),
                               Text(
-                                'Set 프리셋',
+                                '운동 프리셋',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -486,7 +571,7 @@ class _WorkoutViewState extends State<WorkoutView> {
               OutlinedButton.icon(
                 onPressed: _showPresetManagerSheet,
                 icon: const Icon(Icons.bolt, size: 18),
-                label: const Text('Set 프리셋 불러오기'),
+                label: const Text('운동 프리셋 불러오기'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.q2,
                   side: const BorderSide(color: AppColors.q2),
@@ -776,10 +861,7 @@ class _WorkoutViewState extends State<WorkoutView> {
               const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: () {
-                  widget.provider.deleteSetFromWorkout(
-                    workout: workout,
-                    setIndex: sets.length,
-                  );
+                  _confirmDeleteSet(context, workout, sets.length);
                 },
                 icon: const Icon(Icons.remove, size: 14),
                 label: const Text('세트 삭제', style: TextStyle(fontSize: 12)),
@@ -837,8 +919,9 @@ class _WorkoutViewState extends State<WorkoutView> {
             if (totalSetsCount > 1)
               TextButton(
                 onPressed: () {
-                  widget.provider.deleteSetFromWorkout(workout: workout, setIndex: setDetail.setIndex);
-                  Navigator.pop(ctx);
+                  _confirmDeleteSet(context, workout, setDetail.setIndex, onConfirmed: () {
+                    Navigator.pop(ctx);
+                  });
                 },
                 child: const Text('세트 삭제', style: TextStyle(color: Colors.redAccent)),
               ),

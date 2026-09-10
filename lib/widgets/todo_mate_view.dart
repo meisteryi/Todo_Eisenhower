@@ -56,6 +56,48 @@ class _TodoMateViewState extends State<TodoMateView> {
     }
   }
 
+  Future<bool?> _confirmDeleteTodo(BuildContext context, Todo todo) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+            SizedBox(width: 8),
+            Text(
+              '할 일 삭제',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          '\'${todo.title}\' 할 일을 삭제하시겠습니까?\n(소각장/휴지통으로 이동됩니다)',
+          style: const TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final categories = widget.provider.categories;
@@ -402,13 +444,34 @@ class _TodoMateViewState extends State<TodoMateView> {
 
                 return Dismissible(
                   key: Key('todo_mate_${todo.id}'),
+                  direction: DismissDirection.endToStart,
+                  confirmDismiss: (direction) async {
+                    return await _confirmDeleteTodo(context, todo);
+                  },
                   background: Container(
-                    color: Colors.red.shade400,
+                    color: Colors.redAccent.shade200,
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          '삭제',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        SizedBox(width: 6),
+                        Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ],
+                    ),
                   ),
-                  direction: DismissDirection.endToStart,
                   onDismissed: (_) {
                     widget.provider.softDeleteTodo(todo);
                   },

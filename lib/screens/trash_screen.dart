@@ -77,6 +77,55 @@ class TrashScreen extends StatelessWidget {
       );
     }
 
+    void confirmPermanentDelete(Todo todo) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+          title: const Row(
+            children: [
+              Icon(Icons.delete_forever_rounded, color: Colors.redAccent, size: 22),
+              SizedBox(width: 8),
+              Text(
+                '영구 삭제',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Text(
+            '\'${todo.title}\' 할 일을 영구 삭제하시겠습니까?\n(영구 삭제 후에는 복구할 수 없습니다)',
+            style: const TextStyle(fontSize: 13),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                provider.deleteTodoPermanently(todo.id!);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('영구 삭제되었습니다.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('영구 삭제'),
+            ),
+          ],
+        ),
+      );
+    }
+
     Widget buildTrashItem(Todo todo) {
       final qColor = getQuadrantColor(todo.quadrant);
       final qName = getQuadrantName(todo.quadrant);
@@ -175,15 +224,7 @@ class TrashScreen extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
               tooltip: '영구 삭제',
-              onPressed: () {
-                provider.deleteTodoPermanently(todo.id!);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('영구 삭제되었습니다.'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
+              onPressed: () => confirmPermanentDelete(todo),
             ),
           ],
         ),

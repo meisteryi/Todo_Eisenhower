@@ -296,6 +296,50 @@ class TodoListPage extends StatelessWidget {
       Share.share(shareText, subject: '업무 위임 요청');
     }
 
+    // Confirm delete helper
+    void confirmDeleteTodo(Todo todo) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+          title: const Row(
+            children: [
+              Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+              SizedBox(width: 8),
+              Text(
+                '할 일 삭제',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Text(
+            '\'${todo.title}\' 할 일을 삭제하시겠습니까?\n(소각장/휴지통으로 이동됩니다)',
+            style: const TextStyle(fontSize: 13),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                provider.softDeleteTodo(todo);
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('삭제'),
+            ),
+          ],
+        ),
+      );
+    }
+
     // Quick show bottom sheet for quadrant repositioning
     void showRepositionSheet(Todo todo) {
       showModalBottomSheet(
@@ -474,7 +518,7 @@ class TodoListPage extends StatelessWidget {
                       quadrantColor: themeColor,
                       onToggleComplete: () => provider.toggleTodoCompletion(todo),
                       onMoveToQuadrant: (q) => provider.moveTodo(todo, q),
-                      onDelete: () => provider.softDeleteTodo(todo),
+                      onDelete: () => confirmDeleteTodo(todo),
                       onLongPress: () => showRepositionSheet(todo),
                       onTap: onEditTodo != null ? () => onEditTodo!(todo) : null,
                       trailing: Row(
