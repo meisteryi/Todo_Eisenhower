@@ -1,0 +1,4 @@
+/* Korean Localization for Info.plist */
+CFBundleDisplayName = "아이젠하워 투두";
+NSUserNotificationUsageDescription = "중요한 할 일, 반복 루틴 및 운동 일정을 정해진 시간에 알려드리기 위해 알림 권한을 사용합니다.";
+NSUserNotificationsUsageDescription = "중요한 할 일, 반복 루틴 및 운동 일정을 정해진 시간에 알려드리기 위해 알림 권한을 사용합니다.";

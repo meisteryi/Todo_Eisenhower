@@ -862,26 +862,23 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _setItems.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final item = _setItems[index];
-                        final canDelete = _setItems.length > 1;
+                    const SizedBox(height: 4),
+                    ...List.generate(_setItems.length, (index) {
+                      final item = _setItems[index];
+                      final canDelete = _setItems.length > 1;
 
-                        return Container(
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 8,
+                            horizontal: 8,
+                            vertical: 4,
                           ),
                           decoration: BoxDecoration(
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.04)
                                 : Colors.grey.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: isDark
                                   ? Colors.white10
@@ -891,8 +888,8 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                           child: Row(
                             children: [
                               Container(
-                                width: 28,
-                                height: 28,
+                                width: 24,
+                                height: 24,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: AppColors.q2.withValues(alpha: 0.15),
@@ -901,13 +898,13 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                                 child: Text(
                                   '${index + 1}',
                                   style: const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.q2,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 8),
                               Expanded(
                                 flex: 5,
                                 child: TextFormField(
@@ -921,8 +918,8 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                                     labelText: '무게',
                                     suffixText: 'kg',
                                     contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 10,
+                                      horizontal: 8,
+                                      vertical: 6,
                                     ),
                                     filled: true,
                                     fillColor: isDark
@@ -952,9 +949,18 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                                       ),
                                     ),
                                   ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return '입력';
+                                    }
+                                    if (double.tryParse(value.trim()) == null) {
+                                      return '숫자';
+                                    }
+                                    return null;
+                                  },
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               Expanded(
                                 flex: 5,
                                 child: TextFormField(
@@ -965,8 +971,8 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                                     labelText: '횟수',
                                     suffixText: '회',
                                     contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 10,
+                                      horizontal: 8,
+                                      vertical: 6,
                                     ),
                                     filled: true,
                                     fillColor: isDark
@@ -996,38 +1002,52 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                                       ),
                                     ),
                                   ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return '입력';
+                                    }
+                                    final parsed = int.tryParse(value.trim());
+                                    if (parsed == null || parsed <= 0) {
+                                      return '자연수';
+                                    }
+                                    return null;
+                                  },
                                 ),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 2),
                               IconButton(
                                 icon: Icon(
                                   Icons.delete_outline_rounded,
                                   color: canDelete
                                       ? Colors.redAccent.withValues(alpha: 0.85)
                                       : Colors.grey.withValues(alpha: 0.25),
-                                  size: 20,
+                                  size: 18,
                                 ),
                                 tooltip: canDelete ? '세트 삭제' : '최소 1개 세트 필요',
                                 onPressed: canDelete
                                     ? () => _removeSetItem(index)
                                     : null,
                                 visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(
+                                  minWidth: 28,
+                                  minHeight: 28,
+                                ),
                               ),
                             ],
                           ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
+                        ),
+                      );
+                    }),
                     InkWell(
                       onTap: _addSetItem,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 7),
                         decoration: BoxDecoration(
                           color: AppColors.q2.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: AppColors.q2.withValues(alpha: 0.3),
                           ),
@@ -1037,10 +1057,10 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
                           children: [
                             Icon(
                               Icons.add_circle_outline_rounded,
-                              size: 16,
+                              size: 15,
                               color: AppColors.q2,
                             ),
-                            SizedBox(width: 6),
+                            SizedBox(width: 5),
                             Text(
                               '세트 항목 추가',
                               style: TextStyle(

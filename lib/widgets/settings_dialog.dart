@@ -401,16 +401,79 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     ),
                     const SizedBox(height: 18),
 
-                    // Section 5: 앱 정보
-                    _buildSectionHeader('ℹ️ 앱 정보', context),
+                    // Section 5: 앱 정보 & 개인정보 보호
+                    _buildSectionHeader('ℹ️ 앱 정보 및 정책', context),
                     const SizedBox(height: 8),
                     _buildCardWrapper(
                       isDark: isDark,
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
                         children: [
-                          Text('아이젠하워 투두 (Eisenhower)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                          Text('v1.0.0', style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '아이젠하워 투두 (Eisenhower Todo)',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                'v1.0.0',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Divider(
+                            height: 18,
+                            thickness: 0.5,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.black.withValues(alpha: 0.08),
+                          ),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.privacy_tip_outlined,
+                                color: Colors.teal,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  '개인정보 처리방침 (Privacy Policy)',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 26,
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                  onPressed: () => _showPrivacyPolicyDialog(context),
+                                  child: const Text(
+                                    '확인하기',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.teal,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -483,7 +546,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user.displayName ?? '구글 사용자',
+                        user.displayName ?? (user.email?.split('@').first ?? '연동된 계정'),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -543,7 +606,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       height: 28,
                       child: TextButton.icon(
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
                           visualDensity: VisualDensity.compact,
                         ),
                         icon: _isSyncing
@@ -576,7 +639,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       height: 28,
                       child: TextButton(
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
                           visualDensity: VisualDensity.compact,
                         ),
                         onPressed: () async {
@@ -586,7 +649,18 @@ class _SettingsDialogState extends State<SettingsDialog> {
                             const SnackBar(content: Text('로그아웃 되었습니다.')),
                           );
                         },
-                        child: const Text('로그아웃', style: TextStyle(color: Colors.redAccent, fontSize: 11)),
+                        child: const Text('로그아웃', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 28,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        onPressed: () => _confirmDeleteAccount(context, user),
+                        child: const Text('회원 탈퇴', style: TextStyle(color: Colors.redAccent, fontSize: 11)),
                       ),
                     ),
                   ],
@@ -604,25 +678,73 @@ class _SettingsDialogState extends State<SettingsDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Google 계정 연동 (미연동)',
+            '클라우드 계정 연동 (미연동)',
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 2),
           const Text(
-            '모든 기기(스마트폰, PC, Web)에서 일정이 실시간 동기화됩니다.',
+            'Apple 또는 Google 로그인 시 모든 기기에서 실시간 동기화됩니다.',
             style: TextStyle(fontSize: 11, color: Colors.grey),
           ),
           const SizedBox(height: 10),
+
+          // Apple Sign In Button
           SizedBox(
             width: double.infinity,
-            height: 34,
+            height: 36,
             child: ElevatedButton.icon(
-              icon: const Icon(Icons.login_rounded, size: 15),
-              label: const Text('Google 계정 로그인', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.apple, size: 20),
+              label: const Text(
+                'Sign in with Apple (애플 로그인)',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.q2,
-                foregroundColor: Colors.white,
+                backgroundColor: isDark ? Colors.white : Colors.black,
+                foregroundColor: isDark ? Colors.black : Colors.white,
                 elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: () async {
+                try {
+                  final credential = await AuthService().signInWithApple();
+                  if (credential != null) {
+                    setState(() {});
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('🎉 ${credential.user?.displayName ?? "Apple 사용자"}님 환영합니다!'),
+                        backgroundColor: Colors.green[700],
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('Apple 로그인 실패: $e')),
+                  );
+                }
+              },
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Google Sign In Button
+          SizedBox(
+            width: double.infinity,
+            height: 36,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.g_mobiledata_rounded, size: 22, color: AppColors.q2),
+              label: const Text(
+                'Google 계정으로 계속하기',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: isDark ? Colors.white : Colors.black87,
+                side: BorderSide(
+                  color: isDark ? Colors.white24 : Colors.grey.shade400,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -642,11 +764,151 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   }
                 } catch (e) {
                   messenger.showSnackBar(
-                    SnackBar(content: Text('로그인 오류: $e')),
+                    SnackBar(content: Text('Google 로그인 오류: $e')),
                   );
                 }
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context, User user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final messenger = ScaffoldMessenger.of(context);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.person_remove_rounded, color: Colors.redAccent, size: 22),
+            SizedBox(width: 8),
+            Text(
+              '회원 탈퇴 (계정 삭제)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: const Text(
+          '계정을 탈퇴하시면 클라우드에 백업/동기화된 모든 일정, 루틴, 운동 기록 및 계정 정보가 영구적으로 삭제되며 복구할 수 없습니다.\n\n정말로 회원 탈퇴를 진행하시겠습니까?',
+          style: TextStyle(fontSize: 13, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              try {
+                await AuthService().deleteAccount();
+                if (context.mounted) {
+                  setState(() {});
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('회원 탈퇴 및 클라우드 데이터 삭제가 완료되었습니다.'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text('회원 탈퇴 실패: $e (보안을 위해 재로그인 후 다시 시도해 주세요)'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('회원 탈퇴'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyPolicyDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.privacy_tip_rounded, color: Colors.teal, size: 22),
+            SizedBox(width: 8),
+            Text(
+              '개인정보 처리방침 요약',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '1. 수집하는 개인정보 항목',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 로그인 시: 이메일 주소, 표시 이름, 프로필 사진 URL, 고유 사용자 식별자(UID)\n• 일정 및 기록: 사용자가 직접 작성한 할 일, 루틴, 운동 기록',
+                style: TextStyle(fontSize: 12, height: 1.4),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '2. 개인정보의 이용 목적',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 사용자 기기 간 실시간 데이터 동기화 및 백업 제공\n• 알림 시간 도달 시 사용자 지정 일정 안내\n• 타사 광고 추적(Tracking) 목적으로는 일체 활용되지 않습니다.',
+                style: TextStyle(fontSize: 12, height: 1.4),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '3. 데이터 파기 및 탈퇴 권리',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 사용자는 언제든지 설정 > [회원 탈퇴] 버튼을 눌러 클라우드에 보관된 모든 개인정보 및 일정을 즉시 영구 삭제할 수 있습니다.',
+                style: TextStyle(fontSize: 12, height: 1.4),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('확인'),
           ),
         ],
       ),

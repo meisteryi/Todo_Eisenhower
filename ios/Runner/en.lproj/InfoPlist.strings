@@ -1,0 +1,4 @@
+/* English Localization for Info.plist */
+CFBundleDisplayName = "Eisenhower Todo";
+NSUserNotificationUsageDescription = "Used to send timely reminders and alerts for your scheduled tasks, daily routines, and workout plans.";
+NSUserNotificationsUsageDescription = "Used to send timely reminders and alerts for your scheduled tasks, daily routines, and workout plans.";

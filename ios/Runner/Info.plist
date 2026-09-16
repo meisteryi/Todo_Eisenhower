@@ -7,7 +7,18 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Todo Eisenhower</string>
+	<string>아이젠하워 투두</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ko</string>
+		<string>en</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>중요한 할 일, 반복 루틴 및 운동 일정을 정해진 시간에 알려드리기 위해 알림 권한을 사용합니다. (Used to send timely reminders and alerts for your scheduled tasks, daily routines, and workout plans.)</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>중요한 할 일, 반복 루틴 및 운동 일정을 정해진 시간에 알려드리기 위해 알림 권한을 사용합니다. (Used to send timely reminders and alerts for your scheduled tasks, daily routines, and workout plans.)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

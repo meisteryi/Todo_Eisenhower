@@ -777,7 +777,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
               // Title Input Text Field
               TextField(
                 controller: _titleController,
-                autofocus: widget.initialTodo == null,
+                autofocus: false,
                 decoration: InputDecoration(
                   hintText: '할 일을 입력하세요...',
                   prefixIcon: const Icon(Icons.check_box_outlined, size: 20),

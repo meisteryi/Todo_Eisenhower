@@ -435,8 +435,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   )
                 : null,
             actions: [
-              _buildGoogleAuthButton(),
               if (isDesktop) ...[
+                _buildGoogleAuthButton(),
                 IconButton(
                   icon: const Icon(Icons.help_outline_rounded),
                   tooltip: '사용 설명서',

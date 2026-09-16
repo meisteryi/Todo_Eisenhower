@@ -19,8 +19,16 @@ class MiniMapTracker extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Helper to get active task count
+    int getActiveCount(int quadrant) {
+      return provider.getQuadrantTodos(quadrant).length;
+    }
+
     // Helper to calculate progress ratio
     double getProgressRatio(int quadrant) {
+      final activeCount = getActiveCount(quadrant);
+      if (activeCount == 0) return 0.0;
+
       final now = DateTime.now();
       final selectedDate = provider.selectedDate;
 
@@ -61,11 +69,6 @@ class MiniMapTracker extends StatelessWidget {
       if (quadrantTodos.isEmpty) return 0.0;
       final completed = quadrantTodos.where((t) => t.isCompleted).length;
       return completed / quadrantTodos.length;
-    }
-
-    // Helper to get active task count
-    int getActiveCount(int quadrant) {
-      return provider.getQuadrantTodos(quadrant).length;
     }
 
     Widget buildQuadrantCell(int index, String label, String title, Color themeColor) {
