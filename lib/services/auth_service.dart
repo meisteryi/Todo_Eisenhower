@@ -25,25 +25,6 @@ class AuthService {
       if (kIsWeb) {
         GoogleAuthProvider googleProvider = GoogleAuthProvider();
         return await _auth.signInWithPopup(googleProvider);
-      } else if (defaultTargetPlatform == TargetPlatform.macOS) {
-        // On macOS, try GoogleSignIn with clientId, or fallback to OAuth provider
-        try {
-          final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-          if (googleUser == null) {
-            return null;
-          }
-          final GoogleSignInAuthentication googleAuth =
-              await googleUser.authentication;
-          final OAuthCredential credential = GoogleAuthProvider.credential(
-            accessToken: googleAuth.accessToken,
-            idToken: googleAuth.idToken,
-          );
-          return await _auth.signInWithCredential(credential);
-        } catch (e) {
-          debugPrint('GoogleSignIn failed on macOS, trying signInWithProvider: $e');
-          final GoogleAuthProvider provider = GoogleAuthProvider();
-          return await _auth.signInWithProvider(provider);
-        }
       } else {
         final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
         if (googleUser == null) {
