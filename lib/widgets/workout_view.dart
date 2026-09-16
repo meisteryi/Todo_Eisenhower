@@ -99,9 +99,7 @@ class _WorkoutViewState extends State<WorkoutView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) => AddWorkoutSheet(
         provider: widget.provider,
         workoutToEdit: workoutToEdit,
@@ -304,6 +302,7 @@ class _WorkoutViewState extends State<WorkoutView> {
                                             targetMinutes: p.targetMinutes,
                                             repeatDays: '월,화,수,목,금,토,일',
                                             sortOrder: widget.provider.workouts.length + 1,
+                                            customSetsJson: p.customSetsJson,
                                           );
                                           widget.provider.addWorkout(newWorkout);
                                           Navigator.pop(ctx);
@@ -1010,16 +1009,7 @@ class _WorkoutViewState extends State<WorkoutView> {
   Widget _buildSetTypeBody(Workout workout, WorkoutLog? log) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final sets = log?.setDetails ??
-        List.generate(
-          workout.targetSets,
-          (i) => SetDetail(
-            setIndex: i + 1,
-            weight: workout.targetWeight,
-            reps: workout.targetReps,
-            isCompleted: false,
-          ),
-        );
+    final sets = log?.setDetails ?? workout.getInitialSetDetails();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

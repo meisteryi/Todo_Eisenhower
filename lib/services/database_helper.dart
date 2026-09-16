@@ -36,7 +36,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -112,7 +112,8 @@ class DatabaseHelper {
         repeat_days TEXT NOT NULL DEFAULT '월,화,수,목,금,토,일',
         sort_order INTEGER NOT NULL DEFAULT 0,
         is_active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        custom_sets_json TEXT
       )
     ''');
 
@@ -151,7 +152,8 @@ class DatabaseHelper {
         target_reps INTEGER NOT NULL DEFAULT 10,
         target_weight REAL NOT NULL DEFAULT 0.0,
         target_minutes INTEGER NOT NULL DEFAULT 30,
-        is_default INTEGER NOT NULL DEFAULT 0
+        is_default INTEGER NOT NULL DEFAULT 0,
+        custom_sets_json TEXT
       )
     ''');
   }
@@ -242,7 +244,8 @@ class DatabaseHelper {
           repeat_days TEXT NOT NULL DEFAULT '월,화,수,목,금,토,일',
           sort_order INTEGER NOT NULL DEFAULT 0,
           is_active INTEGER NOT NULL DEFAULT 1,
-          created_at TEXT NOT NULL
+          created_at TEXT NOT NULL,
+          custom_sets_json TEXT
         )
       ''');
 
@@ -260,12 +263,33 @@ class DatabaseHelper {
         )
       ''');
 
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS workout_presets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          emoji TEXT NOT NULL DEFAULT '🏋️',
+          category TEXT NOT NULL DEFAULT '웨이트',
+          workout_type TEXT NOT NULL DEFAULT 'set',
+          target_sets INTEGER NOT NULL DEFAULT 3,
+          target_reps INTEGER NOT NULL DEFAULT 10,
+          target_weight REAL NOT NULL DEFAULT 0.0,
+          target_minutes INTEGER NOT NULL DEFAULT 30,
+          is_default INTEGER NOT NULL DEFAULT 0,
+          custom_sets_json TEXT
+        )
+      ''');
+
       final wCheck = await db.rawQuery('SELECT count(*) as count FROM workouts');
       if ((wCheck.first['count'] as int) == 0) {
         for (final w in Workout.defaultWorkouts()) {
           await db.insert('workouts', w.toMap());
         }
       }
+    }
+
+    if (oldVersion < 9) {
+      try { await db.execute('ALTER TABLE workouts ADD COLUMN custom_sets_json TEXT'); } catch (_) {}
+      try { await db.execute('ALTER TABLE workout_presets ADD COLUMN custom_sets_json TEXT'); } catch (_) {}
     }
   }
 
@@ -326,6 +350,49 @@ class DatabaseHelper {
   Future<int> clearAllTodos() async {
     final db = await instance.database;
     return await db.delete('todos');
+  }
+
+  Future<List<Todo>> fetchAllTodosAll() async {
+    final db = await instance.database;
+    final maps = await db.query('todos', orderBy: 'id ASC');
+    return maps.map((map) => Todo.fromMap(map)).toList();
+  }
+
+  Future<void> upsertTodoRaw(Map<String, dynamic> map) async {
+    final db = await instance.database;
+    await db.insert('todos', map, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> upsertCategoryRaw(Map<String, dynamic> map) async {
+    final db = await instance.database;
+    await db.insert('categories', map, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> upsertRoutineRaw(Map<String, dynamic> map) async {
+    final db = await instance.database;
+    await db.insert('routines', map, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> upsertWorkoutRaw(Map<String, dynamic> map) async {
+    final db = await instance.database;
+    await db.insert('workouts', map, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> upsertWorkoutLogRaw(Map<String, dynamic> map) async {
+    final db = await instance.database;
+    await db.insert('workout_logs', map, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> upsertWorkoutPresetRaw(Map<String, dynamic> map) async {
+    final db = await instance.database;
+    await _ensureWorkoutPresetsTable(db);
+    await db.insert('workout_presets', map, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<WorkoutLog>> fetchAllWorkoutLogs() async {
+    final db = await instance.database;
+    final maps = await db.query('workout_logs', orderBy: 'id ASC');
+    return maps.map((map) => WorkoutLog.fromMap(map)).toList();
   }
 
   /// Finds active (uncompleted) Q4 tasks created more than 7 days ago and soft-deletes them.
@@ -581,9 +648,11 @@ class DatabaseHelper {
         target_reps INTEGER NOT NULL DEFAULT 10,
         target_weight REAL NOT NULL DEFAULT 0.0,
         target_minutes INTEGER NOT NULL DEFAULT 30,
-        is_default INTEGER NOT NULL DEFAULT 0
+        is_default INTEGER NOT NULL DEFAULT 0,
+        custom_sets_json TEXT
       )
     ''');
+    try { await db.execute('ALTER TABLE workout_presets ADD COLUMN custom_sets_json TEXT'); } catch (_) {}
   }
 
   Future<List<WorkoutPreset>> fetchWorkoutPresets() async {

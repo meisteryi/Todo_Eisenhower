@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/workout_model.dart';
 import '../providers/todo_provider.dart';
@@ -17,13 +18,31 @@ class AddWorkoutSheet extends StatefulWidget {
   State<AddWorkoutSheet> createState() => _AddWorkoutSheetState();
 }
 
+class _WorkoutSetInputItem {
+  final TextEditingController weightController;
+  final TextEditingController repsController;
+
+  _WorkoutSetInputItem({required double weight, required int reps})
+    : weightController = TextEditingController(
+        text: weight > 0
+            ? (weight % 1 == 0 ? weight.toInt().toString() : weight.toString())
+            : '',
+      ),
+      repsController = TextEditingController(
+        text: reps > 0 ? reps.toString() : '10',
+      );
+
+  void dispose() {
+    weightController.dispose();
+    repsController.dispose();
+  }
+}
+
 class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
-  late TextEditingController _setsController;
-  late TextEditingController _repsController;
-  late TextEditingController _weightController;
   late TextEditingController _minutesController;
+  List<_WorkoutSetInputItem> _setItems = [];
 
   late String _selectedEmoji;
   late String _selectedCategory;
@@ -54,18 +73,24 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
     super.initState();
     final w = widget.workoutToEdit;
     _titleController = TextEditingController(text: w?.title ?? '');
-    _setsController = TextEditingController(
-      text: (w?.targetSets ?? 3).toString(),
-    );
-    _repsController = TextEditingController(
-      text: (w?.targetReps ?? 10).toString(),
-    );
-    _weightController = TextEditingController(
-      text: (w?.targetWeight ?? 0.0).toString(),
-    );
     _minutesController = TextEditingController(
       text: (w?.targetMinutes ?? 30).toString(),
     );
+
+    final initialSets = w?.getInitialSetDetails() ?? [];
+    if (initialSets.isNotEmpty) {
+      _setItems = initialSets
+          .map((s) => _WorkoutSetInputItem(weight: s.weight, reps: s.reps))
+          .toList();
+    } else {
+      final defaultWeight = w?.targetWeight ?? 0.0;
+      final defaultReps = w?.targetReps ?? 10;
+      final defaultSetsCount = w?.targetSets ?? 3;
+      _setItems = List.generate(
+        defaultSetsCount > 0 ? defaultSetsCount : 3,
+        (_) => _WorkoutSetInputItem(weight: defaultWeight, reps: defaultReps),
+      );
+    }
 
     _selectedEmoji = w?.emoji ?? '🏋️‍♂️';
     _selectedCategory = w?.category ?? '웨이트';
@@ -75,11 +100,32 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
   @override
   void dispose() {
     _titleController.dispose();
-    _setsController.dispose();
-    _repsController.dispose();
-    _weightController.dispose();
     _minutesController.dispose();
+    for (final item in _setItems) {
+      item.dispose();
+    }
     super.dispose();
+  }
+
+  void _addSetItem() {
+    double lastWeight = 0.0;
+    int lastReps = 10;
+    if (_setItems.isNotEmpty) {
+      final last = _setItems.last;
+      lastWeight = double.tryParse(last.weightController.text.trim()) ?? 0.0;
+      lastReps = int.tryParse(last.repsController.text.trim()) ?? 10;
+    }
+    setState(() {
+      _setItems.add(_WorkoutSetInputItem(weight: lastWeight, reps: lastReps));
+    });
+  }
+
+  void _removeSetItem(int index) {
+    if (_setItems.length <= 1) return;
+    setState(() {
+      final removed = _setItems.removeAt(index);
+      removed.dispose();
+    });
   }
 
   void _confirmDeletePreset(
@@ -193,15 +239,30 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
   }
 
   void _applyPreset(WorkoutPreset preset) {
+    for (final item in _setItems) {
+      item.dispose();
+    }
+    final presetSets = preset.getInitialSetDetails();
     setState(() {
       _titleController.text = preset.title;
       _selectedEmoji = preset.emoji;
       _selectedCategory = preset.category;
       _selectedWorkoutType = preset.workoutType;
-      _setsController.text = preset.targetSets.toString();
-      _repsController.text = preset.targetReps.toString();
-      _weightController.text = preset.targetWeight.toString();
       _minutesController.text = preset.targetMinutes.toString();
+
+      if (presetSets.isNotEmpty) {
+        _setItems = presetSets
+            .map((s) => _WorkoutSetInputItem(weight: s.weight, reps: s.reps))
+            .toList();
+      } else {
+        _setItems = List.generate(
+          preset.targetSets > 0 ? preset.targetSets : 3,
+          (_) => _WorkoutSetInputItem(
+            weight: preset.targetWeight,
+            reps: preset.targetReps,
+          ),
+        );
+      }
     });
   }
 
@@ -209,10 +270,35 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     final title = _titleController.text.trim();
-    final sets = int.tryParse(_setsController.text.trim()) ?? 3;
-    final reps = int.tryParse(_repsController.text.trim()) ?? 0;
-    final weight = double.tryParse(_weightController.text.trim()) ?? 0.0;
     final minutes = int.tryParse(_minutesController.text.trim()) ?? 30;
+
+    int sets = _setItems.length;
+    int reps = 10;
+    double weight = 0.0;
+    String? customSetsJson;
+
+    if (_selectedWorkoutType == 'set') {
+      if (_setItems.isEmpty) {
+        _addSetItem();
+      }
+      sets = _setItems.length;
+      final firstWeight =
+          double.tryParse(_setItems.first.weightController.text.trim()) ?? 0.0;
+      final firstReps =
+          int.tryParse(_setItems.first.repsController.text.trim()) ?? 10;
+      weight = firstWeight;
+      reps = firstReps;
+
+      final setDetails = _setItems.asMap().entries.map((entry) {
+        final idx = entry.key + 1;
+        final w =
+            double.tryParse(entry.value.weightController.text.trim()) ?? 0.0;
+        final r = int.tryParse(entry.value.repsController.text.trim()) ?? 0;
+        return SetDetail(setIndex: idx, weight: w, reps: r);
+      }).toList();
+
+      customSetsJson = jsonEncode(setDetails.map((s) => s.toMap()).toList());
+    }
 
     final workout = Workout(
       id: widget.workoutToEdit?.id,
@@ -228,6 +314,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
       sortOrder:
           widget.workoutToEdit?.sortOrder ??
           (widget.provider.workouts.length + 1),
+      customSetsJson: customSetsJson,
     );
 
     if (widget.workoutToEdit != null) {
@@ -247,6 +334,7 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
         targetWeight: weight,
         targetMinutes: minutes,
         isDefault: false,
+        customSetsJson: customSetsJson,
       );
       widget.provider.addWorkoutPreset(newPreset);
     }
@@ -489,454 +577,596 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isEdit = widget.workoutToEdit != null;
-    final maxHeight = MediaQuery.of(context).size.height * 0.88;
+    final maxHeight = MediaQuery.of(context).size.height * 0.85;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 620,
-            maxHeight: maxHeight,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCard : Colors.white,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                // Handle Bar
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[700] : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Handle Bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      isEdit ? '🏋️ 운동 편집' : '🏋️ 신규 운동 추가',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Preset Quick Load Button
-                InkWell(
-                  onTap: _showPresetPickerSheet,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.q2.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.q2.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.bolt, color: AppColors.q2, size: 18),
-                        SizedBox(width: 6),
-                        Text(
-                          '미리 등록된 운동 프리셋 불러오기',
-                          style: TextStyle(
-                            color: AppColors.q2,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isEdit ? '🏋️ 운동 편집' : '🏋️ 신규 운동 추가',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
-                // Emoji & Title row
-                Row(
-                  children: [
-                    // Emoji selection button
-                    GestureDetector(
-                      onTap: _showEmojiPicker,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.grey.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Text(
-                          _selectedEmoji,
-                          style: const TextStyle(fontSize: 32),
+                  // Preset Quick Load Button
+                  InkWell(
+                    onTap: _showPresetPickerSheet,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.q2.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.q2.withValues(alpha: 0.3),
+                          width: 1,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Title TextField
-                    Expanded(
-                      child: TextFormField(
-                        controller: _titleController,
-                        decoration: InputDecoration(
-                          hintText: '운동 이름 (예: 벤치프레스, 런닝)',
-                          filled: true,
-                          fillColor: isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.grey.withValues(alpha: 0.06),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.bolt, color: AppColors.q2, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            '미리 등록된 운동 프리셋 불러오기',
+                            style: TextStyle(
                               color: AppColors.q2,
-                              width: 1.5,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                        ),
-                        validator: (val) {
-                          if (val == null || val.trim().isEmpty) {
-                            return '운동 이름을 입력해 주세요.';
-                          }
-                          return null;
-                        },
+                        ],
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Category Selector
-                Text(
-                  '운동 카테고리',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: _categoryOptions.map((cat) {
-                    final isSelected = _selectedCategory == cat;
-                    return ChoiceChip(
-                      label: Text(cat),
-                      selected: isSelected,
-                      selectedColor: AppColors.q2,
-                      backgroundColor: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.grey.withValues(alpha: 0.08),
-                      side: BorderSide.none,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      labelStyle: TextStyle(
-                        color: isSelected
-                            ? Colors.white
-                            : (isDark ? Colors.white70 : Colors.black87),
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 12,
-                      ),
-                      showCheckmark: false,
-                      visualDensity: VisualDensity.compact,
-                      onSelected: (selected) {
-                        if (selected) {
-                          setState(() => _selectedCategory = cat);
-                        }
-                      },
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Workout Type Selector
-                Text(
-                  '기록 측정 방식',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _buildTypeOption(
-                      'set',
-                      '세트 수',
-                      Icons.fitness_center,
-                      isDark,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildTypeOption('time', '시간/목표', Icons.timer, isDark),
-                    const SizedBox(width: 8),
-                    _buildTypeOption(
-                      'simple',
-                      '단순 체크',
-                      Icons.check_circle_outline,
-                      isDark,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Dynamic Input Fields according to Workout Type
-                if (_selectedWorkoutType == 'set') ...[
+                  // Emoji & Title row
                   Row(
                     children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _setsController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: '목표 세트',
-                            suffixText: '세트',
-                            filled: true,
-                            fillColor: isDark
+                      // Emoji selection button
+                      GestureDetector(
+                        onTap: _showEmojiPicker,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark
                                 ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.grey.withValues(alpha: 0.06),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: AppColors.q2,
-                                width: 1.5,
-                              ),
-                            ),
+                                : Colors.grey.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(
+                            _selectedEmoji,
+                            style: const TextStyle(fontSize: 32),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
+                      // Title TextField
                       Expanded(
                         child: TextFormField(
-                          controller: _repsController,
-                          keyboardType: TextInputType.number,
+                          controller: _titleController,
                           decoration: InputDecoration(
-                            labelText: '횟수 (선택)',
-                            suffixText: '회',
+                            hintText: '운동 이름 (예: 벤치프레스, 런닝)',
                             filled: true,
                             fillColor: isDark
                                 ? Colors.white.withValues(alpha: 0.05)
                                 : Colors.grey.withValues(alpha: 0.06),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                               borderSide: BorderSide.none,
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                               borderSide: const BorderSide(
                                 color: AppColors.q2,
                                 width: 1.5,
                               ),
                             ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _weightController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: '무게 (선택)',
-                            suffixText: 'kg',
-                            filled: true,
-                            fillColor: isDark
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.grey.withValues(alpha: 0.06),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: AppColors.q2,
-                                width: 1.5,
-                              ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
                             ),
                           ),
+                          validator: (val) {
+                            if (val == null || val.trim().isEmpty) {
+                              return '운동 이름을 입력해 주세요.';
+                            }
+                            return null;
+                          },
                         ),
                       ),
                     ],
                   ),
-                ] else if (_selectedWorkoutType == 'time') ...[
-                  TextFormField(
-                    controller: _minutesController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: '목표 운동 시간',
-                      suffixText: '분',
-                      filled: true,
-                      fillColor: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.grey.withValues(alpha: 0.06),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: AppColors.q2,
-                          width: 1.5,
-                        ),
-                      ),
+                  const SizedBox(height: 16),
+
+                  // Category Selector
+                  Text(
+                    '운동 카테고리',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
                     ),
                   ),
-                ],
-
-                const SizedBox(height: 16),
-
-                // Save as Preset Checkbox
-                InkWell(
-                  onTap: () {
-                    setState(() => _saveAsPreset = !_saveAsPreset);
-                  },
-                  borderRadius: BorderRadius.circular(10),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: _saveAsPreset,
-                          activeColor: AppColors.q2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          onChanged: (val) {
-                            setState(() => _saveAsPreset = val ?? false);
-                          },
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: _categoryOptions.map((cat) {
+                      final isSelected = _selectedCategory == cat;
+                      return ChoiceChip(
+                        label: Text(cat),
+                        selected: isSelected,
+                        selectedColor: AppColors.q2,
+                        backgroundColor: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.withValues(alpha: 0.08),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const Expanded(
-                          child: Text(
-                            '⭐ 이 설정을 나만의 운동 프리셋으로 저장',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 12,
+                        ),
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() => _selectedCategory = cat);
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Workout Type Selector
+                  Text(
+                    '기록 측정 방식',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _buildTypeOption(
+                        'set',
+                        '세트 수',
+                        Icons.fitness_center,
+                        isDark,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildTypeOption('time', '시간/목표', Icons.timer, isDark),
+                      const SizedBox(width: 8),
+                      _buildTypeOption(
+                        'simple',
+                        '단순 체크',
+                        Icons.check_circle_outline,
+                        isDark,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Dynamic Input Fields according to Workout Type
+                  if (_selectedWorkoutType == 'set') ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.fitness_center_rounded,
+                              size: 16,
+                              color: AppColors.q2,
                             ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '세트별 설정',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.q2.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '총 ${_setItems.length}세트',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.q2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '세트별 무게/횟수 개별 설정',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: theme.hintColor,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
+                    const SizedBox(height: 10),
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _setItems.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final item = _setItems[index];
+                        final canDelete = _setItems.length > 1;
 
-                const SizedBox(height: 20),
-
-                // Action Buttons
-                Row(
-                  children: [
-                    if (isEdit) ...[
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () => _confirmDeleteWorkout(context),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _saveWorkout,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.q2,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.04)
+                                : Colors.grey.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white10
+                                  : Colors.black.withValues(alpha: 0.05),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: AppColors.q2.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '${index + 1}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.q2,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                flex: 5,
+                                child: TextFormField(
+                                  controller: item.weightController,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    labelText: '무게',
+                                    suffixText: 'kg',
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 10,
+                                    ),
+                                    filled: true,
+                                    fillColor: isDark
+                                        ? Colors.white.withValues(alpha: 0.05)
+                                        : Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: isDark
+                                            ? Colors.white12
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: isDark
+                                            ? Colors.white12
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.q2,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 5,
+                                child: TextFormField(
+                                  controller: item.repsController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    labelText: '횟수',
+                                    suffixText: '회',
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 10,
+                                    ),
+                                    filled: true,
+                                    fillColor: isDark
+                                        ? Colors.white.withValues(alpha: 0.05)
+                                        : Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: isDark
+                                            ? Colors.white12
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: isDark
+                                            ? Colors.white12
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.q2,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: canDelete
+                                      ? Colors.redAccent.withValues(alpha: 0.85)
+                                      : Colors.grey.withValues(alpha: 0.25),
+                                  size: 20,
+                                ),
+                                tooltip: canDelete ? '세트 삭제' : '최소 1개 세트 필요',
+                                onPressed: canDelete
+                                    ? () => _removeSetItem(index)
+                                    : null,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: _addSetItem,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.q2.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.q2.withValues(alpha: 0.3),
                           ),
                         ),
-                        child: Text(
-                          isEdit ? '수정 완료' : '운동 추가하기',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_circle_outline_rounded,
+                              size: 16,
+                              color: AppColors.q2,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              '세트 항목 추가',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.q2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ] else if (_selectedWorkoutType == 'time') ...[
+                    TextFormField(
+                      controller: _minutesController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: '목표 운동 시간',
+                        suffixText: '분',
+                        filled: true,
+                        fillColor: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.withValues(alpha: 0.06),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.q2,
+                            width: 1.5,
                           ),
                         ),
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 16),
-              ],
+
+                  const SizedBox(height: 16),
+
+                  // Save as Preset Checkbox
+                  InkWell(
+                    onTap: () {
+                      setState(() => _saveAsPreset = !_saveAsPreset);
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Checkbox(
+                            value: _saveAsPreset,
+                            activeColor: AppColors.q2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            onChanged: (val) {
+                              setState(() => _saveAsPreset = val ?? false);
+                            },
+                          ),
+                          const Expanded(
+                            child: Text(
+                              '⭐ 이 설정을 나만의 운동 프리셋으로 저장',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Action Buttons
+                  Row(
+                    children: [
+                      if (isEdit) ...[
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: () => _confirmDeleteWorkout(context),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _saveWorkout,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.q2,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            isEdit ? '수정 완료' : '운동 추가하기',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 
   Widget _buildTypeOption(
     String typeKey,

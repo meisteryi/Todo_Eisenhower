@@ -13,7 +13,18 @@ class TodoProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   TodoProvider() {
-    SyncService.instance.initializeSync(() => loadTodos());
+    SyncService.instance.initializeSync(
+      () => loadTodos(),
+      onSettingsChanged: (settings) {
+        if (settings.containsKey('activeViewMode')) {
+          _activeViewMode = settings['activeViewMode'] as String;
+        }
+        if (settings.containsKey('isMatrixFilterTodayOnly')) {
+          _isMatrixFilterTodayOnly = settings['isMatrixFilterTodayOnly'] as bool;
+        }
+        notifyListeners();
+      },
+    );
   }
 
   List<Todo> _todos = [];
@@ -73,6 +84,10 @@ class TodoProvider with ChangeNotifier {
   void setMatrixFilterTodayOnly(bool todayOnly) {
     _isMatrixFilterTodayOnly = todayOnly;
     notifyListeners();
+    SyncService.instance.pushSettings({
+      'activeViewMode': _activeViewMode,
+      'isMatrixFilterTodayOnly': _isMatrixFilterTodayOnly,
+    });
   }
 
   // Get filtered Todos for a quadrant based on isMatrixFilterTodayOnly
@@ -182,6 +197,10 @@ class TodoProvider with ChangeNotifier {
     if (['todomate', 'eisenhower', 'routines', 'workout'].contains(mode)) {
       _activeViewMode = mode;
       notifyListeners();
+      SyncService.instance.pushSettings({
+        'activeViewMode': _activeViewMode,
+        'isMatrixFilterTodayOnly': _isMatrixFilterTodayOnly,
+      });
     }
   }
 
@@ -531,6 +550,10 @@ class TodoProvider with ChangeNotifier {
   // Clear All Todos (Reset schedules)
   Future<void> clearAllTodos() async {
     try {
+      final allTodos = await _dbHelper.fetchAllTodosAll();
+      for (final t in allTodos) {
+        if (t.id != null) SyncService.instance.removeTodo(t.id!);
+      }
       await _dbHelper.clearAllTodos();
       await loadTodos();
     } catch (e) {
@@ -553,7 +576,9 @@ class TodoProvider with ChangeNotifier {
     );
 
     try {
-      await _dbHelper.insertCategory(category);
+      final insertedId = await _dbHelper.insertCategory(category);
+      final catWithId = category.copyWith(id: insertedId);
+      SyncService.instance.pushCategory(catWithId);
       await loadTodos();
     } catch (e) {
       debugPrint("Error adding category: $e");
@@ -563,6 +588,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> updateCategory(Category category) async {
     try {
       await _dbHelper.updateCategory(category);
+      SyncService.instance.pushCategory(category);
       await loadTodos();
     } catch (e) {
       debugPrint("Error updating category: $e");
@@ -572,6 +598,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> deleteCategory(int id) async {
     try {
       await _dbHelper.deleteCategory(id);
+      SyncService.instance.removeCategory(id);
       await loadTodos();
     } catch (e) {
       debugPrint("Error deleting category: $e");
@@ -589,6 +616,9 @@ class TodoProvider with ChangeNotifier {
 
     try {
       await _dbHelper.updateCategoriesOrder(_categories);
+      for (final cat in _categories) {
+        SyncService.instance.pushCategory(cat);
+      }
     } catch (e) {
       debugPrint("Error reordering categories: $e");
       await loadTodos();
@@ -630,7 +660,9 @@ class TodoProvider with ChangeNotifier {
     );
 
     try {
-      await _dbHelper.insertRoutine(routine);
+      final insertedId = await _dbHelper.insertRoutine(routine);
+      final routineWithId = routine.copyWith(id: insertedId);
+      SyncService.instance.pushRoutine(routineWithId);
       await loadTodos();
     } catch (e) {
       debugPrint("Error adding routine: $e");
@@ -641,6 +673,7 @@ class TodoProvider with ChangeNotifier {
     final updated = routine.copyWith(isActive: !routine.isActive);
     try {
       await _dbHelper.updateRoutine(updated);
+      SyncService.instance.pushRoutine(updated);
       await loadTodos();
     } catch (e) {
       debugPrint("Error toggling routine: $e");
@@ -650,6 +683,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> updateRoutine(Routine routine) async {
     try {
       await _dbHelper.updateRoutine(routine);
+      SyncService.instance.pushRoutine(routine);
       await loadTodos();
     } catch (e) {
       debugPrint("Error updating routine: $e");
@@ -659,6 +693,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> deleteRoutine(int id) async {
     try {
       await _dbHelper.deleteRoutine(id);
+      SyncService.instance.removeRoutine(id);
       await loadTodos();
     } catch (e) {
       debugPrint("Error deleting routine: $e");
@@ -806,32 +841,39 @@ class TodoProvider with ChangeNotifier {
   }
 
   Future<void> addWorkout(Workout workout) async {
-    await _dbHelper.insertWorkout(workout);
+    final insertedId = await _dbHelper.insertWorkout(workout);
+    final wWithId = workout.copyWith(id: insertedId);
+    SyncService.instance.pushWorkout(wWithId);
     await loadWorkouts();
     notifyListeners();
   }
 
   Future<void> updateWorkout(Workout workout) async {
     await _dbHelper.updateWorkout(workout);
+    SyncService.instance.pushWorkout(workout);
     await loadWorkouts();
     notifyListeners();
   }
 
   Future<void> deleteWorkout(int id) async {
     await _dbHelper.deleteWorkout(id);
+    SyncService.instance.removeWorkout(id);
     _todayWorkoutLogs.remove(id);
     await loadWorkouts();
     notifyListeners();
   }
 
   Future<void> addWorkoutPreset(WorkoutPreset preset) async {
-    await _dbHelper.insertWorkoutPreset(preset);
+    final insertedId = await _dbHelper.insertWorkoutPreset(preset);
+    final pWithId = preset.copyWith(id: insertedId);
+    SyncService.instance.pushWorkoutPreset(pWithId);
     _workoutPresets = await _dbHelper.fetchWorkoutPresets();
     notifyListeners();
   }
 
   Future<void> deleteWorkoutPreset(int id) async {
     await _dbHelper.deleteWorkoutPreset(id);
+    SyncService.instance.removeWorkoutPreset(id);
     _workoutPresets = await _dbHelper.fetchWorkoutPresets();
     notifyListeners();
   }
@@ -849,15 +891,7 @@ class TodoProvider with ChangeNotifier {
         WorkoutLog(
           workoutId: workoutId,
           date: dateStr,
-          setDetails: List.generate(
-            workout.targetSets,
-            (i) => SetDetail(
-              setIndex: i + 1,
-              weight: workout.targetWeight,
-              reps: workout.targetReps,
-              isCompleted: false,
-            ),
-          ),
+          setDetails: workout.getInitialSetDetails(),
         );
 
     final updatedSets = List<SetDetail>.from(existingLog.setDetails);
@@ -891,7 +925,9 @@ class TodoProvider with ChangeNotifier {
     );
 
     final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
-    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+    final finalLog = updatedLog.copyWith(id: newId);
+    _todayWorkoutLogs[workoutId] = finalLog;
+    SyncService.instance.pushWorkoutLog(finalLog);
 
     await _calculateWorkoutStreak();
     notifyListeners();
@@ -910,15 +946,7 @@ class TodoProvider with ChangeNotifier {
         WorkoutLog(
           workoutId: workoutId,
           date: dateStr,
-          setDetails: List.generate(
-            workout.targetSets,
-            (i) => SetDetail(
-              setIndex: i + 1,
-              weight: workout.targetWeight,
-              reps: workout.targetReps,
-              isCompleted: false,
-            ),
-          ),
+          setDetails: workout.getInitialSetDetails(),
         );
 
     final updatedSets = List<SetDetail>.from(existingLog.setDetails);
@@ -942,7 +970,9 @@ class TodoProvider with ChangeNotifier {
 
     final updatedLog = existingLog.copyWith(setDetails: updatedSets);
     final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
-    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+    final finalLog = updatedLog.copyWith(id: newId);
+    _todayWorkoutLogs[workoutId] = finalLog;
+    SyncService.instance.pushWorkoutLog(finalLog);
 
     notifyListeners();
   }
@@ -973,7 +1003,9 @@ class TodoProvider with ChangeNotifier {
     );
 
     final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
-    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+    final finalLog = updatedLog.copyWith(id: newId);
+    _todayWorkoutLogs[workoutId] = finalLog;
+    SyncService.instance.pushWorkoutLog(finalLog);
 
     await _calculateWorkoutStreak();
     notifyListeners();
@@ -987,15 +1019,7 @@ class TodoProvider with ChangeNotifier {
         WorkoutLog(
           workoutId: workoutId,
           date: dateStr,
-          setDetails: List.generate(
-            workout.targetSets,
-            (i) => SetDetail(
-              setIndex: i + 1,
-              weight: workout.targetWeight,
-              reps: workout.targetReps,
-              isCompleted: false,
-            ),
-          ),
+          setDetails: workout.getInitialSetDetails(),
         );
 
     final updatedSets = List<SetDetail>.from(existingLog.setDetails);
@@ -1013,7 +1037,9 @@ class TodoProvider with ChangeNotifier {
 
     final updatedLog = existingLog.copyWith(setDetails: updatedSets);
     final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
-    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+    final finalLog = updatedLog.copyWith(id: newId);
+    _todayWorkoutLogs[workoutId] = finalLog;
+    SyncService.instance.pushWorkoutLog(finalLog);
 
     notifyListeners();
   }
@@ -1057,7 +1083,9 @@ class TodoProvider with ChangeNotifier {
     );
 
     final newId = await _dbHelper.upsertWorkoutLog(updatedLog);
-    _todayWorkoutLogs[workoutId] = updatedLog.copyWith(id: newId);
+    final finalLog = updatedLog.copyWith(id: newId);
+    _todayWorkoutLogs[workoutId] = finalLog;
+    SyncService.instance.pushWorkoutLog(finalLog);
 
     await _calculateWorkoutStreak();
     notifyListeners();

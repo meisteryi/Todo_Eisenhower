@@ -609,10 +609,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			Akb5OF7GUNp2zaObzTrKVUt7anI=
+			cCa6XOb0ofzRgxUdaEmZcTlugb4=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"0246f9385ec650da76cda39bcd3aca554b7b6a72" or cdhash H"81df27d2b72ab97019c6935502ff70b790dd59e7"</string>
+			<string>cdhash H"7026ba5ce6f4a1fcd183151d68499971396e81be" or cdhash H"513d85e1e878c28dda5f866cbabdaa9d8948759d"</string>
 		</dict>
 		<key>Frameworks/FirebaseFirestoreInternal.framework</key>
 		<dict>

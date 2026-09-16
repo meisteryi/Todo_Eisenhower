@@ -69,6 +69,13 @@ class MyApp extends StatelessWidget {
           themeMode:
               ThemeMode.system, // Automatic Dark/Light based on system settings
           home: HomeScreen(provider: provider),
+          builder: (context, child) {
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           debugShowCheckedModeBanner: false,
         );
       },

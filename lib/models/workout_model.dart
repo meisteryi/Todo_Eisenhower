@@ -60,6 +60,7 @@ class Workout {
   final int sortOrder;
   final bool isActive;
   final String createdAt;
+  final String? customSetsJson;
 
   Workout({
     this.id,
@@ -75,7 +76,29 @@ class Workout {
     this.sortOrder = 0,
     this.isActive = true,
     String? createdAt,
+    this.customSetsJson,
   }) : createdAt = createdAt ?? DateTime.now().toIso8601String();
+
+  List<SetDetail> getInitialSetDetails() {
+    if (customSetsJson != null && customSetsJson!.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(customSetsJson!);
+        final list = decoded
+            .map((e) => SetDetail.fromMap(Map<String, dynamic>.from(e)))
+            .toList();
+        if (list.isNotEmpty) return list;
+      } catch (_) {}
+    }
+    return List.generate(
+      targetSets > 0 ? targetSets : 1,
+      (i) => SetDetail(
+        setIndex: i + 1,
+        weight: targetWeight,
+        reps: targetReps,
+        isCompleted: false,
+      ),
+    );
+  }
 
   Workout copyWith({
     int? id,
@@ -91,6 +114,7 @@ class Workout {
     int? sortOrder,
     bool? isActive,
     String? createdAt,
+    String? customSetsJson,
   }) {
     return Workout(
       id: id ?? this.id,
@@ -106,6 +130,7 @@ class Workout {
       sortOrder: sortOrder ?? this.sortOrder,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
+      customSetsJson: customSetsJson ?? this.customSetsJson,
     );
   }
 
@@ -124,6 +149,7 @@ class Workout {
       'sort_order': sortOrder,
       'is_active': isActive ? 1 : 0,
       'created_at': createdAt,
+      'custom_sets_json': customSetsJson,
     };
   }
 
@@ -142,6 +168,7 @@ class Workout {
       sortOrder: (map['sort_order'] as int?) ?? 0,
       isActive: (map['is_active'] as int? ?? 1) == 1,
       createdAt: (map['created_at'] as String?) ?? DateTime.now().toIso8601String(),
+      customSetsJson: map['custom_sets_json'] as String?,
     );
   }
 
@@ -188,6 +215,7 @@ class WorkoutPreset {
   final double targetWeight;
   final int targetMinutes;
   final bool isDefault;
+  final String? customSetsJson;
 
   WorkoutPreset({
     this.id,
@@ -200,7 +228,29 @@ class WorkoutPreset {
     this.targetWeight = 0.0,
     this.targetMinutes = 30,
     this.isDefault = false,
+    this.customSetsJson,
   });
+
+  List<SetDetail> getInitialSetDetails() {
+    if (customSetsJson != null && customSetsJson!.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(customSetsJson!);
+        final list = decoded
+            .map((e) => SetDetail.fromMap(Map<String, dynamic>.from(e)))
+            .toList();
+        if (list.isNotEmpty) return list;
+      } catch (_) {}
+    }
+    return List.generate(
+      targetSets > 0 ? targetSets : 1,
+      (i) => SetDetail(
+        setIndex: i + 1,
+        weight: targetWeight,
+        reps: targetReps,
+        isCompleted: false,
+      ),
+    );
+  }
 
   WorkoutPreset copyWith({
     int? id,
@@ -213,6 +263,7 @@ class WorkoutPreset {
     double? targetWeight,
     int? targetMinutes,
     bool? isDefault,
+    String? customSetsJson,
   }) {
     return WorkoutPreset(
       id: id ?? this.id,
@@ -225,6 +276,7 @@ class WorkoutPreset {
       targetWeight: targetWeight ?? this.targetWeight,
       targetMinutes: targetMinutes ?? this.targetMinutes,
       isDefault: isDefault ?? this.isDefault,
+      customSetsJson: customSetsJson ?? this.customSetsJson,
     );
   }
 
@@ -240,6 +292,7 @@ class WorkoutPreset {
       'target_weight': targetWeight,
       'target_minutes': targetMinutes,
       'is_default': isDefault ? 1 : 0,
+      'custom_sets_json': customSetsJson,
     };
   }
 
@@ -255,6 +308,7 @@ class WorkoutPreset {
       targetWeight: (map['target_weight'] as num?)?.toDouble() ?? 0.0,
       targetMinutes: (map['target_minutes'] as int?) ?? 30,
       isDefault: (map['is_default'] as int? ?? 0) == 1,
+      customSetsJson: map['custom_sets_json'] as String?,
     );
   }
 

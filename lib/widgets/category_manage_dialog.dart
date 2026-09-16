@@ -196,11 +196,15 @@ class _CategoryManageDialogState extends State<CategoryManageDialog> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: Text(category == null ? '신규 카테고리 추가' : '카테고리 수정'),
-              content: SingleChildScrollView(
-                child: Column(
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                title: Text(category == null ? '신규 카테고리 추가' : '카테고리 수정'),
+                content: SingleChildScrollView(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -315,12 +319,13 @@ class _CategoryManageDialogState extends State<CategoryManageDialog> {
                   child: const Text('저장'),
                 ),
               ],
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   Color _parseColor(String hex) {
     try {
