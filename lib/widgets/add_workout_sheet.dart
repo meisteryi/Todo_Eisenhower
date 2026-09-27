@@ -302,6 +302,9 @@ class _AddWorkoutSheetState extends State<AddWorkoutSheet> {
 
     final workout = Workout(
       id: widget.workoutToEdit?.id,
+      date:
+          widget.workoutToEdit?.date ??
+          widget.provider.formatDateKey(widget.provider.selectedDate),
       title: title,
       emoji: _selectedEmoji,
       category: _selectedCategory,

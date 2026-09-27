@@ -48,6 +48,7 @@ class SetDetail {
 
 class Workout {
   final int? id;
+  final String date; // 'YYYY-MM-DD'
   final String title;
   final String emoji;
   final String category; // '웨이트', '유산소', '스트레칭', '기타'
@@ -64,6 +65,7 @@ class Workout {
 
   Workout({
     this.id,
+    String? date,
     required this.title,
     this.emoji = '🏋️',
     this.category = '웨이트',
@@ -77,7 +79,10 @@ class Workout {
     this.isActive = true,
     String? createdAt,
     this.customSetsJson,
-  }) : createdAt = createdAt ?? DateTime.now().toIso8601String();
+  }) : date = date ?? (createdAt != null && createdAt.length >= 10
+            ? createdAt.substring(0, 10)
+            : DateTime.now().toIso8601String().substring(0, 10)),
+       createdAt = createdAt ?? DateTime.now().toIso8601String();
 
   List<SetDetail> getInitialSetDetails() {
     if (customSetsJson != null && customSetsJson!.isNotEmpty) {
@@ -102,6 +107,7 @@ class Workout {
 
   Workout copyWith({
     int? id,
+    String? date,
     String? title,
     String? emoji,
     String? category,
@@ -118,6 +124,7 @@ class Workout {
   }) {
     return Workout(
       id: id ?? this.id,
+      date: date ?? this.date,
       title: title ?? this.title,
       emoji: emoji ?? this.emoji,
       category: category ?? this.category,
@@ -137,6 +144,7 @@ class Workout {
   Map<String, dynamic> toMap() {
     return {
       if (id != null) 'id': id,
+      'date': date,
       'title': title,
       'emoji': emoji,
       'category': category,
@@ -154,8 +162,11 @@ class Workout {
   }
 
   factory Workout.fromMap(Map<String, dynamic> map) {
+    final createdAtStr = (map['created_at'] as String?) ?? DateTime.now().toIso8601String();
+    final defaultDate = createdAtStr.length >= 10 ? createdAtStr.substring(0, 10) : DateTime.now().toIso8601String().substring(0, 10);
     return Workout(
       id: map['id'] as int?,
+      date: (map['date'] as String?) ?? defaultDate,
       title: map['title'] as String,
       emoji: (map['emoji'] as String?) ?? '🏋️',
       category: (map['category'] as String?) ?? '웨이트',
@@ -167,40 +178,14 @@ class Workout {
       repeatDays: (map['repeat_days'] as String?) ?? '월,화,수,목,금,토,일',
       sortOrder: (map['sort_order'] as int?) ?? 0,
       isActive: (map['is_active'] as int? ?? 1) == 1,
-      createdAt: (map['created_at'] as String?) ?? DateTime.now().toIso8601String(),
+      createdAt: createdAtStr,
       customSetsJson: map['custom_sets_json'] as String?,
     );
   }
 
-  // Predefined default exercises for user convenience
+  // Predefined default exercises - Empty by default per user request
   static List<Workout> defaultWorkouts() {
-    return [
-      Workout(
-        title: '스쿼트',
-        emoji: '🏋️‍♂️',
-        category: '웨이트',
-        workoutType: 'set',
-        targetSets: 3,
-        targetReps: 10,
-        targetWeight: 60.0,
-        sortOrder: 1,
-      ),
-      Workout(
-        title: '30분 야외 런닝',
-        emoji: '🏃',
-        category: '유산소',
-        workoutType: 'time',
-        targetMinutes: 30,
-        sortOrder: 2,
-      ),
-      Workout(
-        title: '전신 스트레칭',
-        emoji: '🧘',
-        category: '스트레칭',
-        workoutType: 'simple',
-        sortOrder: 3,
-      ),
-    ];
+    return [];
   }
 }
 

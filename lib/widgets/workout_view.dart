@@ -292,6 +292,7 @@ class _WorkoutViewState extends State<WorkoutView> {
                                       ElevatedButton(
                                         onPressed: () {
                                           final newWorkout = Workout(
+                                            date: widget.provider.formatDateKey(widget.provider.selectedDate),
                                             title: p.title,
                                             emoji: p.emoji,
                                             category: p.category,
@@ -840,6 +841,13 @@ class _WorkoutViewState extends State<WorkoutView> {
   }
 
   Widget _buildEmptyState(ThemeData theme) {
+    final selectedDate = widget.provider.selectedDate;
+    final now = DateTime.now();
+    final isToday = selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+    final dateLabel = isToday ? '오늘' : DateFormat('M월 d일', 'ko').format(selectedDate);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -847,7 +855,7 @@ class _WorkoutViewState extends State<WorkoutView> {
           const Text('🏋️', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 12),
           Text(
-            '등록된 운동이 없습니다.',
+            '$dateLabel 등록된 운동이 없습니다.',
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.hintColor,
               fontWeight: FontWeight.bold,
@@ -855,7 +863,7 @@ class _WorkoutViewState extends State<WorkoutView> {
           ),
           const SizedBox(height: 8),
           Text(
-            '운동을 기록하고 오운완 습관을 만들어보세요!',
+            '운동을 추가하거나 프리셋을 불러와 기록해보세요!',
             style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(height: 16),

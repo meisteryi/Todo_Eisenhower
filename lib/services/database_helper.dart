@@ -36,7 +36,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -101,6 +101,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE workouts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL DEFAULT '',
         title TEXT NOT NULL,
         emoji TEXT NOT NULL DEFAULT '🏋️',
         category TEXT NOT NULL DEFAULT '웨이트',
@@ -134,11 +135,6 @@ class DatabaseHelper {
     // Populate default categories
     for (final cat in Category.defaultCategories()) {
       await db.insert('categories', cat.toMap());
-    }
-
-    // Populate default workouts
-    for (final w in Workout.defaultWorkouts()) {
-      await db.insert('workouts', w.toMap());
     }
 
     await db.execute('''
@@ -290,6 +286,15 @@ class DatabaseHelper {
     if (oldVersion < 9) {
       try { await db.execute('ALTER TABLE workouts ADD COLUMN custom_sets_json TEXT'); } catch (_) {}
       try { await db.execute('ALTER TABLE workout_presets ADD COLUMN custom_sets_json TEXT'); } catch (_) {}
+    }
+
+    if (oldVersion < 10) {
+      try {
+        await db.execute("ALTER TABLE workouts ADD COLUMN date TEXT NOT NULL DEFAULT ''");
+      } catch (_) {}
+      try {
+        await db.execute("UPDATE workouts SET date = substr(created_at, 1, 10) WHERE date = '' OR date IS NULL");
+      } catch (_) {}
     }
   }
 
@@ -541,6 +546,21 @@ class DatabaseHelper {
     final db = await instance.database;
     final maps = await db.query('workouts', where: 'is_active = 1', orderBy: 'sort_order ASC, id ASC');
     return maps.map((map) => Workout.fromMap(map)).toList();
+  }
+
+  Future<List<Workout>> fetchWorkoutsForDate(String dateStr) async {
+    final db = await instance.database;
+    try {
+      final maps = await db.query(
+        'workouts',
+        where: 'date = ? AND is_active = 1',
+        whereArgs: [dateStr],
+        orderBy: 'sort_order ASC, id ASC',
+      );
+      return maps.map((map) => Workout.fromMap(map)).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<int> insertWorkout(Workout workout) async {

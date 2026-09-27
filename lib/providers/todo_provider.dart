@@ -766,31 +766,34 @@ class TodoProvider with ChangeNotifier {
 
   // --- WORKOUT METHODS ---
 
-  String _formatDateKey(DateTime dt) {
+  String formatDateKey(DateTime dt) {
     final y = dt.year.toString().padLeft(4, '0');
     final m = dt.month.toString().padLeft(2, '0');
     final d = dt.day.toString().padLeft(2, '0');
     return '$y-$m-$d';
   }
 
+  String _formatDateKey(DateTime dt) => formatDateKey(dt);
+
   Future<void> loadWorkouts() async {
     try {
-      _workouts = await _dbHelper.fetchWorkouts();
+      final dateStr = formatDateKey(_selectedDate);
+      _workouts = await _dbHelper.fetchWorkoutsForDate(dateStr);
       _workoutPresets = await _dbHelper.fetchWorkoutPresets();
 
-      final todayStr = _formatDateKey(_selectedDate);
-      final logs = await _dbHelper.fetchWorkoutLogsForDate(todayStr);
+      final logs = await _dbHelper.fetchWorkoutLogsForDate(dateStr);
 
       _todayWorkoutLogs = {for (var l in logs) l.workoutId: l};
 
       // Load current month logs for streak/calendar
-      final yyyyMM = todayStr.substring(0, 7);
+      final yyyyMM = dateStr.substring(0, 7);
       _monthlyWorkoutLogs = await _dbHelper.fetchWorkoutLogsForMonth(yyyyMM);
 
       // Load weekly logs
       await loadWeeklyWorkoutLogs(_selectedDate);
 
       await _calculateWorkoutStreak();
+      notifyListeners();
     } catch (e) {
       debugPrint('Error loading workouts: $e');
     }
@@ -805,8 +808,8 @@ class TodoProvider with ChangeNotifier {
     final now = refDate ?? _selectedDate;
     final monday = now.subtract(Duration(days: now.weekday - 1));
     final sunday = monday.add(const Duration(days: 6));
-    final startStr = _formatDateKey(monday);
-    final endStr = _formatDateKey(sunday);
+    final startStr = formatDateKey(monday);
+    final endStr = formatDateKey(sunday);
     _weeklyWorkoutLogs = await _dbHelper.fetchWorkoutLogsForDateRange(startStr, endStr);
     notifyListeners();
   }
@@ -815,20 +818,26 @@ class TodoProvider with ChangeNotifier {
     return await _dbHelper.fetchWorkoutLogsForDateRange(startStr, endStr);
   }
 
+  Future<List<Workout>> fetchWorkoutsForDate(String dateStr) async {
+    return await _dbHelper.fetchWorkoutsForDate(dateStr);
+  }
+
   Future<void> _calculateWorkoutStreak() async {
     int streak = 0;
     DateTime checkDate = DateTime.now();
 
     for (int i = 0; i < 365; i++) {
-      final dateStr = _formatDateKey(checkDate);
+      final dateStr = formatDateKey(checkDate);
+      final dayWorkouts = await _dbHelper.fetchWorkoutsForDate(dateStr);
       final logs = await _dbHelper.fetchWorkoutLogsForDate(dateStr);
-      final hasCompletedLog = logs.any((l) => l.isCompleted);
+      final hasCompleted = dayWorkouts.isNotEmpty &&
+          dayWorkouts.every((w) => logs.any((l) => l.workoutId == w.id && l.isCompleted));
 
-      if (hasCompletedLog) {
+      if (hasCompleted) {
         streak++;
         checkDate = checkDate.subtract(const Duration(days: 1));
       } else {
-        // If today hasn't been completed yet, check yesterday to keep active streak
+        // If today hasn't been completed yet or has no workouts, check yesterday to keep active streak
         if (i == 0) {
           checkDate = checkDate.subtract(const Duration(days: 1));
           continue;
@@ -841,8 +850,10 @@ class TodoProvider with ChangeNotifier {
   }
 
   Future<void> addWorkout(Workout workout) async {
-    final insertedId = await _dbHelper.insertWorkout(workout);
-    final wWithId = workout.copyWith(id: insertedId);
+    final dateStr = formatDateKey(_selectedDate);
+    final targetWorkout = workout.date.isEmpty ? workout.copyWith(date: dateStr) : workout;
+    final insertedId = await _dbHelper.insertWorkout(targetWorkout);
+    final wWithId = targetWorkout.copyWith(id: insertedId);
     SyncService.instance.pushWorkout(wWithId);
     await loadWorkouts();
     notifyListeners();

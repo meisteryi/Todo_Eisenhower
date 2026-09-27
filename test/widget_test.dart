@@ -171,5 +171,41 @@ void main() {
       await provider.deleteWorkoutPreset(addedPreset.id!);
       expect(provider.workoutPresets.length, initialCount);
     });
+
+    test('Daily workout is empty by default on new days and scoped to specific date', () async {
+      final provider = TodoProvider();
+      final today = DateTime.now();
+      provider.setSelectedDate(today);
+      await provider.loadWorkouts();
+
+      // 1. Initial state for today is empty
+      expect(provider.workouts.isEmpty, isTrue);
+
+      // 2. Add a workout today
+      final todayWorkout = Workout(
+        title: '오늘의 스쿼트',
+        emoji: '🏋️‍♂️',
+        targetSets: 3,
+        targetReps: 10,
+        targetWeight: 60,
+      );
+      await provider.addWorkout(todayWorkout);
+
+      // 3. Today has 1 workout
+      expect(provider.workouts.length, 1);
+      expect(provider.workouts.first.title, '오늘의 스쿼트');
+
+      // 4. Moving to tomorrow - defaults to empty!
+      final tomorrow = today.add(const Duration(days: 1));
+      provider.setSelectedDate(tomorrow);
+      await provider.loadWorkouts();
+      expect(provider.workouts.isEmpty, isTrue);
+
+      // 5. Returning to today preserves the workout
+      provider.setSelectedDate(today);
+      await provider.loadWorkouts();
+      expect(provider.workouts.length, 1);
+      expect(provider.workouts.first.title, '오늘의 스쿼트');
+    });
   });
 }

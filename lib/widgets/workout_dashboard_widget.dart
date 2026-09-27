@@ -118,7 +118,9 @@ class WorkoutDashboardWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '총 $totalCount개 중 $completedCount개 완료',
+                        totalCount > 0
+                            ? '총 $totalCount개 중 $completedCount개 완료'
+                            : '오늘 등록된 운동이 없습니다',
                         style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
                       ),
                     ],
