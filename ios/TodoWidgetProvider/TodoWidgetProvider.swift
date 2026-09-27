@@ -74,9 +74,74 @@ struct SimpleEntry: TimelineEntry {
 }
 
 struct TodoWidgetEntryView : View {
+    @Environment(\.widgetFamily) var family
     var entry: Provider.Entry
 
     var body: some View {
+        if family == .systemSmall {
+            smallView
+        } else {
+            mediumView
+        }
+    }
+
+    // 작은 위젯 (systemSmall): Q1~Q4 행을 제거하여 남은 할 일 수와 최우선 태스크가 잘리지 않고 선명하게 표시됨
+    private var smallView: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("아이젠하워 & 오운완")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text("🔥 \(entry.streak)일째")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.green)
+            }
+            
+            Divider()
+            
+            // 남은 할 일 개수 강조
+            HStack(alignment: .firstTextBaseline) {
+                Text("남은 할 일")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text("\(entry.totalPending)개")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+            }
+            
+            // 최우선 할 일
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 3) {
+                    Text("⏰")
+                        .font(.system(size: 10))
+                    Text("최우선:")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.orange)
+                }
+                Text(entry.urgentTaskText)
+                    .font(.caption2)
+                    .lineLimit(1)
+                    .foregroundColor(.primary)
+            }
+            
+            Spacer(minLength: 0)
+            
+            // 주간 달성률
+            if !entry.weeklyStatsText.isEmpty {
+                Text(entry.weeklyStatsText)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.green)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+    }
+
+    // 중간 위젯 (systemMedium): 기존 Q1~Q4 4분면 현황 유지
+    private var mediumView: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text("아이젠하워 & 오운완")

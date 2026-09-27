@@ -2,10 +2,17 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter iOS Simulator (iPhone 17)",
+      "name": "Flutter (Selected Device)",
       "request": "launch",
       "type": "dart",
-      "deviceId": "EB372706-2C7D-4FA1-A59E-5F2C66CEAC34",
+      "flutterMode": "debug",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "Flutter iOS Simulator (iPhone 18 Pro - iOS 27)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "3758ADDB-2B92-4281-8E41-76B2EE11DE86",
       "flutterMode": "debug",
       "program": "lib/main.dart"
     },
