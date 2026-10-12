@@ -91,6 +91,7 @@ lib/
 ├── main.dart                     # 앱 엔트리포인트 및 테마 초기화
 ├── models/                       # 데이터 모델
 │   ├── category_model.dart       # 투두 카테고리 (이모지, 컬러, 순서)
+│   ├── quote_model.dart          # 일일 동기부여 명언 모델
 │   ├── routine_model.dart        # 반복 루틴 규칙 모델
 │   ├── todo_model.dart           # 할 일 모델 (우선순위 4분면, 날짜, 마감)
 │   └── workout_model.dart        # 운동 및 세트 디테일, 프리셋, 운동 로그
